@@ -1,257 +1,89 @@
 # ex00 — Megaphone
 
-Concepts needed: `iostream`, `std::string`, `argc`/`argv`, character manipulation
+Concepts: `iostream`, `std::string`, `argc`/`argv`, character manipulation
 
 ---
 
-## 1. Output in C++
+## Output — std::cout
 
-The first thing to drop from C is `printf`. In C++ output goes through `std::cout`,
-which lives in the `iostream` header.
+A **stream** is an abstraction for a sequence of data flowing in one direction: to a file, to the terminal, to a network socket. 
+You write into it without caring about what is on the other end.
 
-```cpp
-#include <iostream>
-
-int main()
-{
-    std::cout << "hello" << std::endl;
-    return 0;
-}
-// OUTPUT: hello
+```
+your code  →  std::cout  →  [ stdout stream ]  →  terminal
+your code  →  std::cerr  →  [ stderr stream ]  →  terminal (unbuffered)
 ```
 
-`<<` sends data into the stream. You can chain as many as you want:
+`<<` is the insertion operator: it pushes data into the stream and can be chained:
 
 ```cpp
 std::cout << "hello" << " " << "world" << std::endl;
-// OUTPUT: hello world
 ```
 
-`std::endl` adds a newline and flushes the output. You can also just use `"\n"` if you
-do not need to flush.
+`std::endl` flushes the buffer and adds `\n`. 
+Use `"\n"` when you don't need the flush.
 
----
-
-## 2. argc and argv — same as C, slightly different type
-
-You already know `argc` and `argv` from C. In C++ they work exactly the same way.
-The only difference you will notice is that you can store each argument as a
-`std::string` instead of working with raw `char *`:
-
-```cpp
-#include <iostream>
-#include <string>
-
-int main(int argc, char *argv[])
-{
-    if (argc == 1)
-    {
-        std::cout << "no arguments" << std::endl;
-        return 0;
-    }
-
-    std::string word = argv[1];   // argv[1] converts to std::string automatically
-    std::cout << word << std::endl;
-
-    return 0;
-}
-```
-
-To loop over all arguments:
-
-```cpp
-int main(int argc, char *arv[])
-{
-	for (int i = 1; i < argc; i++)
-	{
-		std::string arg = argv[i];
-		std::cout << arg << std::endl;
-	}
-	return 0;
-}
-```
+`std::cout` is **type-safe**: the compiler knows the type of what you are printing and will error if something is wrong. `printf` has no such check (a format/argument mismatch is undefined behavior caught only at runtime).
 
 ---
 
-## 3. std::string — the C++ string
- 
-`std::string` is the C++ replacement for `char *`. It manages its own memory, knows
-its own length, and gives you a clean interface to work with text.
- 
-### The basics
- 
-```cpp
-#include <string>
- 
-std::string str = "hello";
- 
-str.length();       // number of characters — like strlen, no need to count manually
-str[0];             // access a single character — like str[0] in C
-str += " world";    // concatenation — no strcat, no buffer, no size calculation
-```
- 
-You can loop over every character with a standard index loop:
- 
-```cpp
-std::string str = "hello";
- 
-for (int i = 0; i < (int)str.length(); i++)
-    std::cout << str[i] << std::endl;   // prints one character per line
-```
- 
-Each `str[i]` is a `char`. The same `char` you know from C. You can read it, modify it,
-and pass it to any C character function.
- 
-### Concatenation — no malloc, no strcat, no size tracking
- 
-In C, joining two strings is an operation. You have to allocate enough memory, track
-the sizes and call `strcat`. One mistake and you have a buffer overflow or a leak.
- 
-```c
-// C
-char *result = malloc(strlen(s1) + strlen(s2) + 1);
-strcpy(result, s1);
-strcat(result, s2);
-// ... use result ...
-free(result);
-```
- 
-```cpp
-// C++
-std::string s1 = "hello";
-std::string s2 = " world";
-std::string result = s1 + s2;   // "hello world" — memory handled automatically
-```
- 
-`+=` appends in place:
- 
-```cpp
-std::string str = "hello";
-str += " world";    // str is now "hello world"
-str += "!";         // str is now "hello world!"
-```
- 
-### Comparison — no strcmp
- 
-In C you cannot use `==` to compare strings. This compares pointers, not content.
-You have to call `strcmp` and check if the result is 0. In C++ `==` just works:
- 
-```cpp
-// C
-if (strcmp(s1, s2) == 0)
-    printf("equal\n");
- 
-// C++
-std::string s1 = "hello";
-std::string s2 = "hello";
- 
-if (s1 == s2)
-    std::cout << "equal" << std::endl;
- 
-if (s1 != s2)
-    std::cout << "not equal" << std::endl;
-```
- 
-### Substring — extracting part of a string
- 
-In C you use `strncpy` or pointer arithmetic to get a piece of a string. In C++:
- 
-```cpp
-std::string str = "hello world";
- 
-std::string sub = str.substr(6, 5);   // start at index 6, take 5 characters
-std::cout << sub << std::endl;      // "world"
- 
-std::string from = str.substr(6);     // from index 6 to the end
-std::cout << from << std::endl;     // "world"
-```
- 
-### Finding — searching inside a string
- 
-In C you use `strstr` or `strchr`. In C++ strings have `find` built in:
- 
-```cpp
-std::string str = "hello world";
- 
-int pos = str.find("world");    // returns the index where "world" starts
-std::cout << pos << std::endl;  // 6
- 
-if (str.find("world") != std::string::npos)   // npos means "not found"
-    std::cout << "found" << std::endl;
- 
-if (str.find("xyz") == std::string::npos)
-    std::cout << "not found" << std::endl;
-```
- 
-`std::string::npos` is a special value that means "no position" — returned when `find`
-finds nothing. Think of it as the `NULL` of string positions.
- 
-### Empty check
- 
-```cpp
-std::string str = "";
- 
-if (str.empty())
-    std::cout << "string is empty" << std::endl;
- 
-if (str.length() == 0)   // same thing, two ways to check
-    std::cout << "string is empty" << std::endl;
-```
- 
-### Copying — it just works
- 
-In C, copying a string means allocating memory and calling `strcpy`. Assigning a
-`char *` to another `char *` just copies the pointer, both point to the same memory,
-one change affects both.
- 
-```c
-// C — this does NOT copy the string, just the pointer
-char *a = "hello";
-char *b = a;       // b and a point to the same place
-```
- 
-```cpp
-// C++ — this actually copies the string content
-std::string a = "hello";
-std::string b = a;    // b is a full independent copy
-b += " world";        // modifying b does NOT affect a
- 
-std::cout << a << std::endl;   // hello
-std::cout << b << std::endl;   // hello world
-```
- 
+## argc and argv
+
+Identical to C. `argv[i]` can be assigned directly to a `std::string`, which converts automatically.
+
 ---
- 
-## 4. Character manipulation — toupper
- 
-To convert a character to uppercase you use `toupper` from `<cctype>`.
-This is the C++ version of the C header `<ctype.h>` — same function, different header name.
- 
-```cpp
-#include <cctype>
- 
-char c = 'a';
-char upper = toupper(c);   // 'A'
+
+## std::string
+
+`std::string` owns its memory, knows its length, and handles copying correctly.
+
+In C a string is a pointer to a null-terminated char array, you manage the memory, track the size, and free it yourself.
+Copying a `char *` copies only the pointer:
+
 ```
- 
-`toupper` works on a single `char`. Non-letter characters (spaces, dots, `!`) are
-returned unchanged — you do not need to check before calling it.
- 
-To uppercase an entire string, loop over it and apply `toupper` to each character:
- 
-```cpp
-#include <iostream>
-#include <string>
-#include <cctype>
- 
-int main()
-{
-    std::string str = "hello world";
- 
-    for (int i = 0; i < (int)str.length(); i++)
-        str[i] = toupper(str[i]);
- 
-    std::cout << str << std::endl;   // HELLO WORLD
-    return 0;
-}
+C:
+  a ──► [ h | e | l | l | o | \0 ]
+  b ──►  same block          ← one change affects both
+
+C++:
+  a ──► [ h | e | l | l | o ]
+  b ──► [ h | e | l | l | o ]  ← independent copy
 ```
+
+### Key operations
+
+| Operation   | C                          | C++                        |
+|-------------|----------------------------|----------------------------|
+| Length      | `strlen(s)`                | `s.length()`               |
+| Concatenate | `malloc` + `strcat`        | `s1 + s2` / `s += "..."`  |
+| Compare     | `strcmp(a, b) == 0`        | `a == b`                   |
+| Substring   | `strncpy` / ptr arithmetic | `s.substr(start, len)`     |
+| Search      | `strstr` / `strchr`        | `s.find("...")`            |
+| Empty check | `s[0] == '\0'`             | `s.empty()`                |
+| Single char | `s[i]`                     | `s[i]` — same, type `char` |
+
+### find and npos
+
+`s.find("word")` returns the start index, or `std::string::npos` if not found — the sentinel value meaning "no position", equivalent to `NULL` for pointers.
+
+### Edge cases
+
+- `std::string` can hold null bytes mid-string — it tracks length separately, unlike C strings which terminate at the first `\0`.
+- `s[i]` out of bounds is undefined behavior. Use `s.at(i)` for bounds-checked access (throws on invalid index).
+- `s.length()` returns `size_t` (unsigned). Comparing with a signed `int` in a loop can cause subtle bugs, cast explicitly: `(int)s.length()`.
+
+---
+
+## Character manipulation — cctype
+
+`<cctype>` is the C++ name for C's `<ctype.h>`. Same functions: `toupper`, `tolower`, `isalpha`, `isdigit`, `isspace`.
+
+`toupper(c)` returns the uppercase version of a char. Non-letter characters pass through unchanged.
+
+**The correct cast:** `toupper` expects `unsigned char`. On platforms where `char` is signed, passing a negative char value is undefined behavior. Safe form:
+
+```cpp
+str[i] = toupper((unsigned char)str[i]);
+```
+
+For ASCII-only input this never surfaces, but it is the correct pattern.
