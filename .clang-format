@@ -1,0 +1,5 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+UseTab: Never
+PointerAlignment: Right
+AccessModifierOffset: -4    # keeps private: at column 0 (LLVM default)
