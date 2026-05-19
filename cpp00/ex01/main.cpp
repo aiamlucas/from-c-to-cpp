@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 15:24:47 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/05/18 20:39:17 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/05/19 14:47:03 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,9 @@ void fillContact(Contact &newContact) {
     std::cout << "Phone Number : ";
     std::getline(std::cin, input);
     newContact.setPhoneNumber(input);
+    std::cout << "Darkest Secret : ";
+    std::getline(std::cin, input);
+    newContact.setDarkestSecret(input);
 }
 
 int main(void) {
@@ -39,7 +42,7 @@ int main(void) {
     while (true) {
         std::cout << "Enter command ";
         if (!std::getline(std::cin, command))
-            break; // EOF
+            break;
         if (command == "ADD") {
             fillContact(newContact);
             phonebook.addContact(newContact);

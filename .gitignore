@@ -1,0 +1,24 @@
+# compiled binaries
+*.o
+*.out
+*.exe
+
+# executables
+phonebook
+megaphone
+
+# build artifacts
+*.dSYM/
+*.a
+
+# neovim / vim
+*.swp
+*.swo
+*.swn
+Session.vim
+.netrwhist
+tags
+
+# OS
+.DS_Store
+Thumbs.db
