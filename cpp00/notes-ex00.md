@@ -14,7 +14,8 @@ your code  →  std::cout  →  [ stdout stream ]  →  terminal
 your code  →  std::cerr  →  [ stderr stream ]  →  terminal (unbuffered)
 ```
 
-`<<` is the insertion operator: it pushes data into the stream and can be chained:
+`<<`  insertion operator   (push data INTO the stream)
+`>>`  extraction operator  (pull data OUT of the stream)
 
 ```cpp
 std::cout << "hello" << " " << "world" << std::endl;
@@ -25,11 +26,7 @@ Use `"\n"` when you don't need the flush.
 
 `std::cout` is **type-safe**: the compiler knows the type of what you are printing and will error if something is wrong. `printf` has no such check (a format/argument mismatch is undefined behavior caught only at runtime).
 
----
-
-## argc and argv
-
-Identical to C. `argv[i]` can be assigned directly to a `std::string`, which converts automatically.
+> Type-safe: printf("%d", "hello") compiles and crashes at runtime. std::cout << someInt —> the compiler picks the right behavior for int automatically based on the type. No format specifier, no mismatch possible.
 
 ---
 
@@ -71,6 +68,54 @@ C++:
 - `std::string` can hold null bytes mid-string — it tracks length separately, unlike C strings which terminate at the first `\0`.
 - `s[i]` out of bounds is undefined behavior. Use `s.at(i)` for bounds-checked access (throws on invalid index).
 - `s.length()` returns `size_t` (unsigned). Comparing with a signed `int` in a loop can cause subtle bugs, cast explicitly: `(int)s.length()`.
+
+#### Null bytes in std::string vs C strings
+
+```
+C string  ("hello"):
+─────────────────────
+char *s = "hello";
+
+  position:     0    1    2    3    4    5
+              ┌────┬────┬────┬────┬────┬────┐
+              │ h  │ e  │ l  │ l  │ o  │ \0 │
+              └────┴────┴────┴────┴────┴────┘
+                                          ↑
+                                  string ENDS at \0
+                                  strlen() reads until it hits \0
+
+If you put \0 in the middle:
+              ┌────┬────┬────┬────┬────┬────┬────┐
+              │ h  │ e  │ \0 │ l  │ o  │ \0 │ ?  │
+              └────┴────┴────┴────┴────┴────┴────┘
+                       ↑
+                  strlen() stops HERE → reports length 2
+                  "llo" is invisible to all C string functions
+                  data is technically there but unreachable
+```
+```
+std::string  ("he\0llo"):
+─────────────────────────
+std::string s("he\0llo", 5);   // explicit length
+
+  ┌─────────────────────────┐
+  │ length: 5               │   ← stored separately
+  │ data:                   │
+  │   ┌────┬────┬────┬────┬────┐
+  │   │ h  │ e  │ \0 │ l  │ o  │
+  │   └────┴────┴────┴────┴────┘
+  └─────────────────────────┘
+
+  s.length()  →  5     (knows length independently)
+  s[2]        →  \0    (you can read it)
+  s[3]        →  l     (still accessible!)
+
+  std::cout << s.length()  →  5
+  std::cout << s           →  prints "he", terminal sees \0 and stops
+                              but the data is all there
+```
+
+> Why does this matter? Binary data file contents, network packets and encrypted data can contain \0 bytes naturally. C strings can't hold them, but std::string can.
 
 ---
 
