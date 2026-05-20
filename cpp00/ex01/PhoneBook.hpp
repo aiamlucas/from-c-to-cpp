@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/18 12:16:21 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/05/19 10:46:32 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/05/20 11:11:34 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ private:
     int _count;
 
 public:
-    PhoneBook();
+    PhoneBook(); // default constructor
     void addContact(Contact contact);
     void searchContact();
 };

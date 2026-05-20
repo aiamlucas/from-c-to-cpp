@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 15:53:31 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/05/19 11:01:11 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/05/20 11:17:38 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,14 @@
 #include <iostream>
 #include <sstream>
 
-std::string truncate(const std::string &str, int width) {
+static std::string truncate(std::string str, int width) {
     if ((int)str.length() > width)
         return str.substr(0, width - 1) + ".";
     return str;
 }
 
+// default constructor. Initializes _count to 0
+// {}           empty body, nothing else to initialize
 PhoneBook::PhoneBook() : _count(0) {}
 
 void PhoneBook::addContact(Contact contact) {
@@ -35,8 +37,11 @@ void PhoneBook::addContact(Contact contact) {
 }
 
 void PhoneBook::searchContact() {
-    std::stringstream stringStream;
 
+    if (_count == 0) {
+        std::cout << "Phonebook is empty." << std::endl;
+        return;
+    }
     std::cout << std::setw(10) << std::right << "index" << "|" << std::setw(10)
               << std::right << "firstname" << "|" << std::setw(10) << std::right
               << "lastname" << "|" << std::setw(10) << std::right << "nickname"
@@ -46,19 +51,17 @@ void PhoneBook::searchContact() {
         std::string firstName = truncate(_contacts[i].getFirstName(), 10);
         std::string lastName = truncate(_contacts[i].getLastName(), 10);
         std::string nickName = truncate(_contacts[i].getNickName(), 10);
-        std::string phoneNumber = truncate(_contacts[i].getPhoneNumber(), 10);
-        std::string darkestSecret;
-        std::string pickIndex;
 
         std::cout << std::setw(10) << std::right << i << "|" << std::setw(10)
                   << std::right << firstName << "|" << std::setw(10)
                   << std::right << lastName << "|" << std::setw(10)
                   << std::right << nickName << "|" << std::endl;
     }
-    std::cout << "Enter index:";
+    std::cout << "Enter index: ";
     std::string input;
     std::getline(std::cin, input);
-
+    // using stringstram to convert strint input to int (
+    std::stringstream stringStream;
     stringStream << input;
     int index;
     if (!(stringStream >> index)) {
@@ -68,16 +71,15 @@ void PhoneBook::searchContact() {
     if (index < 0 || index >= _count) {
         std::cout << "Invalid index" << std::endl;
         return;
-    } else {
-        std::cout << "First name    : " << _contacts[index].getFirstName()
-                  << std::endl;
-        std::cout << "Last name     : " << _contacts[index].getLastName()
-                  << std::endl;
-        std::cout << "Nickname      : " << _contacts[index].getNickName()
-                  << std::endl;
-        std::cout << "Phone number  : " << _contacts[index].getPhoneNumber()
-                  << std::endl;
-        std::cout << "Darkest secret: " << _contacts[index].getDarkestSecret()
-                  << std::endl;
     }
+    std::cout << "First name    : " << _contacts[index].getFirstName()
+              << std::endl;
+    std::cout << "Last name     : " << _contacts[index].getLastName()
+              << std::endl;
+    std::cout << "Nickname      : " << _contacts[index].getNickName()
+              << std::endl;
+    std::cout << "Phone number  : " << _contacts[index].getPhoneNumber()
+              << std::endl;
+    std::cout << "Darkest secret: " << _contacts[index].getDarkestSecret()
+              << std::endl;
 }

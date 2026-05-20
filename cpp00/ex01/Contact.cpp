@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/10 15:53:39 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/04/10 18:02:59 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/05/20 11:00:49 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ void Contact::setPhoneNumber(std::string phoneNumber) {
 void Contact::setDarkestSecret(std::string darkestSecret) {
     _darkestSecret = darkestSecret;
 }
+// const: method cannot modify the object -> good praxis for read-only methods
 std::string Contact::getFirstName() const { return _firstName; }
 std::string Contact::getLastName() const { return _lastName; }
 std::string Contact::getNickName() const { return _nickName; }

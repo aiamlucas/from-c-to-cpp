@@ -27,7 +27,10 @@ OOP         →  organized around objects       (C++)
 
 ### Class vs instance
 
-A **class** is a blueprint. An **instance** is the concrete thing built from it.
+Analogy: **class** is a blueprint. An **instance** is the concrete thing built from it.
+
+>class    → defines/declare members (just blueprint)
+>instance → holds those members (real memory)
 
 ```
 class Dog { ... }          ← blueprint, exists once in code
@@ -93,6 +96,16 @@ Every member function gets an implicit `this` pointer, a pointer to the object i
 
 ---
 
+## Encapsulation
+
+Encapsulation is the idea that an object hides its internal state and only exposes a controlled interface. 
+Other code cannot reach into the data directly, it must go through public methods. 
+This is one of the core reasons OOP exists.
+
+In C, a struct's fields are all accessible from anywhere.
+Anyone can do account->balance = -99999
+In C++, classes let you mark data as off-limits and the compiler enforces it.
+
 ## public / private / protected
 
 Access specifiers do not affect memory layout. A `private int` and a `public int` are identical in memory. They control which code is allowed to read or write them.
@@ -120,15 +133,6 @@ Access specifiers do not affect memory layout. A `private int` and a `public int
 `protected` is for inheritance -> covered in Module 03. 
 For now: `private` for internals, `public` for the interface.
 
-### class vs struct — the only real difference
-
-```cpp
-class Dog  { std::string _name; };  // private by default
-struct Cat  { std::string name;  };  // public by default
-```
-
-Everything else is identical.
-
 ### The _ convention
 
 Prefixing private attributes with `_` is a convention, not enforced by the language. It makes intent immediately readable:
@@ -138,28 +142,77 @@ void Player::takeDamage(int damage) {
     _health -= damage;   // _health = attribute, damage = parameter — obvious
 }
 ```
-
 ---
 
 ## Constructors and initialization lists
 
-A constructor runs automatically when an object is created. Same name as the class, no return type.
+A constructor is a special method that runs automatically when an object is created.
+It has the same name as the class and no return type (not even `void`).
+Its job is to set up the object's initial state so it is ready to use.
+
+Let's say we have a `Player` class with a name and health. Every player needs both values before they can do anything:
 
 ```cpp
-Engine::Engine(int cylinders) : _cylinders(cylinders), _running(false) {
-    std::cout << "Engine created" << std::endl;
+class Player {
+private:
+    std::string _name;
+    int         _health;
+
+public:
+    Player(std::string name);
+};
+
+// Constructor
+Player::Player(std::string name) : _name(name), _health(100)
+{
+    std::cout << _name << " joined the game" << std::endl;
 }
 ```
 
-The `: _cylinders(cylinders), _running(false)` part is the **initialization list**. It initializes attributes directly at construction time, before the body runs.
+When you write `Player hero("Sunra")`, the constructor fires automatically:
+`_name` becomes `"Sunra"`, `_health` becomes `100` and the message prints.
 
-Without it, what happens inside `{ }` is assignment — the attribute is first default-constructed (garbage for primitives), then assigned. Two steps instead of one.
+> In C++ design philosophy: every object must be fully initialized before any code runs on it. The initialization list is the moment where that happens.
 
-For `const` members and references, the initialization list is not optional — it is the only way to set them. A `const` attribute cannot be assigned after construction.
+#### Initialization list
 
-### Default constructor
+```cpp
+Player::Player(std::string name) : _name(name), _health(100) { ... }
+//                                 ───────────────────────────
+//                                 initialization list
+```
 
-Takes no arguments. If you define no constructors at all, the compiler generates one — but it leaves primitives uninitialized. Once you define any constructor yourself, the compiler stops generating the default.
+**`const`** attributes can only be set in the initialization list.
+By definition, `const` means "set once, never change" and since the body runs after the object exists, the only window to set them is during construction.
+
+#### Default constructor vs parameterized constructor
+ 
+A **default constructor** takes no arguments. A **parameterized constructor** takes one or more.
+ 
+```cpp
+Player p;              // default constructor   → Player()
+Player hero("Sunra");  // parameterized         → Player(std::string)
+```
+ 
+```cpp
+// default — no arguments, sets a blank state
+Player::Player() : _name(""), _health(100) {}
+ 
+// parameterized — takes arguments, sets a specific state
+Player::Player(std::string name) : _name(name), _health(100) {}
+```
+ 
+Both can coexist. The compiler picks the right one based on what you pass.
+ 
+> The moment you write any constructor, the compiler stops generating the free default. If you want both `Player p;` and `Player hero("Sunra")` to work, you must write both yourself.
+ 
+In your PhoneBook this is the default constructor at work:
+ 
+```cpp
+PhoneBook::PhoneBook() : _count(0) {}
+```
+ 
+No arguments, just sets `_count` to 0 so the phonebook starts empty and clean.
 
 ---
 
@@ -174,7 +227,7 @@ void   setCelsius(double c) { if (c >= -273.15) _celsius = c; }  // setter with 
 
 ### const on getters
 
-The `const` after the parameter list is a promise: this function will not modify any attribute. The compiler enforces it — assigning to an attribute inside a `const` method is a compiler error.
+The `const` after the parameter list is a promise: this function will not modify any attribute. The compiler enforces it assigning to an attribute inside a `const` method is a compiler error.
 
 This matters when objects are passed as `const &`:
 
