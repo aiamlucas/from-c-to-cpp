@@ -1,6 +1,6 @@
 CC      = c++
 CFLAGS  = -Wall -Wextra -Werror -std=c++98
-NAME    = phonebook
+NAME    = zombie
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g -O0
@@ -8,8 +8,6 @@ endif
 
 SRC     =  main.cpp
 SRC     += Zombie.cpp
-SRC     += newZombie.cpp
-SRC     += randomChump.cpp
 
 OBJ     =  $(SRC:.cpp=.o)
 
