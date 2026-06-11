@@ -8,6 +8,8 @@ endif
 
 SRC     =  main.cpp
 SRC     += Zombie.cpp
+SRC     += newZombie.cpp
+SRC     += randomChump.cpp
 
 OBJ     =  $(SRC:.cpp=.o)
 

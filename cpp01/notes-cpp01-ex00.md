@@ -6,7 +6,7 @@ Concepts: stack vs heap, `new` / `delete`, object lifetime, destructors, multi-f
 
 ## Where objects live: stack vs heap
 
-Every object you create lives in one of two regions of memory. Choosing the right one is the whole point of this exercise.
+Every object you create lives in one of two regions of memory.
 
 ```
 ┌───────────────────────────────────────────────────────────┐
@@ -65,15 +65,15 @@ Forget that `delete` and the memory leaks: still allocated, no longer reachable.
 
 ```
 Need the object only inside this function?        →  STACK
-Need it to outlive the function that creates it?  →  HEAP
 Size known at compile time, small object?         →  STACK
+Need it to outlive the function that creates it?  →  HEAP
 Size unknown, or very large?                      →  HEAP
 ```
 
 This exercise gives you both situations side by side:
 
-- `randomChump(name)` — creates a zombie, uses it, throws it away. **Stack** is fine.
-- `newZombie(name)` — creates a zombie and returns it to the caller. The zombie must outlive the function. **Heap** is required.
+- `randomChump(name)` — creates a zombie, uses it, throws it away. --> **Stack**
+- `newZombie(name)` — creates a zombie and returns it to the caller. The zombie must outlive the function. --> **Heap**
 
 > If `newZombie` allocated on the stack and returned a pointer to it, the pointer would point to memory that no longer exists the moment the function returns. Undefined behavior. Classic mistake.
 
@@ -172,7 +172,21 @@ public:
     void announce(void);
 };
 
+// constructor
 Zombie::Zombie(std::string name) : _name(name) {}
+
+```
+Zombie::Zombie(std::string name) : _name(name) {}
+  │       │           │              │     │   │
+  │       │           │              │     │   └─ empty body, nothing else to do
+  │       │           │              │     └─── initialize WITH this value (the parameter)
+  │       │           │              └───────── initialize THIS attribute
+  │       │           └──────────────────────── the parameter coming in
+  │       └──────────────────────────────────── constructor (same name as class)
+  └──────────────────────────────────────────── class scope — "this belongs to Zombie"
+```
+
+
 
 Zombie::~Zombie() {
     std::cout << _name << " destroyed" << std::endl;
