@@ -6,6 +6,7 @@
 # executables
 phonebook
 megaphone
+zombie
 
 # build artifacts
 *.dSYM/
