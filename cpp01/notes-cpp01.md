@@ -114,7 +114,9 @@ STACK:              HEAP:
 
 ## 2. new and delete
 
-In C, you manage heap memory with `malloc` and `free`. In C++, you use `new` and `delete`. They look similar but do fundamentally more: **`new` calls the constructor, `delete` calls the destructor**. `malloc` and `free` are ignorant of classes — they only move raw bytes.
+In C, you manage heap memory with `malloc` and `free`.
+In C++, you use `new` and `delete`. 
+They look similar but do fundamentally more: **`new` calls the constructor, `delete` calls the destructor**. `malloc` and `free` are ignorant of classes, they only move raw bytes.
 
 ```
 malloc(sizeof(Zombie))   →  raw uninitialized bytes. _name is garbage.
@@ -192,78 +194,56 @@ delete   p   →  calls ~Zombie() × 1, tries to free from the wrong address
 > Never mix allocators: `free` something allocated with `new` → undefined behavior. `delete` something from `malloc` → undefined behavior. They may use different underlying allocators, and you'd skip constructor/destructor calls either way.
 
 ---
-
+ 
 ## 3. Constructors and initialization lists
-
-A constructor is a special method that runs automatically when an object is created. Its job: **put the object into a valid, usable state before any code outside the class can touch it**.
-
+ 
+A constructor runs automatically when an object is created. Its job: **put the object into a valid state before anything outside the class can touch it**. Without it, the object's memory starts as garbage.
+ 
 ```cpp
-class Zombie {
-private:
-    std::string _name;
-public:
-    Zombie(std::string name);
-};
-
-Zombie::Zombie(std::string name) : _name(name) {
-    // body — runs after the init list
-}
-```
-
-### The initialization list
-
-The `: _name(name)` part is the **initialization list**. It runs *before* the constructor body, at the moment the object's memory is first set up.
-
-```
 Zombie::Zombie(std::string name) : _name(name) {}
-                                   ──────────────
-                                   initialization list
-                                   _name is constructed here
-                                   with the value of `name`
+//                                 ──────────────
+//                                 initialization list — sets _name DURING construction
+//                                 body runs after — empty here, nothing else to do
 ```
-
-**Why prefer it over assignment in the body?**
-
-Without the init list:
-
+ 
+### What "creating an object" means in memory
+ 
+```
+Zombie z("Foo");                   // stack
+  1. compiler reserves sizeof(Zombie) bytes on the stack  →  raw garbage bytes
+  2. constructor runs on those bytes                      →  _name = "Foo"
+  3. z is a valid Zombie
+ 
+Zombie *z = new Zombie("Foo");     // heap
+  1. operator new reserves sizeof(Zombie) bytes on the heap  →  raw garbage bytes
+  2. constructor runs on those bytes                         →  _name = "Foo"
+  3. returns pointer to a valid Zombie
+```
+ 
+Same constructor, both cases. The only difference is who reserved the memory.
+ 
+### Initialization list vs body assignment
+ 
 ```cpp
+// WITH init list — one operation
+Zombie::Zombie(std::string name) : _name(name) {}
+// _name is constructed directly with "Foo"
+ 
+// WITHOUT init list — two operations
 Zombie::Zombie(std::string name) {
-    _name = name;   // assignment — but _name was already default-constructed
-}                   // to "" first, then overwritten. Two operations.
+    _name = name;   // _name was first default-constructed to ""
+}                   // then overwritten — wasteful
 ```
-
-With the init list:
-
-```cpp
-Zombie::Zombie(std::string name) : _name(name) {}
-// _name is constructed directly with `name`. One operation.
-```
-
-For `std::string` the difference is minor. For some types it matters a lot. More importantly: **`const` members and reference members can only be set in the initialization list** — they cannot be assigned in the body by definition.
-
+ 
+For `std::string` the cost difference is small. The rule matters more for `const` and reference members, which **can only be set in the initialization list** — they cannot be assigned in the body:
+ 
 ```cpp
 class Foo {
-    const int _id;
+    const int _id;   // const — set once, never changed
 public:
-    Foo(int id) : _id(id) {}    // ✓ only way to set a const member
+    Foo(int id) : _id(id) {}   // ✓ only option
 };
 ```
-
-### What "creating an object" actually means
-
-```
-Zombie z("Foo");         // stack
-                         // 1. compiler reserves sizeof(Zombie) bytes on the stack
-                         // 2. runs Zombie::Zombie("Foo") on those bytes
-                         // 3. z is now a fully-formed Zombie
-
-Zombie *z = new Zombie("Foo");   // heap
-                         // 1. operator new reserves sizeof(Zombie) bytes on heap
-                         // 2. runs Zombie::Zombie("Foo") on those bytes
-                         // 3. returns pointer — z points to a fully-formed Zombie
-```
-
-The same constructor code runs in both cases. The only difference is who reserved the memory first.
 
 ### Multiple constructors
 
@@ -327,7 +307,7 @@ Rules:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**The destructor runs for both stack and heap objects.** The difference is not whether it runs — it's who triggers it:
+**The destructor runs for both stack and heap objects.** The difference is not whether it runs, it's who triggers it:
 
 ```
 stack  →  compiler triggers it automatically at scope end
@@ -349,7 +329,7 @@ Concrete proof — run this and read the output order:
 
 ### Do you always need to write one?
 
-No. If you don't write a destructor, the compiler generates a default one that calls the destructor of every member in reverse order of declaration. For `Zombie` with just `std::string _name`, the default destructor calls `_name.~string()` — and `std::string` correctly frees its own heap data.
+No. If you don't write a destructor, the compiler generates a default one that calls the destructor of every member in reverse order of declaration. For `Zombie` with just `std::string _name`, the default destructor calls `_name.~string()` and `std::string` correctly frees its own heap data.
 
 **Write a destructor when your class directly owns a raw resource** that the default won't know how to release:
 
@@ -445,29 +425,7 @@ void    randomChump(std::string name);
 #endif
 ```
 
-**Rule enforced by 42:** function bodies in a header file (except templates) → **grade 0**. The header declares; the `.cpp` defines.
 
-### Include guards
-
-Every header must have an include guard:
-
-```cpp
-#ifndef ZOMBIE_HPP   // "if ZOMBIE_HPP is not yet defined..."
-#define ZOMBIE_HPP   // "...define it now"
-
-// header content
-
-#endif               // end of the guarded block
-```
-
-**Why:** the compiler processes each `.cpp` file independently. If `main.cpp` includes both `Zombie.hpp` and `Utils.hpp`, and `Utils.hpp` also includes `Zombie.hpp`, the compiler would see the Zombie class declaration twice — a "redefinition" error. The guard makes the second inclusion a no-op.
-
-```
-First inclusion:   ZOMBIE_HPP not defined → enters block → defines ZOMBIE_HPP → class declared
-Second inclusion:  ZOMBIE_HPP already defined → skips entire block → no redefinition
-```
-
-Convention: name the macro after the file, uppercase, dots replaced with underscores: `ZOMBIE_HPP`, `HUMAN_A_HPP`.
 
 ### The .cpp — definitions
 
