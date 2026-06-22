@@ -108,7 +108,7 @@ STACK:              HEAP:
 └──────────────┘
 ```
 
-`str` lives on the stack. Its text lives on the heap. When `str` goes out of scope, its destructor frees the heap data automatically. This is the correct model — a stack object *owning* heap resources and cleaning them up through its destructor.
+`str` lives on the stack. Its text lives on the heap. When `str` goes out of scope, its destructor frees the heap data automatically. This is the correct model — a stack object *owning* heap resources and cleaning them up through its **destructor**.
 
 ---
 
