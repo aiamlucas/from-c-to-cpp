@@ -14,7 +14,9 @@ public:
     void announce(void);
 };
 
+// return a pointer to the heap-allocated Zombie
 Zombie *newZombie(std::string name);
+// stack Zombie
 void randomChump(std::string name);
 
 #endif
