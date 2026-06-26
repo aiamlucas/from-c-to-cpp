@@ -369,24 +369,3 @@ newZombie("Alice")
 If your destructor doesn't print for every zombie you created, you have a leak.
 
 ---
-
-## Checking for leaks
-
-The subject mentions checking for leaks. Two tools you'll meet repeatedly:
-
-- **valgrind** (Linux): `valgrind ./a.out` — reports any block allocated and not freed.
-- **leaks** (macOS): `leaks --atExit -- ./a.out`.
-
-A clean run with `valgrind` ends with `All heap blocks were freed -- no leaks are possible`. Anything else means a `new` somewhere has no matching `delete`.
-
-Counting destructor prints against constructor calls is a quick sanity check on the stdout — if you created 5 zombies and only see 4 "destroyed" lines, one leaked.
-
----
-
-## Edge cases & traps
-
-- **Double delete.** Calling `delete` twice on the same pointer is undefined behavior. After `delete z`, the pointer still holds the old address but the memory is gone. Setting `z = NULL` after deleting is a defensive habit (deleting `NULL` is a no-op and safe).
-- **Returning a pointer to a stack object.** Compiles, runs, sometimes even appears to work — but it's UB. The object died when the function returned.
-- **`delete` vs `delete[]`.** Don't mix them. `new[]` always pairs with `delete[]`. Coming up in ex01.
-- **Mixing `malloc`/`new` with `free`/`delete`.** Never `free` something allocated with `new`, never `delete` something allocated with `malloc`. They may use different allocators, and you'd skip the constructor/destructor calls — corrupting the object's invariants.
-- **Forgetting `delete` entirely.** The OS reclaims memory when the process exits, so a small leaky program may seem fine. In a long-running program (a server, a game loop), leaks accumulate until the process is killed by the OS.
