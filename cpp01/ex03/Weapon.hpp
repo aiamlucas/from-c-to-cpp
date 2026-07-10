@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/08 16:59:53 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/07/08 17:16:54 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/07/09 19:52:54 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ private:
     std::string _type;
 
 public:
+    Weapon(std::string type);
     void setType(std::string type);
     const std::string &getType() const;
 };

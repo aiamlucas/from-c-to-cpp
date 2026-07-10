@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/08 17:23:30 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/07/08 19:32:40 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/07/10 16:02:18 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 class HumanA {
 private:
     std::string _name;
-    Weapon &_weapon; // has a Weapon as a member
+    Weapon &_weapon; // reference -> always armed, cannot be NULL
 
 public:
     HumanA(std::string name, Weapon &weapon);
