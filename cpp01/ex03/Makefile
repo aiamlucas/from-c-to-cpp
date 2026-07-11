@@ -6,13 +6,13 @@
 #    By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/07/08 19:56:37 by lbueno-m          #+#    #+#              #
-#    Updated: 2026/07/08 19:57:21 by lbueno-m         ###   ########.fr        #
+#    Updated: 2026/07/11 15:53:44 by lbueno-m         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC      = c++
 CFLAGS  = -Wall -Wextra -Werror -std=c++98
-NAME    = brain
+NAME    = game
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g -O0
