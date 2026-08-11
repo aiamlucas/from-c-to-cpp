@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C++ Module 00 — Namespaces, Classes &amp; the Basics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1729;
+    --bg-2:#0D2036;
+    --card:#0F2540;
+    --card-2:#122B4B;
+    --grid:rgba(120,180,220,0.07);
+    --cyan:#5FC7EC;
+    --cyan-dim:rgba(95,199,236,0.32);
+    --amber:#F2A65A;
+    --green:#7FD9A8;
+    --pink:#E88FB0;
+    --text:#E7F1F9;
+    --text-dim:#8CA6BC;
+    --text-faint:#5C7690;
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 40px),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  /* ---------- Title block (hero) ---------- */
+  .titleblock{
+    border-bottom:1px solid var(--cyan-dim);
+    padding:56px 0 32px;
+    position:relative;
+  }
+  .titleblock .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.18em;
+    color:var(--cyan); text-transform:uppercase; margin-bottom:14px;
+  }
+  .titleblock h1{
+    font-family:var(--mono); font-weight:700; text-transform:uppercase;
+    letter-spacing:.02em; font-size:clamp(28px,4.2vw,46px);
+    line-height:1.15; max-width:900px;
+  }
+  .titleblock .sub{
+    font-size:17px; color:var(--text-dim); max-width:640px; margin-top:14px;
+  }
+  .stamp{
+    margin-top:32px; display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border:1px solid var(--cyan-dim);
+  }
+  .stamp div{
+    padding:12px 16px; border-right:1px solid var(--cyan-dim);
+  }
+  .stamp div:last-child{border-right:none;}
+  .stamp .k{font-family:var(--mono); font-size:10px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase;}
+  .stamp .v{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-top:4px;}
+
+  /* ---------- Layout ---------- */
+  .layout{display:grid; grid-template-columns:230px 1fr; gap:48px; padding:40px 0 100px;}
+  nav.sidebar{position:sticky; top:24px; align-self:start; height:fit-content;}
+  nav.sidebar .navlabel{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--text-faint);
+    text-transform:uppercase; margin-bottom:14px;
+  }
+  nav.sidebar ol{list-style:none; border-left:1px solid var(--cyan-dim);}
+  nav.sidebar li{margin:0;}
+  nav.sidebar a{
+    display:block; padding:9px 0 9px 16px; font-family:var(--mono); font-size:13px;
+    color:var(--text-dim); text-decoration:none; border-left:2px solid transparent; margin-left:-1px;
+    transition:color .15s, border-color .15s;
+  }
+  nav.sidebar a .num{color:var(--text-faint); margin-right:8px;}
+  nav.sidebar a:hover{color:var(--text);}
+  nav.sidebar a.active{color:var(--cyan); border-left-color:var(--cyan);}
+
+  main{min-width:0;}
+  section.sheet{
+    padding-top:8px; margin-bottom:96px; scroll-margin-top:24px;
+  }
+  section.sheet .sheetnum{
+    font-family:var(--mono); font-size:12px; color:var(--text-faint); letter-spacing:.14em;
+    text-transform:uppercase; margin-bottom:8px;
+  }
+  section.sheet h2{
+    font-family:var(--mono); font-size:clamp(22px,2.6vw,30px); font-weight:600;
+    letter-spacing:.01em; margin-bottom:6px;
+  }
+  section.sheet .tagline{color:var(--text-dim); font-size:15px; margin-bottom:28px; max-width:680px;}
+  section.sheet h3{
+    font-family:var(--mono); font-size:15px; font-weight:600; color:var(--cyan);
+    text-transform:uppercase; letter-spacing:.06em; margin:36px 0 12px;
+  }
+  section.sheet p{max-width:700px; margin-bottom:14px; color:var(--text);}
+  section.sheet p.dim{color:var(--text-dim);}
+  code, .inline-code{
+    font-family:var(--mono); font-size:.92em; background:var(--card);
+    padding:2px 6px; border-radius:3px; color:var(--green);
+  }
+  pre{
+    font-family:var(--mono); font-size:13.5px; line-height:1.6; background:var(--card);
+    border:1px solid var(--cyan-dim); border-radius:6px; padding:18px 20px; overflow-x:auto;
+    margin:16px 0 22px; color:var(--text);
+  }
+  pre .kw{color:var(--pink);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;}
+
+  .diagram{
+    border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card);
+    padding:18px; margin:18px 0 26px; position:relative;
+  }
+  .diagram .fig{
+    position:absolute; top:-11px; left:16px; background:var(--bg-2);
+    font-family:var(--mono); font-size:11px; color:var(--text-faint); padding:0 8px; letter-spacing:.08em;
+  }
+  .diagram svg{display:block; width:100%; height:auto;}
+
+  .note{
+    border-left:3px solid var(--cyan); background:var(--card); border-radius:0 6px 6px 0;
+    padding:14px 18px; margin:18px 0; max-width:700px;
+  }
+  .note.warn{border-left-color:var(--amber);}
+  .note .tag{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--cyan); margin-bottom:6px; display:block;
+  }
+  .note.warn .tag{color:var(--amber);}
+  .note p{margin-bottom:0; font-size:14.5px; color:var(--text-dim);}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:18px 0 26px;}
+  .cardmini{border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:16px 18px;}
+  .cardmini h4{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-bottom:8px; letter-spacing:.03em;}
+  .cardmini p{font-size:13.5px; color:var(--text-dim); margin-bottom:0;}
+
+  .annot{
+    border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:20px 22px; margin:16px 0 26px;
+  }
+  .annot pre{border:none; background:none; padding:0; margin-bottom:14px;}
+  .annot ul{list-style:none;}
+  .annot li{
+    font-size:13.5px; color:var(--text-dim); padding:7px 0 7px 16px; border-left:2px solid var(--cyan-dim);
+    margin-bottom:2px;
+  }
+  .annot li b{color:var(--text); font-family:var(--mono); font-weight:500;}
+
+  .checklist{list-style:none; max-width:700px; margin:16px 0 26px;}
+  .checklist li{
+    font-size:14.5px; color:var(--text-dim); padding:8px 0 8px 26px; position:relative; border-bottom:1px solid var(--cyan-dim);
+  }
+  .checklist li:last-child{border-bottom:none;}
+  .checklist li::before{
+    content:"—"; position:absolute; left:0; color:var(--cyan); font-family:var(--mono);
+  }
+  .checklist li b{color:var(--text); font-weight:500;}
+
+  footer{border-top:1px solid var(--cyan-dim); padding:28px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.sidebar{position:relative; top:0; margin-bottom:8px;}
+    nav.sidebar ol{display:flex; flex-wrap:wrap; border-left:none;}
+    nav.sidebar li{margin-right:4px;}
+    nav.sidebar a{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+    .cols{grid-template-columns:1fr;}
+    .stamp{grid-template-columns:1fr 1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <div class="wrap">
+    <div class="eyebrow">42 Berlin — C++ Common Core</div>
+    <h1>Module 00 — Namespaces, classes, member functions, stdio<br>streams, initialization lists, static &amp; const</h1>
+    <p class="sub">The refresher for where your C++ journey actually starts: the shift from C's raw buffers and free functions to objects that own their own data and know how to manage it.</p>
+    <div class="stamp">
+      <div><div class="k">Autor</div><div class="v">aiamlucas</div></div>
+      <div><div class="k">Standard</div><div class="v">c++98</div></div>
+      <div><div class="k">Scope</div><div class="v">ex00 &ndash; ex02</div></div>
+      <div><div class="k">Sheet</div><div class="v">1 of 1</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="sidebar">
+    <div class="navlabel">Index</div>
+    <ol id="navlist">
+      <li><a href="#overview"><span class="num">00</span>Big picture</a></li>
+      <li><a href="#ex00"><span class="num">01</span>Streams &amp; strings</a></li>
+      <li><a href="#ex01"><span class="num">02</span>Classes &amp; encapsulation</a></li>
+      <li><a href="#ex02"><span class="num">03</span>Static members</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="sheet" id="overview">
+      <div class="sheetnum">Sheet 00</div>
+      <h2>The big picture</h2>
+      <p class="tagline">Module 00 isn't really about syntax. It's the moment data stops being a buffer you manage by hand and starts being an object that manages itself.</p>
+
+      <p>In C, "an account" would be a <code>struct</code> plus a pile of free functions that all take a pointer to it and hope nobody calls them out of order. C++ lets the data and the functions that operate on it live in one place, with rules the compiler enforces about who's allowed to touch what. Everything in this module &mdash; <code>std::string</code>, classes, <code>const</code>, <code>static</code> &mdash; is building toward that one shift.</p>
+
+      <h3>Rules worth keeping in view</h3>
+      <ul class="checklist">
+        <li><b>No STL yet</b> &mdash; no containers, no <code>&lt;algorithm&gt;</code>. That's Module 08/09. Fixed-size C-arrays and hand-written loops are the tool for now.</li>
+        <li><b>No printf(), *alloc(), free()</b> &mdash; the C++ standard library has a replacement for all of them; reaching for the C version is an instant 0, not a style deduction.</li>
+        <li><b>Header/implementation split is enforced</b> &mdash; a function body in a <code>.hpp</code> (outside templates) is worth 0 to the exercise, not just bad style.</li>
+        <li><b>Include guards are mandatory</b> &mdash; every header must be safely includable on its own, with no double-inclusion crashes.</li>
+        <li><b>No <code>using namespace std;</code></b> &mdash; every standard-library name gets its <code>std::</code> prefix, explicitly, every time.</li>
+      </ul>
+
+      <div class="note">
+        <span class="tag">Goodbye Norminette</span>
+        <p>No enforced style here &mdash; but "code your peer evaluator can't follow is code they can't grade" is doing the same job Norminette used to. Consistent naming and a header/implementation split people can actually navigate matters more than it did in C.</p>
+      </div>
+    </section>
+
+    <!-- ============ EX00 ============ -->
+    <section class="sheet" id="ex00">
+      <div class="sheetnum">Sheet 01 &middot; Exercise 00 &mdash; Megaphone</div>
+      <h2>Streams and std::string</h2>
+      <p class="tagline">A tiny exercise carrying two ideas that show up in every file from here on: stream objects, and strings that manage their own memory.</p>
+
+      <h3>cout / cin are objects, not syntax</h3>
+      <p><code>std::cout &lt;&lt; x</code> is an overloaded operator call, not special syntax &mdash; <code>&lt;&lt;</code> inserts into the stream and returns a reference to that same stream, which is exactly why <code>cout &lt;&lt; a &lt;&lt; b</code> chains. <code>std::endl</code> writes a newline <em>and</em> flushes the output buffer; <code>"\n"</code> only does the first. Default to <code>"\n"</code>, reach for <code>endl</code> only when the flush itself matters &mdash; the difference is invisible in a one-shot program but real in a loop that runs thousands of times.</p>
+
+      <h3>std::string vs a C string</h3>
+      <p>A C string is just a <code>char*</code> &mdash; you own the buffer, you track the length, and one off-by-one puts you past the end of it. <code>std::string</code> is a real object: it allocates its own memory in its constructor, frees it in its destructor, and knows its own length. That's the pattern called <b style="color:var(--text)">RAII</b> &mdash; resource acquisition is initialization &mdash; and it's the reason <code>+=</code> and <code>.length()</code> replace <code>strcat</code> and manual buffer math for the rest of the curriculum.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 01 &mdash; who's responsible for the memory</span>
+        <svg viewBox="0 0 640 210" role="img" aria-label="Diagram contrasting a raw C string buffer that must be managed manually with a std::string object that manages its own memory">
+          <rect x="30" y="30" width="270" height="150" rx="6" fill="none" stroke="#E88FB0" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>
+          <text x="44" y="54" font-family="IBM Plex Mono" font-size="12" fill="#E88FB0" letter-spacing="1">C STRING &mdash; char*</text>
+          <rect x="48" y="72" width="234" height="46" rx="4" fill="#122B4B" stroke="#E88FB0" stroke-width="1"/>
+          <text x="165" y="99" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">'F' 'o' 'o' '\0' ...</text>
+          <text x="48" y="140" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">you allocate it</text>
+          <text x="48" y="158" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">you track the length</text>
+          <text x="48" y="176" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">you must free it yourself</text>
+
+          <rect x="340" y="30" width="270" height="150" rx="6" fill="none" stroke="#7FD9A8" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>
+          <text x="354" y="54" font-family="IBM Plex Mono" font-size="12" fill="#7FD9A8" letter-spacing="1">STD::STRING &mdash; object</text>
+          <rect x="358" y="72" width="234" height="46" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="475" y="99" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">"Foo"</text>
+          <text x="358" y="140" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">constructor allocates internally</text>
+          <text x="358" y="158" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">.length() tracked for you</text>
+          <text x="358" y="176" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">destructor frees automatically</text>
+        </svg>
+      </div>
+
+      <h3>Casts, and one real gotcha</h3>
+      <p>A C-style cast like <code>(int)x</code> silently picks whichever of <code>static_cast</code>, <code>const_cast</code>, or <code>reinterpret_cast</code> the context allows &mdash; C++ gives you four named casts that each do one specific thing and fail to compile if misused. <code>static_cast&lt;int&gt;(x)</code> is more typing for the same result, but it's a reflex worth building now.</p>
+
+      <div class="note warn">
+        <span class="tag">Real bug, not a style note</span>
+        <p><code>std::toupper</code> takes a value representable as <code>unsigned char</code> or <code>EOF</code>. Passing it a plain (likely signed) <code>char</code> that happens to hold a negative byte value is undefined behavior, not just untidy &mdash; the fix is <code>std::toupper(static_cast&lt;unsigned char&gt;(c))</code>. It's an easy one to never notice on your own machine and worth internalizing now, since it'll keep coming up anywhere character-classification functions touch raw <code>char</code> values.</p>
+      </div>
+    </section>
+
+    <!-- ============ EX01 ============ -->
+    <section class="sheet" id="ex01">
+      <div class="sheetnum">Sheet 02 &middot; Exercise 01 &mdash; My Awesome PhoneBook</div>
+      <h2>Classes, encapsulation &amp; constructors</h2>
+      <p class="tagline">The exercise where "anything used inside the class is private, anything used outside is public" stops being a slogan and becomes a design decision you make for every member.</p>
+
+      <h3>Encapsulation</h3>
+      <p>A class's private data can only be touched through the public interface it chooses to expose. That's not bureaucracy, it means the class can change how it stores something internally without breaking anyone who only ever called its public methods, and it means invariants (like "no field can be empty") can actually be enforced in one place instead of trusted to every call site.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 02 &mdash; the only two doors into a Contact's private data</span>
+        <svg viewBox="0 0 640 200" role="img" aria-label="Diagram of a class's private fields walled off, accessible only through public setter and getter methods">
+          <rect x="200" y="20" width="240" height="160" rx="8" fill="none" stroke="#E88FB0" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="320" y="44" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E88FB0" letter-spacing="1">PRIVATE</text>
+          <rect x="222" y="58" width="196" height="34" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="0.8"/>
+          <text x="320" y="80" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">_firstName, _lastName ...</text>
+          <rect x="222" y="100" width="196" height="34" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="0.8"/>
+          <text x="320" y="122" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">_phoneNumber, _darkestSecret</text>
+
+          <rect x="30" y="70" width="140" height="40" rx="5" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="100" y="94" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7FD9A8">setFirstName()</text>
+          <rect x="470" y="70" width="140" height="40" rx="5" fill="#122B4B" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="540" y="94" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#5FC7EC">getFirstName()</text>
+
+          <defs>
+            <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5FC7EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <path d="M170 90 L198 90" fill="none" stroke="#7FD9A8" stroke-width="1.3" marker-end="url(#a1)"/>
+          <path d="M442 90 L468 90" fill="none" stroke="#5FC7EC" stroke-width="1.3" marker-end="url(#a1)"/>
+          <text x="320" y="176" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#5C7690">no other way in or out</text>
+        </svg>
+      </div>
+
+      <h3>Constructors &amp; the initialization list</h3>
+      <p>A constructor runs automatically the moment an object exists. The part after the colon, <code>: _count(0)</code>, is the <b style="color:var(--text)">member initialization list</b> and it's not interchangeable with assigning inside the constructor body, even when the visible result looks the same.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 03 &mdash; one step vs two, for the exact same value</span>
+        <svg viewBox="0 0 640 190" role="img" aria-label="Diagram comparing constructing a member directly via an initialization list against default-constructing it and then assigning in the constructor body">
+          <text x="30" y="26" font-family="IBM Plex Mono" font-size="12" fill="#7FD9A8" letter-spacing="1">: _count(0) {}</text>
+          <rect x="30" y="40" width="220" height="46" rx="5" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="140" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">_count constructed = 0</text>
+          <text x="270" y="68" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">one step, done</text>
+
+          <text x="30" y="120" font-family="IBM Plex Mono" font-size="12" fill="#E88FB0" letter-spacing="1">{ _count = 0; }</text>
+          <rect x="30" y="134" width="220" height="42" rx="5" fill="#122B4B" stroke="#5C7690" stroke-width="1"/>
+          <text x="140" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">_count default-constructed</text>
+          <rect x="270" y="134" width="150" height="42" rx="5" fill="#122B4B" stroke="#E88FB0" stroke-width="1"/>
+          <text x="345" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">then assigned 0</text>
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#E88FB0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <path d="M250 155 L268 155" fill="none" stroke="#E88FB0" stroke-width="1.3" marker-end="url(#a2)"/>
+          <text x="440" y="160" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">two steps, wasted work</text>
+        </svg>
+      </div>
+
+      <div class="note">
+        <span class="tag">Why this stops being cosmetic</span>
+        <p>For a plain <code>int</code> the compiler optimizes the difference away. It stops being optional the moment a member is <code>const</code>, a reference, or an object of a class with no default constructor. Those can only be set once, at construction, so assignment in the body won't compile at all. Building the init-list habit now means you're not relearning it under pressure later.</p>
+      </div>
+
+      <h3>const-correctness on getters</h3>
+      <p><code>std::string getFirstName() const;</code> &mdash; the trailing <code>const</code> is a compiler-enforced promise that calling this method cannot modify the object. Reading a contact's name shouldn't be able to mutate the contact; marking every read-only method <code>const</code> is what lets the compiler catch it if it ever accidentally could.</p>
+
+      <h3>What the compiler writes for you</h3>
+      <p>Declare no constructors, destructor, or assignment operator yourself, and the compiler silently generates a default constructor, copy constructor, copy assignment operator, and destructor. For a class like <code>Contact</code> whose only members are <code>std::string</code>s, the generated copy constructor &mdash; a plain memberwise copy &mdash; is completely correct, which is why passing a <code>Contact</code> by value into <code>PhoneBook::addContact</code> just works with no code written for it.</p>
+
+      <div class="note warn">
+        <span class="tag">Where this stops being safe</span>
+        <p>That free memberwise copy only stays correct as long as nothing in the class owns raw allocated memory. The moment a class holds a pointer from <code>new</code>, the compiler-generated copy constructor copies the pointer, not what it points to &mdash; two objects end up pointing at the same memory, and one destructor eventually frees it out from under the other. That's exactly why the <b style="color:var(--text)">Orthodox Canonical Form</b> becomes mandatory starting Module 02. Not relevant yet with plain <code>std::string</code> members &mdash; just worth knowing why the rule exists before you meet it.</p>
+      </div>
+
+      <h3>iomanip, briefly</h3>
+      <p><code>std::setw(10)</code> fixes the field width for the next thing printed, <code>std::right</code> right-aligns it &mdash; both live in <code>&lt;iomanip&gt;</code> and both need to be re-applied before each field, since <code>setw</code> only affects the single next insertion. Truncation to "9 characters + a dot" is manual string logic (<code>.substr()</code>), not something <code>iomanip</code> does for you.</p>
+    </section>
+
+    <!-- ============ EX02 ============ -->
+    <section class="sheet" id="ex02">
+      <div class="sheetnum">Sheet 03 &middot; Exercise 02 &mdash; The Job Of Your Dreams (optional)</div>
+      <h2>Static members &amp; reconstructing from a spec</h2>
+      <p class="tagline">Recreating Account.cpp from a header and a log file is really an exercise in two things: static state, and disciplined output-matching.</p>
+
+      <h3>static: one copy, shared by every instance</h3>
+      <p>A normal member variable is per-object &mdash; each <code>Account</code> has its own <code>_amount</code>. A <code>static</code> member variable belongs to the <em>class itself</em>: there's exactly one copy, shared across every instance, which is exactly the shape you need for something like "how many accounts exist in total" or "total amount currently deposited across the whole bank."</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 04 &mdash; per-instance data vs one shared class-level counter</span>
+        <svg viewBox="0 0 640 220" role="img" aria-label="Diagram of three Account instances each with their own amount, all incrementing one shared static counter at the class level">
+          <rect x="30" y="30" width="150" height="70" rx="5" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="105" y="55" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">Account a</text>
+          <text x="105" y="73" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">_amount = 4200</text>
+
+          <rect x="245" y="30" width="150" height="70" rx="5" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="320" y="55" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">Account b</text>
+          <text x="320" y="73" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">_amount = 1000</text>
+
+          <rect x="460" y="30" width="150" height="70" rx="5" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="535" y="55" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">Account c</text>
+          <text x="535" y="73" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">_amount = 900</text>
+
+          <rect x="200" y="150" width="240" height="50" rx="5" fill="#122B4B" stroke="#F2A65A" stroke-width="1.3"/>
+          <text x="320" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#F2A65A">static int _nbAccounts = 3</text>
+
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#F2A65A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <path d="M105 100 L105 130 L320 130 L320 148" fill="none" stroke="#F2A65A" stroke-width="1" opacity="0.8" marker-end="url(#a3)"/>
+          <path d="M320 100 L320 148" fill="none" stroke="#F2A65A" stroke-width="1" opacity="0.8" marker-end="url(#a3)"/>
+          <path d="M535 100 L535 130 L320 130" fill="none" stroke="#F2A65A" stroke-width="1" opacity="0.8"/>
+          <text x="320" y="128" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC" dy="-4">every constructor increments the same shared counter</text>
+        </svg>
+      </div>
+
+      <p>A <code>static</code> member <em>function</em> follows from this: it can be called without any instance (<code>Account::displayAccountsInfos()</code> rather than through an object), and correspondingly it can only touch other <code>static</code> data &mdash; it has no instance to work with, so there's no <code>_amount</code> for it to see.</p>
+
+      <div class="cols">
+        <div class="cardmini">
+          <h4>Instance data</h4>
+          <p>Belongs to one object. <code>_amount</code>, <code>_nbDeposits</code> &mdash; each <code>Account</code> has its own. Needs an object to exist at all.</p>
+        </div>
+        <div class="cardmini">
+          <h4>Class data</h4>
+          <p>Belongs to the class as a whole. <code>_nbAccounts</code>, <code>_totalAmount</code> &mdash; one copy, shared, updated from every constructor/destructor/deposit/withdraw call regardless of which instance triggered it.</p>
+        </div>
+      </div>
+
+      <h3>Reconstructing behavior from a log</h3>
+      <p>This exercise isn't testing whether you can invent an <code>Account</code> class &mdash; the header is already given. It's testing whether you can read a specification (the header's declared interface) and a record of expected behavior (the log) and produce an implementation that matches both exactly. A few habits that generalize well beyond this one exercise:</p>
+
+      <ul class="checklist">
+        <li><b>Match structure before matching values</b> &mdash; get the shape of each printed line right first, then worry about getting the exact numbers right.</li>
+        <li><b>Timestamps will differ, and that's expected</b> &mdash; the log was generated before you existed as a student; don't chase matching the literal timestamp, only its format.</li>
+        <li><b>Destructor order isn't guaranteed</b> &mdash; the subject calls this out explicitly. If your accounts are destroyed in a different order than the reference log, that alone isn't a sign something's wrong.</li>
+        <li><b>Test incrementally</b> &mdash; run <code>tests.cpp</code> against small pieces of behavior as you implement them, rather than writing the whole class and debugging against the full log at the end.</li>
+      </ul>
+
+      <div class="note">
+        <span class="tag">Not mandatory, still worth doing</span>
+        <p>The subject explicitly says finishing this exercise isn't required to pass the module. It's still the best static-members practice in Module 00 &mdash; worth attempting even under time pressure, since this exact class-level-vs-instance-level distinction reappears constantly from here on.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>C++ Module 00 refresher &middot; concepts only, exercises are yours to write</footer>
+
+<script>
+  var links = document.querySelectorAll('nav.sidebar a');
+  var sections = Array.prototype.map.call(links, function(l){ return document.querySelector(l.getAttribute('href')); });
+  function setActive(){
+    var y = window.scrollY + 120;
+    var current = sections[0];
+    sections.forEach(function(s){ if(s && s.offsetTop <= y) current = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    var idx = sections.indexOf(current);
+    if(idx >= 0) links[idx].classList.add('active');
+  }
+  document.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>
