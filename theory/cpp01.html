@@ -260,7 +260,7 @@
       <h2>Single allocation, many objects</h2>
       <p class="tagline"><code>Zombie* zombieHorde(int N, std::string name)</code> &mdash; N objects, one allocation, one pointer back to the first.</p>
 
-      <p>"Single allocation" is the operative phrase. Calling <code>new Zombie(...)</code> N times in a loop would give you N <em>separate</em> allocations scattered wherever the heap happens to put them &mdash; and you'd need to track N different pointers to free them all. The array form of <code>new</code>, written <code>new Zombie[N]</code>, does something different: it asks the heap for one contiguous block big enough for N objects, and hands you back a single pointer to the first one. Pointer arithmetic (<code>horde + i</code>) or array indexing (<code>horde[i]</code>) gets you to the rest.</p>
+      <p>"Single allocation" is the operative phrase. Calling <code>new Zombie(...)</code> N times in a loop would give you N <em>separate</em> allocations scattered wherever the heap happens to put them, and you'd need to track N different pointers to free them all. The array form of <code>new</code>, written <code>new Zombie[N]</code>, does something different: it asks the heap for one contiguous block big enough for N objects, and hands you back a single pointer to the first one. Pointer arithmetic (<code>horde + i</code>) or array indexing (<code>horde[i]</code>) gets you to the rest.</p>
 
       <div class="diagram">
         <span class="fig">Fig. 02 &mdash; new Zombie[N] vs N separate new calls</span>
@@ -313,7 +313,7 @@
       <h2>Pointers vs references</h2>
       <p class="tagline">Same underlying idea &mdash; address manipulation &mdash; two different syntaxes with one crucial difference.</p>
 
-      <p>A pointer is its own object: it has its own address, it can be reassigned to point somewhere else, it can be null, and you need <code>*</code> to get at what it points to. A reference is not a separate object at all &mdash; it's an alias, a second name for a variable that already exists. It must be bound at creation, it can never be reseated to refer to something else, and it can never be null.</p>
+      <p>A pointer is its own object: it has its own address, it can be reassigned to point somewhere else, it can be null, and you need <code>*</code> to get at what it points to. A reference is not a separate object at all. It's an alias, a second name for a variable that already exists. It must be bound at creation, it can never be reseated to refer to something else, and it can never be null.</p>
 
       <div class="diagram">
         <span class="fig">Fig. 03 &mdash; the same string, a pointer to it, and a reference to it</span>
@@ -413,7 +413,7 @@
       <h2>Pointers to member functions</h2>
       <p class="tagline">The goal stated directly in the subject: dispatch without a forest of if/else if/else.</p>
 
-      <p>A pointer to a member function isn't like a regular function pointer &mdash; it can't be called on its own, because a member function implicitly needs an object (a <code>this</code>) to run against. The syntax reflects that: it's a pointer <em>scoped to the class</em>, and calling it requires supplying an object alongside it.</p>
+      <p>A pointer to a member function isn't like a regular function pointer, it can't be called on its own, because a member function implicitly needs an object (a <code>this</code>) to run against. The syntax reflects that: it's a pointer <em>scoped to the class</em>, and calling it requires supplying an object alongside it.</p>
 
       <div class="annot">
         <pre><span class="kw">void</span> (Logger::*handler)(<span class="kw">void</span>) = &amp;Logger::warn;
@@ -440,7 +440,7 @@
       <h2>Switch statements &amp; fallthrough</h2>
       <p class="tagline">"Display all messages from this level and above" is a fallthrough problem in disguise.</p>
 
-      <p><code>switch</code> jumps to the matching <code>case</code> label and then keeps executing forward through every subsequent case until it hits a <code>break</code> &mdash; it doesn't stop at the end of the matched case on its own. That's usually the bug you guard against with a <code>break</code> in every case. Here it's the feature: if levels are ordered DEBUG &rarr; INFO &rarr; WARNING &rarr; ERROR and you omit the <code>break</code>, matching WARNING and falling through naturally prints WARNING and everything below it.</p>
+      <p><code>switch</code> jumps to the matching <code>case</code> label and then keeps executing forward through every subsequent case until it hits a <code>break</code>. It doesn't stop at the end of the matched case on its own. That's usually the bug you guard against with a <code>break</code> in every case. Here it's the feature: if levels are ordered DEBUG &rarr; INFO &rarr; WARNING &rarr; ERROR and you omit the <code>break</code>, matching WARNING and falling through naturally prints WARNING and everything below it.</p>
 
       <div class="diagram">
         <span class="fig">Fig. 05 &mdash; matching WARNING falls through to ERROR when there's no break</span>
