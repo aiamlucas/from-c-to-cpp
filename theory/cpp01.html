@@ -157,6 +157,14 @@
   }
   .annot li b{color:var(--text); font-family:var(--mono); font-weight:500;}
 
+  .cmp-wrap{overflow-x:auto; margin:18px 0 26px;}
+  .cmp{width:100%; border-collapse:collapse; font-size:13.5px; min-width:480px;}
+  .cmp th, .cmp td{padding:10px 16px; border:1px solid var(--cyan-dim); text-align:left; vertical-align:top;}
+  .cmp thead th{background:var(--card-2); color:var(--cyan); font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;}
+  .cmp tbody th{background:var(--card); color:var(--text); font-family:var(--mono); font-weight:500; font-size:13px; white-space:nowrap;}
+  .cmp tbody td{background:var(--card); color:var(--text-dim);}
+  .cmp tbody tr:nth-child(odd) th, .cmp tbody tr:nth-child(odd) td{background:var(--card-2);}
+
   footer{border-top:1px solid var(--cyan-dim); padding:28px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
 
   @media (max-width:860px){
@@ -260,7 +268,7 @@
       <h2>Single allocation, many objects</h2>
       <p class="tagline"><code>Zombie* zombieHorde(int N, std::string name)</code> &mdash; N objects, one allocation, one pointer back to the first.</p>
 
-      <p>"Single allocation" is the operative phrase. Calling <code>new Zombie(...)</code> N times in a loop would give you N <em>separate</em> allocations scattered wherever the heap happens to put them, and you'd need to track N different pointers to free them all. The array form of <code>new</code>, written <code>new Zombie[N]</code>, does something different: it asks the heap for one contiguous block big enough for N objects, and hands you back a single pointer to the first one. Pointer arithmetic (<code>horde + i</code>) or array indexing (<code>horde[i]</code>) gets you to the rest.</p>
+      <p>"Single allocation" is the operative phrase. Calling <code>new Zombie(...)</code> N times in a loop would give you N <em>separate</em> allocations scattered wherever the heap happens to put them &mdash; and you'd need to track N different pointers to free them all. The array form of <code>new</code>, written <code>new Zombie[N]</code>, does something different: it asks the heap for one contiguous block big enough for N objects, and hands you back a single pointer to the first one. Pointer arithmetic (<code>horde + i</code>) or array indexing (<code>horde[i]</code>) gets you to the rest.</p>
 
       <div class="diagram">
         <span class="fig">Fig. 02 &mdash; new Zombie[N] vs N separate new calls</span>
@@ -311,9 +319,60 @@
     <section class="sheet" id="ex02">
       <div class="sheetnum">Sheet 03 &middot; Exercise 02 &mdash; HI THIS IS BRAIN</div>
       <h2>Pointers vs references</h2>
-      <p class="tagline">Same underlying idea &mdash; address manipulation &mdash; two different syntaxes with one crucial difference.</p>
+      <p class="tagline">Coming from C you already know pointers. The reference is the genuinely new idea here, and it's an easy one to tangle up with the phrase "pass by reference," which gets used loosely even when what's actually happening under the hood is passing a pointer.</p>
 
-      <p>A pointer is its own object: it has its own address, it can be reassigned to point somewhere else, it can be null, and you need <code>*</code> to get at what it points to. A reference is not a separate object at all. It's an alias, a second name for a variable that already exists. It must be bound at creation, it can never be reseated to refer to something else, and it can never be null.</p>
+      <p>A reference is not a separate object at all. It's an alias, a second name for a variable that already exists. Nothing gets allocated, nothing gets copied. Once it's bound, it can never point anywhere else and it can never be null, because there's no separate "it" to begin with, just another label on the same variable.</p>
+
+      <pre><span class="tp">int</span> score = 10;
+<span class="tp">int</span> &amp;nickname = score;   <span class="cm">// nickname is just another name for score</span>
+
+nickname = 20;                    <span class="cm">// changes score too, they're the same variable</span>
+std::cout &lt;&lt; score;               <span class="cm">// prints 20</span></pre>
+
+      <div class="note">
+        <span class="tag">In plain terms</span>
+        <p>Think of it like calling someone by a nickname. The nickname isn't a second person standing next to them, it's just another way to refer to the one person who's there. Change what the nickname points to and you've changed the original directly, because they were never two things.</p>
+      </div>
+
+      <p>A pointer is a genuinely different object. It has its own address and its own storage, and what it holds is another variable's address, a value you're free to change:</p>
+
+      <pre><span class="tp">int</span> *scorePtr = &amp;score;   <span class="cm">// scorePtr holds the address of score</span>
+
+*scorePtr = 30;                    <span class="cm">// dereference to reach score and change it</span>
+scorePtr = &amp;otherVar;             <span class="cm">// reseat it: now it points somewhere else entirely</span></pre>
+
+      <p>That's the whole difference in one line: a pointer is a box that holds an address and can be emptied or refilled; a reference isn't a box at all, just a second label taped onto a box that already exists.</p>
+
+      <p>C has no version of this at all, and that's not an oversight, it's a design choice. C's whole philosophy keeps indirection visible: an address is always a value sitting in a variable you can see, print, reseat, or set to null, nothing ever hides that a pointer is a pointer. C++ added references specifically to break that visibility on purpose, in exchange for two things C didn't prioritize: overloaded operators that read like plain expressions instead of pointer-juggling function calls, and function parameters you can modify without pointer syntax showing up at the call site. References aren't a newer feature C forgot to add, they conflict with a rule C set on purpose. The closest C gets is a pointer you dereference by hand every single time you touch it:</p>
+
+      <pre><span class="cm">/* the same idea, in C */</span>
+<span class="tp">int</span> score = 10;
+<span class="tp">int</span> *nickname = &amp;score;
+
+*nickname = 20;             <span class="cm">// the * is mandatory here, C won't insert it for you</span>
+printf(<span class="tp">"%d"</span>, score);     <span class="cm">// prints 20</span></pre>
+
+      <div class="note">
+        <span class="tag">Under the hood</span>
+        <p>On most compilers a C++ reference compiles down to exactly that: an address stored somewhere, dereferenced automatically on every access. It isn't a different runtime mechanism from a pointer, it's the compiler agreeing to insert the <code>*</code> for you and refusing to ever let the address be null or reseated. The safety is a compile-time contract, not a hardware feature.</p>
+      </div>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead>
+            <tr><th>Property</th><th>Pointer (T*)</th><th>Reference (T&amp;)</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Must be set when declared</th><td>No, can declare now, assign later</td><td>Yes, has to bind at declaration</td></tr>
+            <tr><th scope="row">Can be null / unbound</th><td>Yes, <code>0</code> in C++98</td><td>No, always refers to a real object</td></tr>
+            <tr><th scope="row">Can be reseated later</th><td>Yes: <code>ptr = &amp;other;</code></td><td>No, bound for its whole lifetime</td></tr>
+            <tr><th scope="row">Has its own address</th><td>Yes: <code>&amp;ptr</code> is a distinct address</td><td>No: <code>&amp;ref</code> returns the referee's address</td></tr>
+            <tr><th scope="row">Access the underlying object</th><td><code>*ptr</code>, or <code>ptr-&gt;member</code></td><td><code>ref</code> directly, or <code>ref.member</code></td></tr>
+            <tr><th scope="row">Supports arithmetic</th><td>Yes: <code>ptr++</code>, <code>ptr + 1</code></td><td>No</td></tr>
+            <tr><th scope="row">Reaches for it when&hellip;</th><td>the relationship is optional, reassignable, or the object's lifetime is managed elsewhere (heap ownership)</td><td>the relationship is mandatory and fixed, including most function parameters, to avoid a copy</td></tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="diagram">
         <span class="fig">Fig. 03 &mdash; the same string, a pointer to it, and a reference to it</span>
@@ -338,7 +397,7 @@
         </svg>
       </div>
 
-      <p>So printing "the address held by <code>stringREF</code>" isn't really a separate lookup. Taking <code>&stringREF</code> gives you back <code>&string</code>, because as far as the compiler's concerned they're the same object wearing a second name.</p>
+      <p>So printing "the address held by <code>stringREF</code>" isn't really a separate lookup &mdash; taking <code>&stringREF</code> gives you back <code>&string</code>, because as far as the compiler's concerned they're the same object wearing a second name.</p>
     </section>
 
     <!-- ============ EX03 ============ -->
@@ -358,6 +417,19 @@
           <h4>HumanB &mdash; maybe armed</h4>
           <p>Doesn't take a <code>Weapon</code> at construction, and might not have one at all, or might get one later via <code>setWeapon()</code>. A <b style="color:var(--text)">pointer member</b> fits: it can start out null (no weapon yet), and it can be reassigned when <code>setWeapon()</code> is called. Neither of those is possible with a reference.</p>
         </div>
+      </div>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead>
+            <tr><th>As a member</th><th>HumanA::_weapon (Weapon&amp;)</th><th>HumanB::_weapon (Weapon*)</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Set in the constructor</th><td>Required, via the init list</td><td>Not taken there, HumanB's constructor doesn't need one</td></tr>
+            <tr><th scope="row">Can be absent</th><td>No, always armed by construction</td><td>Yes, starts with no weapon until <code>setWeapon()</code> runs</td></tr>
+            <tr><th scope="row">Can change target later</th><td>No, the same <code>Weapon</code> for its whole life</td><td>Yes, <code>setWeapon()</code> can reseat it any time</td></tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="diagram">
