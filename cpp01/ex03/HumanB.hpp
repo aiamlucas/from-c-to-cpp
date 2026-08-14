@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/08 19:34:25 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/07/08 19:48:14 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/14 21:31:38 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,16 @@
 class HumanB {
 private:
     std::string _name;
+    // here is a normal pointer
     Weapon *_weapon; // it can be NULL (in case no weapon)
+                     // it can be assigned later via setWeapon()
 
 public:
-    HumanB(std::string name);
-    void attack() const; // const at the end here means a promise --> this
-                         // method only reads, never writes
-    void setWeapon(Weapon &weapon);
+    // no weapon in the constructor -> HumanB starts unarmed
+    HumanB(const std::string &name);
+    void attack() const; // const -> only reads never writes
+
+    void setWeapon(Weapon &weapon); // assigns a weapon later
 };
 
 #endif
