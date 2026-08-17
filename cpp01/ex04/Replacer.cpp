@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/16 17:29:18 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/16 17:47:22 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/17 08:54:25 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 Replacer::Replacer(const std::string &fileName, const std::string &s1,
                    const std::string &s2)
     : _fileName(fileName), _s1(s1), _s2(s2) {}
+
+Replacer::~Replacer() {}
 
 std::string Replacer::_replaceLine(const std::string &line) {
     std::string result;
