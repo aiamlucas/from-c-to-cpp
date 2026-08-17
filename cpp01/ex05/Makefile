@@ -6,7 +6,7 @@
 #    By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/08/16 21:28:42 by lbueno-m          #+#    #+#              #
-#    Updated: 2026/08/16 21:28:52 by lbueno-m         ###   ########.fr        #
+#    Updated: 2026/08/17 10:35:08 by lbueno-m         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,9 +19,7 @@ CFLAGS += -g -O0
 endif
 
 SRC     =  main.cpp
-SRC     +=  HumanA.cpp
-SRC     +=  HumanB.cpp
-SRC     +=  Weapon.cpp
+SRC     +=  Harl.cpp
 
 OBJ     =  $(SRC:.cpp=.o)
 
