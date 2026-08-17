@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/16 17:20:01 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/16 17:47:39 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/17 08:49:25 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ private:
 public:
     Replacer(const std::string &fileName, const std::string &s1,
              const std::string &s2);
+    ~Replacer();
     void run();
 };
 
