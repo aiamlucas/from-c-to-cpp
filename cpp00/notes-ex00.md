@@ -115,20 +115,20 @@ std::string s("he\0llo", 5);   // explicit length
                               but the data is all there
 ```
 
-> Why does this matter? Binary data file contents, network packets and encrypted data can contain \0 bytes naturally. C strings can't hold them, but std::string can.
+> WHY DOES THIS MATTER? BINARY DATA FILE CONTENTS, NETWORK PACKETS AND ENCRYPTED DATA CAN CONTAIN \0 BYTES NATURALLY. C STRINGS CAN'T HOLD THEM, BUT STD::STRING CAN.
 
 ---
 
-## Character manipulation — cctype
+## CHARACTER MANIPULATION — CCTYPE
 
-`<cctype>` is the C++ name for C's `<ctype.h>`. Same functions: `toupper`, `tolower`, `isalpha`, `isdigit`, `isspace`.
+`<CCTYPE>` IS THE C++ NAME FOR C'S `<CTYPE.H>`. SAME FUNCTIONS: `TOUPPER`, `TOLOWER`, `ISALPHA`, `ISDIGIT`, `ISSPACE`.
 
-`toupper(c)` returns the uppercase version of a char. Non-letter characters pass through unchanged.
+`TOUPPER(C)` RETURNS THE UPPERCASE VERSION OF A CHAR. NON-LETTER CHARACTERS PASS THROUGH UNCHANGED.
 
-**The correct cast:** `toupper` expects `unsigned char`. On platforms where `char` is signed, passing a negative char value is undefined behavior. Safe form:
+**THE CORRECT CAST:** `TOUPPER` EXPECTS `UNSIGNED CHAR`. ON PLATFORMS WHERE `CHAR` IS SIGNED, PASSING A NEGATIVE CHAR VALUE IS UNDEFINED BEHAVIOR. SAFE FORM:
 
-```cpp
-str[i] = toupper((unsigned char)str[i]);
+```CPP
+STR[I] = TOUPPER((UNSIGNED CHAR)STR[I]);
 ```
 
-For ASCII-only input this never surfaces, but it is the correct pattern.
+FOR ASCII-ONLY INPUT THIS NEVER SURFACES, BUT IT IS THE CORRECT PATTERN.
