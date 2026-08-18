@@ -6,11 +6,12 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 19:17:16 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/14 19:30:43 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/18 21:58:25 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Zombie.hpp"
+#include <iostream>
 
 int main(void) {
 
@@ -30,7 +31,7 @@ int main(void) {
 
     // Test 3 (testing destructor only)
     std::cout << "\n--- test 3 ---" << std::endl;
-    Zombie *ordered = zombieHorde(3, "Sunra");
-    delete[] ordered;
+    Zombie *trio = zombieHorde(3, "Sunra");
+    delete[] trio;
     return 0;
 }
