@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 19:17:10 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/18 21:58:04 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/18 23:11:27 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,13 @@ private:
     std::string _name;
 
 public:
-    Zombie();
+    Zombie(); // default constructor
     ~Zombie();
-    // alias to the caller's string, no copy made
     void setName(const std::string &name);
     void announce(void);
 };
 
-// free function (not a class member) - create an array of zombies
+// Creates an array of objects (Zombies) -- single allocation
 Zombie *zombieHorde(int N, const std::string &name);
 
 #endif
