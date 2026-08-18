@@ -6,13 +6,13 @@
 #    By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/07/09 19:16:56 by lbueno-m          #+#    #+#              #
-#    Updated: 2026/07/09 19:16:58 by lbueno-m         ###   ########.fr        #
+#    Updated: 2026/08/18 23:27:51 by lbueno-m         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC      = c++
 CFLAGS  = -Wall -Wextra -Werror -std=c++98
-NAME    = zombie
+NAME    = zombieHorde
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g -O0

@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 19:17:10 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/18 23:11:27 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/18 23:26:18 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,6 @@ public:
 };
 
 // Creates an array of objects (Zombies) -- single allocation
-Zombie *zombieHorde(int N, const std::string &name);
+Zombie *zombieHorde(int N, std::string name);
 
 #endif
