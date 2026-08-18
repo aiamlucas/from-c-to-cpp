@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cpp01 — Evaluation Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f18;
+    --bg-2:#13141f;
+    --card:#181926;
+    --card-2:#1e2030;
+    --border:rgba(96,192,186,0.20);
+    --cyan:#4fbfb2;
+    --amber:#cf9247;
+    --green:#9db54a;
+    --red:#e0645f;
+    --violet:#b58ad9;
+    --text:#c9d2f0;
+    --text-dim:#8b93b8;
+    --text-faint:#5c6390;
+    --sans:'Roboto', sans-serif;
+    --mono:'Roboto Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(79,191,178,0.05), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  .titleblock{border-bottom:1px solid var(--border); padding:44px 0 26px;}
+  .titleblock .tag{font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--cyan); text-transform:uppercase; margin-bottom:10px;}
+  .titleblock h1{font-family:var(--sans); font-weight:700; font-size:clamp(28px,4vw,42px); color:#fff;}
+  .titleblock .sub{font-size:16px; color:var(--text-dim); max-width:620px; margin-top:10px;}
+  .titleblock .genrow{margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;}
+  .titleblock .genchip{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); background:var(--card); border:1px solid var(--border); border-radius:20px; padding:6px 14px;}
+  .titleblock .genchip b{color:var(--cyan); font-weight:500;}
+
+  .layout{display:grid; grid-template-columns:220px 1fr; gap:44px; padding:36px 0 100px;}
+  nav.sidebar{position:sticky; top:24px; align-self:start; height:fit-content;}
+  nav.sidebar .navlabel{font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--text-faint); text-transform:uppercase; margin-bottom:14px;}
+  nav.sidebar ol{list-style:none; border-left:1px solid var(--border);}
+  nav.sidebar a{display:block; padding:9px 0 9px 16px; font-family:var(--mono); font-size:13px; color:var(--text-dim); text-decoration:none; border-left:2px solid transparent; margin-left:-1px; transition:color .15s, border-color .15s;}
+  nav.sidebar a:hover{color:var(--text);}
+  nav.sidebar a.active{color:var(--cyan); border-left-color:var(--cyan);}
+
+  main{min-width:0;}
+  section.sheet{padding-top:8px; margin-bottom:88px; scroll-margin-top:24px;}
+  section.sheet .exnum{font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--text-faint); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:10px;}
+  section.sheet .exnum .optional{color:var(--amber); border:1px solid rgba(207,146,71,0.35); border-radius:4px; padding:1px 8px; font-size:10px; letter-spacing:.08em;}
+  section.sheet h2{font-family:var(--sans); font-weight:700; font-size:clamp(22px,2.6vw,30px); color:#fff; margin-bottom:6px;}
+  section.sheet .tagline{color:var(--text-dim); font-size:15px; margin-bottom:20px; max-width:680px;}
+  section.sheet h3{font-family:var(--mono); font-size:13px; font-weight:600; color:var(--text); letter-spacing:.03em; margin:34px 0 12px; display:flex; align-items:center; gap:9px;}
+  section.sheet h3 .filebadge{font-size:10px; color:var(--cyan); background:var(--card-2); border:1px solid var(--border); border-radius:4px; padding:2px 8px; text-transform:uppercase; letter-spacing:.06em;}
+  section.sheet h4{font-family:var(--sans); font-weight:700; font-size:15px; color:var(--cyan); margin:30px 0 10px;}
+  section.sheet p{max-width:700px; margin:0 0 20px; color:var(--text); font-size:15px;}
+  code{font-family:var(--mono); font-size:.9em; background:var(--card); padding:2px 6px; border-radius:3px; color:var(--green);}
+  pre{font-family:var(--mono); font-size:13px; line-height:1.65; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; overflow-x:auto; margin:0 0 10px; color:var(--text);}
+  pre .kw{color:var(--violet);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;} pre .st{color:var(--green);}
+
+  /* ---------- New-concepts recap ---------- */
+  .concepts{
+    border:1px solid var(--border); border-radius:8px; background:var(--card-2);
+    padding:16px 20px; margin:0 0 26px; max-width:700px;
+  }
+  .concepts .clabel{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); margin-bottom:12px; display:block;}
+  .concepts dl{display:grid; grid-template-columns:auto 1fr; gap:8px 16px; margin:0;}
+  .concepts dt{font-family:var(--mono); font-size:13px; color:var(--cyan); white-space:nowrap; font-weight:500; align-self:baseline;}
+  .concepts dd{font-size:13.5px; color:var(--text-dim); margin:0; align-self:baseline;}
+
+  .qa{border:1px solid var(--border); border-radius:8px; margin:0 0 14px; overflow:hidden; max-width:700px;}
+  .qa .q{background:var(--card-2); padding:12px 18px; font-family:var(--sans); font-weight:500; font-size:14.5px; color:#fff; display:flex; gap:10px;}
+  .qa .q::before{content:"Q"; font-family:var(--mono); color:var(--amber); font-weight:700;}
+  .qa .a{background:var(--card); padding:14px 18px; font-size:14.5px; color:var(--text-dim); display:flex; gap:10px;}
+  .qa .a::before{content:"A"; font-family:var(--mono); color:var(--cyan); font-weight:700; flex-shrink:0;}
+  .qa.checklist{border-color:rgba(157,181,74,0.35);}
+  .qa.checklist .q{border-left:3px solid var(--green);}
+  .qa.checklist .q::before{content:"✓"; color:var(--green);}
+
+  .checklist-note{
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--green); margin:34px 0 12px; display:flex; align-items:center; gap:8px;
+  }
+  .checklist-note::before{content:""; width:16px; height:1px; background:var(--green); display:inline-block;}
+
+  .pitch{font-size:17px; color:#fff; max-width:680px; margin:0 0 22px; padding:16px 20px; border:1px dashed var(--border); border-radius:8px; font-style:italic;}
+
+  footer{border-top:1px solid var(--border); padding:26px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.sidebar{position:relative; top:0; margin-bottom:8px;}
+    nav.sidebar ol{display:flex; flex-wrap:wrap; border-left:none;}
+    nav.sidebar a{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+    .concepts dl{grid-template-columns:1fr;}
+    .concepts dd{margin-bottom:4px;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <div class="wrap">
+    <p class="tag">cpp01</p>
+    <h1>Evaluation Walkthrough</h1>
+    <p class="sub">Peer-evaluation prep, exercise by exercise — a quick concept recap up front, the code walked through, then the actual questions an evaluator's checklist points at.</p>
+    <div class="genrow">
+      <span class="genchip">Every exercise: <b>Makefile</b> compiles clean with <b>-Wall -Wextra -Werror -std=c++98</b></span>
+      <span class="genchip">Every exercise: <b>main.cpp</b> has enough tests to prove it works, not just compile</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="sidebar">
+    <div class="navlabel">Index</div>
+    <ol id="navlist">
+      <li><a href="#ex00">ex00 &mdash; Zombie</a></li>
+      <li><a href="#ex01">ex01 &mdash; zombieHorde</a></li>
+      <li><a href="#ex02">ex02 &mdash; HI THIS IS BRAIN</a></li>
+      <li><a href="#ex03">ex03 &mdash; Unnecessary violence</a></li>
+      <li><a href="#ex04">ex04 &mdash; Sed is for losers</a></li>
+      <li><a href="#ex05">ex05 &mdash; Harl 2.0</a></li>
+      <li><a href="#ex06">ex06 &mdash; Harl filter</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ EX00 ============ -->
+    <section class="sheet" id="ex00">
+      <div class="exnum">ex00</div>
+      <h2>BraiiiiiiinnnzzzZ</h2>
+      <p class="tagline">Zombie, newZombie &amp; randomChump &mdash; the stack vs heap exercise.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>new / delete</dt>
+          <dd><code>new</code> allocates on the heap and runs the constructor; <code>delete</code> runs the destructor and frees the memory. Neither happens automatically.</dd>
+          <dt>automatic storage</dt>
+          <dd>A plain local object (no <code>new</code>) lives on the stack and is destroyed automatically the instant its scope ends.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"This exercise is about deciding when an object should live on the stack versus the heap. I've got a Zombie class with a destructor that prints on death so the lifetime is actually visible, then two functions that create a zombie each way, and my main proves the difference by watching when each one dies."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Zombie.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="cm">#ifndef</span> ZOMBIE_HPP
+<span class="cm">#define</span> ZOMBIE_HPP
+<span class="cm">#include</span> &lt;iostream&gt;
+<span class="cm">#include</span> &lt;string&gt;
+
+<span class="kw">class</span> Zombie {
+<span class="kw">private</span>:
+    <span class="tp">std::string</span> _name;</pre>
+      <p>This class stores exactly one thing, the zombie's name, and it's private. Nothing outside the class can touch <code>_name</code> directly, that's the encapsulation habit from Module 00 showing up here even though this exercise doesn't explicitly ask for it.</p>
+
+      <pre><span class="kw">public</span>:
+    Zombie(<span class="tp">std::string</span> name);
+    ~Zombie();
+    <span class="kw">void</span> announce(<span class="kw">void</span>);
+};
+
+Zombie *newZombie(<span class="tp">std::string</span> name);
+<span class="kw">void</span> randomChump(<span class="tp">std::string</span> name);
+<span class="cm">#endif</span></pre>
+      <p>The constructor takes the name, and the destructor and <code>announce()</code> are declared here too. The two free functions, <code>newZombie</code> and <code>randomChump</code>, are also declared in this header rather than only used inside <code>main.cpp</code>, because both <code>.cpp</code> files that implement them need to see this header, and anyone else including it gets the whole public interface in one place.</p>
+
+      <h3>Zombie.cpp <span class="filebadge">constructor, destructor, announce</span></h3>
+      <pre>Zombie::Zombie(<span class="tp">std::string</span> name) : _name(name) {}</pre>
+      <p>This is the initialization list. It builds <code>_name</code> directly from the argument, instead of default-constructing it and assigning inside the body afterward. The visible result is the same either way here, but this is the correct habit to already have.</p>
+
+      <pre>Zombie::~Zombie() { std::cout &lt;&lt; _name &lt;&lt; <span class="st">" destroyed"</span> &lt;&lt; std::endl; }</pre>
+      <p>The subject requires the destructor to print for debugging, and this is what makes it possible to see. Without this line, an object's death would be completely invisible, you'd have no way to know when it actually happened.</p>
+
+      <pre><span class="kw">void</span> Zombie::announce(<span class="kw">void</span>) {
+    std::cout &lt;&lt; _name &lt;&lt; <span class="st">": BraiiiiiiinnnzzzZ..."</span> &lt;&lt; std::endl;
+}</pre>
+      <p>This matches the subject's exact output format: the name, a colon, then the message. No angle brackets appear in the real output, those were only in the subject to mark where the name goes.</p>
+
+      <h3>newZombie.cpp <span class="filebadge">heap</span></h3>
+      <pre>Zombie *newZombie(<span class="tp">std::string</span> name) { <span class="kw">return</span> <span class="kw">new</span> Zombie(name); }</pre>
+      <p>One line, but it's the whole point of the exercise. <code>new</code> allocates the zombie on the heap, and the pointer it returns stays valid after this function ends. That's the only way to satisfy "returns it so you can use it outside the function scope," a stack-allocated zombie would already be destroyed by the time the caller got it back.</p>
+
+      <h3>randomChump.cpp <span class="filebadge">stack</span></h3>
+      <pre><span class="kw">void</span> randomChump(<span class="tp">std::string</span> name) {
+    Zombie z(name);
+    z.announce();
+}</pre>
+      <p><code>z</code> lives on the stack here. It's destroyed automatically the instant this function returns, so there's no <code>delete</code> anywhere in this function because none is needed.</p>
+
+      <h3>main.cpp <span class="filebadge">tests</span></h3>
+      <pre>{
+    Zombie stackZombie(<span class="st">"StackZombie"</span>);
+    stackZombie.announce();
+}
+std::cout &lt;&lt; <span class="st">"--- stack zombie is already gone ---"</span> &lt;&lt; std::endl;</pre>
+      <p>Those bare braces force the zombie out of scope early, on purpose. Watch the output when this runs: <code>"StackZombie destroyed"</code> prints before <code>"already gone"</code>, which is proof, not just a claim, that the destructor already ran by that point.</p>
+
+      <pre>Zombie *heapZombie = newZombie(<span class="st">"HeapZombie"</span>);
+heapZombie-&gt;announce();
+std::cout &lt;&lt; <span class="st">"--- heap zombie still alive here ---"</span> &lt;&lt; std::endl;
+delete heapZombie;</pre>
+      <p>This zombie is on the heap, so it survives past the function that created it. It needs an explicit <code>delete</code> because nothing frees heap memory automatically, this pairs with the <code>new</code> inside <code>newZombie</code>: one <code>new</code>, one <code>delete</code>.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why is <code>_name</code> private instead of public?</div><div class="a">Encapsulation. Nothing outside the class needs to rename a zombie directly, and keeping it private means if I ever wanted to validate or log a name change, there's exactly one place to add that.</div></div>
+      <div class="qa"><div class="q">Why does <code>newZombie</code> return a pointer instead of a <code>Zombie</code> by value?</div><div class="a">Because the object has to outlive this function. A stack-allocated Zombie would be destroyed the moment the function returns, a pointer to heap memory is the only thing that survives past the creating scope.</div></div>
+      <div class="qa"><div class="q">What happens if you forget the <code>delete</code> on <code>heapZombie</code>?</div><div class="a">Memory leak. The heap block becomes unreachable, nothing ever frees it, and the destructor never runs so you'd lose the debug print too. I can show that with valgrind if you want.</div></div>
+      <div class="qa"><div class="q">Why doesn't <code>randomChump</code> need a <code>delete</code>?</div><div class="a"><code>z</code> is on the stack, its destructor fires automatically the moment the function's scope ends. Nothing to free manually because nothing was manually allocated.</div></div>
+      <div class="qa"><div class="q">Can you prove the stack zombie is actually destroyed when you say it is?</div><div class="a">That's what the braces in main are for. Watch the output, the destroyed message prints before the next line runs, so the destructor already fired by then.</div></div>
+
+      <div class="checklist-note">Important: </div>
+      <div class="qa checklist"><div class="q">Can you justify the choice for randomChump &mdash; stack, or heap with an explicit delete. Which did you pick, and why?</div><div class="a">Stack. randomChump's zombie only needs to exist for the duration of the function, it announces itself and then it's done, so there's no reason to hand it a longer lifetime than that. Heap would work too and the sheet accepts it, but it would mean remembering a delete for an object that never needed to outlive the function in the first place, extra responsibility with no benefit here.</div></div>
+      <div class="qa checklist"><div class="q">Does the Zombie from newZombie get deleted correctly before the program ends?</div><div class="a">Yes, <code>delete heapZombie;</code> runs in main before <code>return 0;</code>. I can point to the destructor's print in the output as proof it actually happened, not just that the line is present in the code.</div></div>
+    </section>
+
+    <!-- ============ EX01 ============ -->
+    <section class="sheet" id="ex01">
+      <div class="exnum">ex01</div>
+      <h2>Moar brainz!</h2>
+      <p class="tagline">zombieHorde &mdash; N objects, a single allocation.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>new[] / delete[]</dt>
+          <dd>The array forms of new/delete. One call allocates a contiguous block of N objects; it must be freed with <code>delete[]</code>, never plain <code>delete</code>.</dd>
+          <dt>default constructor</dt>
+          <dd>Array-new can only call a no-argument constructor on each element in C++98 &mdash; it can't forward arguments like a name.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"This one's about a single allocation for N objects instead of N separate ones. Array-new can't forward constructor arguments in C++98, so I gave Zombie a default constructor and a setName, allocate the whole block in one new Zombie[N], then loop to name each one before handing back a pointer to the first."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Zombie.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> Zombie {
+<span class="kw">private</span>:
+    <span class="tp">std::string</span> _name;</pre>
+      <p>Same private name as ex00, still the only thing this class stores.</p>
+
+      <pre><span class="kw">public</span>:
+    Zombie();                       <span class="cm">// default constructor - new Zombie[N]</span>
+    ~Zombie();                      <span class="cm">// destructor</span>
+    <span class="kw">void</span> setName(<span class="kw">const</span> <span class="tp">std::string</span> &amp;name); <span class="cm">// alias to the caller's string, no copy made</span>
+    <span class="kw">void</span> announce(<span class="kw">void</span>);
+};
+
+Zombie *zombieHorde(<span class="kw">int</span> N, <span class="kw">const</span> <span class="tp">std::string</span> &amp;name);
+<span class="cm">#endif</span></pre>
+      <p>One constructor now, the default one, and it exists for exactly one reason: array-new in C++98 can only call a no-argument constructor for each element, it can't forward a name to any of them. <code>setName</code> is what lets a name get attached after the fact, once each zombie already exists. Both <code>setName</code> and <code>zombieHorde</code> take the name by <code>const&amp;</code> now, so passing it around doesn't copy the string each time.</p>
+
+      <h3>Zombie.cpp <span class="filebadge">constructor, destructor, setName, announce</span></h3>
+      <pre>Zombie::Zombie() : _name(<span class="st">""</span>) {}</pre>
+      <p>This is what makes <code>new Zombie[N]</code> possible at all. Every element in the array gets built with this constructor, starting with an empty name that <code>setName</code> immediately overwrites afterward.</p>
+
+      <pre>Zombie::~Zombie() { std::cout &lt;&lt; _name &lt;&lt; <span class="st">" destroyed"</span> &lt;&lt; std::endl; }</pre>
+      <p>Same debug print as ex00. This is what proves, in test 3, that every zombie in the block actually gets destroyed when the array is deleted, not just the first one.</p>
+
+      <pre><span class="kw">void</span> Zombie::setName(<span class="kw">const</span> <span class="tp">std::string</span> &amp;name) { _name = name; }</pre>
+      <p>The piece that makes the whole default-constructor route work. <code>zombieHorde</code> builds N nameless zombies, then calls this on each one to give it the actual name.</p>
+
+      <pre><span class="kw">void</span> Zombie::announce(<span class="kw">void</span>) {
+    std::cout &lt;&lt; _name &lt;&lt; <span class="st">": BraiiiiiiinnnzzzZ..."</span> &lt;&lt; std::endl;
+}</pre>
+      <p>Unchanged from ex00.</p>
+
+      <h3>zombieHorde.cpp <span class="filebadge">the single allocation</span></h3>
+      <pre>Zombie *horde = <span class="kw">new</span> Zombie[N]; <span class="cm">// single allocation -&gt; N zombies on the heap</span></pre>
+      <p>This is the one allocation the exercise asks for. N default-constructed zombies, contiguous in memory, one pointer back to the first.</p>
+
+      <pre><span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; N; i++)
+    horde[i].setName(name);
+<span class="kw">return</span> horde; <span class="cm">// returning a pointer to the first element</span></pre>
+      <p>Since the constructor couldn't take the name directly, this loop gives every zombie its name right after allocation. <code>horde</code> already points at the first element, which is exactly what the function is supposed to return.</p>
+
+      <h3>main.cpp <span class="filebadge">tests</span></h3>
+      <pre>Zombie *single = zombieHorde(1, <span class="st">"Alone"</span>);
+single[0].announce();
+<span class="kw">delete</span>[] single;</pre>
+      <p>Smallest case, N is 1, still goes through the same array-new path. <code>delete[]</code> matches the <code>new[]</code> inside <code>zombieHorde</code>.</p>
+
+      <pre>Zombie *multiples = zombieHorde(5, <span class="st">"Chespirito"</span>);
+<span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; 5; i++)
+    multiples[i].announce();
+<span class="kw">delete</span>[] multiples;</pre>
+      <p>The real test of the exercise, calling <code>announce()</code> on every element of the horde, proving they're all valid and correctly named, not just the first one.</p>
+
+      <pre>Zombie *ordered = zombieHorde(3, <span class="st">"Sunra"</span>);
+<span class="kw">delete</span>[] ordered;</pre>
+      <p>No <code>announce()</code> here on purpose. This test is only watching <code>delete[]</code> fire the destructor for all 3 zombies, proving the whole block gets cleaned up, not just element zero.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why does Zombie need a default constructor now, when it didn't in ex00?</div><div class="a">Array-new can't forward constructor arguments in C++98. <code>new Zombie[N]</code> needs a no-argument constructor to build each element, so I added one plus setName to assign the real name afterward.</div></div>
+      <div class="qa"><div class="q">Why <code>new Zombie[N]</code> instead of looping <code>new Zombie(name)</code> N times?</div><div class="a">The exercise specifically asks for a single allocation. <code>new Zombie[N]</code> gets one contiguous block and one pointer back, N separate calls would be N separate allocations and N pointers to track and free individually.</div></div>
+      <div class="qa"><div class="q">Why <code>delete[]</code> instead of plain <code>delete</code>?</div><div class="a">It was allocated with <code>new[]</code>. <code>delete[]</code> runs the destructor on every element before freeing the block, plain <code>delete</code> on an array pointer only runs the first element's destructor and is undefined behavior.</div></div>
+
+      <div class="checklist-note">Important: </div>
+      <div class="qa checklist"><div class="q">Does the Zombie class have a default constructor, specifically?</div><div class="a">Yes &mdash; <code>Zombie();</code> with no parameters, that's a separate requirement from just "having a constructor," and it's the one array-new actually needs.</div></div>
+      <div class="qa checklist"><div class="q">Are all the zombies deleted at the same time, in main?</div><div class="a">Yes, each test's whole horde goes through one <code>delete[]</code> call on the pointer zombieHorde returned, not deleted element by element.</div></div>
+    </section>
+
+    <!-- ============ EX02 ============ -->
+    <section class="sheet" id="ex02">
+      <div class="exnum">ex02</div>
+      <h2>HI THIS IS BRAIN</h2>
+      <p class="tagline">Demystifying references: proving a reference has no address of its own.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>reference (T&amp;)</dt>
+          <dd>An alias for an existing variable, not a separate object &mdash; it has no address of its own, can't be null, and can never be rebound.</dd>
+          <dt>&amp; in two roles</dt>
+          <dd>In a declaration, <code>&amp;</code> means "this is a reference type." In an expression, it means "address-of," same as C.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"This one's about showing that a reference isn't a separate object. stringPTR is a real variable that happens to store brain's address, but stringREF has no address of its own at all, asking for its address just gives you brain's, because they're the same thing."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>main.cpp <span class="filebadge">setup</span></h3>
+      <pre><span class="tp">std::string</span> brain = <span class="st">"HI THIS IS BRAIN"</span>;
+<span class="tp">std::string</span> *stringPTR = &amp;brain;
+<span class="tp">std::string</span> &amp;stringREF = brain;</pre>
+      <p>Three names, but only two objects. <code>brain</code> is the real string. <code>stringPTR</code> is a genuinely separate object that stores <code>brain</code>'s address as its value. <code>stringREF</code> isn't a separate object at all, it's just another name for <code>brain</code> itself.</p>
+
+      <h3>main.cpp <span class="filebadge">addresses</span></h3>
+      <pre>std::cout &lt;&lt; &amp;brain &lt;&lt; std::endl;
+std::cout &lt;&lt; stringPTR &lt;&lt; std::endl;
+std::cout &lt;&lt; &amp;stringREF &lt;&lt; std::endl;</pre>
+      <p>All three of these print the exact same address, and that's the actual point of the exercise. <code>&amp;brain</code> is brain's address. <code>stringPTR</code> already holds that same address as its stored value. <code>&amp;stringREF</code> also gives brain's address, because stringREF has no address of its own, asking for one just hands you brain's.</p>
+
+      <h3>main.cpp <span class="filebadge">values</span></h3>
+      <pre>std::cout &lt;&lt; brain &lt;&lt; std::endl;
+std::cout &lt;&lt; *stringPTR &lt;&lt; std::endl;
+std::cout &lt;&lt; stringREF &lt;&lt; std::endl;</pre>
+      <p>Same reasoning, one level down. All three print the same value too: <code>brain</code> directly, <code>*stringPTR</code> by dereferencing to reach it, and <code>stringREF</code> because it already is brain, no dereference needed at all.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why do &amp;brain, stringPTR, and &amp;stringREF all print the same address?</div><div class="a">stringPTR's stored value is brain's address by design, and stringREF isn't a separate object, so asking for its address just gives you brain's, there's nothing else to report.</div></div>
+      <div class="qa"><div class="q">What would print a different address here?</div><div class="a">&amp;stringPTR, since stringPTR is a real variable with its own storage. That's the one address in this exercise that wouldn't match the other three.</div></div>
+      <div class="qa"><div class="q">Why can't stringREF be pointed at a different string later?</div><div class="a">A reference has to bind to something the moment it's declared, and that binding is permanent, there's no syntax to rebind an existing reference afterward.</div></div>
+
+      <div class="checklist-note">Important: </div>
+      <div class="qa checklist"><div class="q">Is the string's address displayed all three ways &mdash; through the variable, stringPTR, and stringREF?</div><div class="a">Yes, that's the three cout lines back to back, all printing the same value for different reasons: brain directly gives its own address with &amp;, stringPTR already stores it, and &amp;stringREF resolves to it since a reference has no address of its own.</div></div>
+      <div class="qa checklist"><div class="q">Is the content displayed all three ways too?</div><div class="a">Yes, same pattern one level down: brain directly, *stringPTR dereferenced, and stringREF used as-is since it already is the string.</div></div>
+    </section>
+
+    <!-- ============ EX03 ============ -->
+    <section class="sheet" id="ex03">
+      <div class="exnum">ex03</div>
+      <h2>Unnecessary violence</h2>
+      <p class="tagline">HumanA always has a weapon, HumanB might not &mdash; the member type follows from that guarantee.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>composition</dt>
+          <dd>A class holding another class as a member &mdash; a "has-a" relationship, as opposed to inheritance's "is-a."</dd>
+          <dt>reference vs pointer member</dt>
+          <dd>Reference for a relationship that's mandatory and fixed for life; pointer for one that can start absent (null) or be reassigned later.</dd>
+          <dt>initializer list requirement</dt>
+          <dd>A reference member has no legal default state, so it must be bound in the constructor's initializer list, never assigned in the body.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"This one's about picking the right member type for a relationship. HumanA always has a weapon, so it holds a reference, HumanB might not, so it holds a pointer that can start null and get set later through setWeapon."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Weapon.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> Weapon {
+<span class="kw">private</span>:
+    <span class="tp">std::string</span> _type;
+<span class="kw">public</span>:
+    Weapon(<span class="kw">const</span> <span class="tp">std::string</span> &amp;type);
+    <span class="kw">void</span> setType(<span class="kw">const</span> <span class="tp">std::string</span> &amp;type);
+    <span class="kw">const</span> <span class="tp">std::string</span> &amp;getType() <span class="kw">const</span>;
+};</pre>
+      <p>Same encapsulation shape as before, but <code>getType()</code> returns a const reference instead of a copy, so reading the type never copies the string, while <code>const</code> on the method itself promises it won't modify the Weapon.</p>
+
+      <h3>HumanA.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> HumanA {
+<span class="kw">private</span>:
+    <span class="tp">std::string</span> _name;
+    Weapon &amp;_weapon;
+<span class="kw">public</span>:
+    HumanA(<span class="tp">std::string</span> name, Weapon &amp;weapon);
+    <span class="kw">void</span> attack() <span class="kw">const</span>;
+};</pre>
+      <p><code>_weapon</code> is a reference, not a pointer. It has to be handed a real Weapon at construction, can never be null, and can never be pointed at a different Weapon later, that's exactly what "always armed" means.</p>
+
+      <h3>HumanA.cpp <span class="filebadge">constructor, attack</span></h3>
+      <pre>HumanA::HumanA(<span class="kw">const</span> <span class="tp">std::string</span> name, Weapon &amp;weapon)
+    : _name(name), _weapon(weapon) {}
+<span class="kw">void</span> HumanA::attack() <span class="kw">const</span> {
+    std::cout &lt;&lt; _name &lt;&lt; <span class="st">" attacks with their "</span> &lt;&lt; _weapon.getType()
+              &lt;&lt; std::endl;
+}</pre>
+      <p>The reference gets bound in the initialization list, that's the only place it's allowed to happen. Because <code>_weapon</code> is an alias for the exact Weapon passed in, if that Weapon's type changes later, <code>attack()</code> sees the change too, without HumanA doing anything.</p>
+
+      <h3>HumanB.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> HumanB {
+<span class="kw">private</span>:
+    <span class="tp">std::string</span> _name;
+    Weapon *_weapon;
+<span class="kw">public</span>:
+    HumanB(<span class="kw">const</span> <span class="tp">std::string</span> &amp;name);
+    <span class="kw">void</span> attack() <span class="kw">const</span>;
+    <span class="kw">void</span> setWeapon(Weapon &amp;weapon);
+};</pre>
+      <p><code>_weapon</code> is a pointer here, on purpose. It can start out null, and <code>setWeapon</code> can point it at a Weapon after construction, neither of those is possible with a reference.</p>
+
+      <h3>HumanB.cpp <span class="filebadge">constructor, setWeapon, attack</span></h3>
+      <pre>HumanB::HumanB(<span class="kw">const</span> <span class="tp">std::string</span> &amp;name) : _name(name), _weapon(NULL) {}
+<span class="kw">void</span> HumanB::setWeapon(Weapon &amp;weapon) { _weapon = &amp;weapon; }
+<span class="kw">void</span> HumanB::attack() <span class="kw">const</span> {
+    <span class="kw">if</span> (_weapon)
+        std::cout &lt;&lt; _name &lt;&lt; <span class="st">" attacks with their "</span> &lt;&lt; _weapon-&gt;getType()
+                  &lt;&lt; std::endl;
+}</pre>
+      <p>Jim starts with <code>_weapon</code> set to NULL. <code>setWeapon</code> stores the address of whatever Weapon it's given. <code>attack()</code> checks <code>_weapon</code> before dereferencing it, that check exists specifically because this pointer might still be null.</p>
+
+      <h3>main.cpp <span class="filebadge">tests</span></h3>
+      <pre>Weapon club(<span class="st">"crude spiked club"</span>);
+HumanA bob(<span class="st">"Bob"</span>, club);
+bob.attack();
+club.setType(<span class="st">"some other type of club"</span>);
+bob.attack();</pre>
+      <p>Bob's reference is bound to this exact <code>club</code>. Changing <code>club</code>'s type after construction changes what bob reports too, since there's only ever one Weapon here.</p>
+
+      <pre>Weapon club(<span class="st">"crude spiked club"</span>);
+HumanB jim(<span class="st">"Jim"</span>);
+jim.setWeapon(club);
+jim.attack();
+club.setType(<span class="st">"some other type of club"</span>);
+jim.attack();</pre>
+      <p>Jim starts unarmed, gets armed via <code>setWeapon</code>, and then sees the same type change club does afterward, same underlying reasoning as bob, just wired through a pointer instead of a reference.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why does HumanA take its Weapon in the constructor, but HumanB doesn't?</div><div class="a">HumanA's _weapon is a reference, and a reference has to be bound the moment the object is constructed, there's no way to set it later. HumanB's pointer can be left null and assigned afterward.</div></div>
+      <div class="qa"><div class="q">What happens if you call jim.attack() before setWeapon?</div><div class="a">Nothing prints. _weapon is still NULL at that point, and attack() checks for that before trying to use it, so it just skips the output instead of crashing.</div></div>
+      <div class="qa"><div class="q">Why does getType() return a const reference instead of a plain std::string?</div><div class="a">To avoid copying the string on every call, while the const still stops the caller from modifying the Weapon's actual type through what's returned.</div></div>
+
+      <div class="checklist-note">Important: </div>
+      <div class="qa checklist"><div class="q">Could HumanA have used a pointer instead of a reference? Would that still pass?</div><div class="a">Reference is a more precise choice. HumanA is guaranteed to always have a Weapon from construction onward and never swap it, a reference enforces that at compile time, a pointer would only enforce it by convention, nothing would stop me from accidentally reassigning or nulling it.</div></div>
+      <div class="qa checklist"><div class="q">Why must HumanB use a pointer, not a reference?</div><div class="a">HumanB's Weapon isn't set at construction, it can be NULL, and setWeapon can assign it after the fact. A reference can't be null and can't be rebound, so it's not an option here, this is the one case the sheet is strict about.</div></div>
+    </section>
+
+    <!-- ============ EX04 ============ -->
+    <section class="sheet" id="ex04">
+      <div class="exnum">ex04</div>
+      <h2>Sed is for losers</h2>
+      <p class="tagline">Find and substr build a replace-all, since std::string::replace is off-limits.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>ifstream / ofstream</dt>
+          <dd>C++'s RAII file streams &mdash; the file opens in the constructor and closes automatically in the destructor, no manual open/close bookkeeping.</dd>
+          <dt>find() / substr() / npos</dt>
+          <dd>Locate a substring, then cut around it to rebuild the string piece by piece; <code>npos</code> is the sentinel meaning "no match found."</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"This one opens a file, walks it line by line, and rebuilds every line with every occurrence of s1 swapped for s2, using find and substr since replace() isn't allowed."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Replacer.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> Replacer {
+<span class="kw">private</span>:
+    <span class="tp">std::string</span> _fileName;
+    <span class="tp">std::string</span> _s1;
+    <span class="tp">std::string</span> _s2;
+    <span class="tp">std::string</span> _replaceLine(<span class="kw">const</span> <span class="tp">std::string</span> &amp;line);
+<span class="kw">public</span>:
+    Replacer(<span class="kw">const</span> <span class="tp">std::string</span> &amp;fileName, <span class="kw">const</span> <span class="tp">std::string</span> &amp;s1,
+             <span class="kw">const</span> <span class="tp">std::string</span> &amp;s2);
+    ~Replacer();
+    <span class="kw">void</span> run();
+};</pre>
+      <p>The three strings from the command line are stored once at construction. <code>_replaceLine</code> is private, it's an internal helper <code>run()</code> uses, not something the outside world needs to call directly.</p>
+
+      <h3>Replacer.cpp <span class="filebadge">constructor</span></h3>
+      <pre>Replacer::Replacer(<span class="kw">const</span> <span class="tp">std::string</span> &amp;fileName, <span class="kw">const</span> <span class="tp">std::string</span> &amp;s1,
+                   <span class="kw">const</span> <span class="tp">std::string</span> &amp;s2)
+    : _fileName(fileName), _s1(s1), _s2(s2) {}</pre>
+      <p>Straightforward initialization list, all three members copied in directly from the constructor's arguments.</p>
+
+      <h3>Replacer.cpp <span class="filebadge">_replaceLine</span></h3>
+      <pre><span class="tp">std::string</span> Replacer::_replaceLine(<span class="kw">const</span> <span class="tp">std::string</span> &amp;line) {
+    <span class="tp">std::string</span> result;
+    size_t pos = 0;
+    size_t found;
+    <span class="kw">while</span> ((found = line.find(_s1, pos)) != <span class="tp">std::string</span>::npos) {
+        result += line.substr(pos, found - pos);
+        result += _s2;
+        pos = found + _s1.length();
+    }
+    result += line.substr(pos);
+    <span class="kw">return</span> result;
+}</pre>
+      <p><code>find()</code> locates the next occurrence of s1 starting from <code>pos</code>. Everything between the last position and that match gets copied as-is, then s2 gets appended instead of the match itself, and <code>pos</code> jumps past it. The loop keeps going until <code>find()</code> can't find any more, and whatever's left after the last match gets appended at the end.</p>
+
+      <h3>Replacer.cpp <span class="filebadge">run</span></h3>
+      <pre><span class="kw">void</span> Replacer::run() {
+    <span class="tp">std::string</span> outName = _fileName + <span class="st">".replace"</span>;
+    <span class="tp">std::ifstream</span> inFile(_fileName.c_str());
+    <span class="kw">if</span> (!inFile.is_open()) { std::cerr &lt;&lt; <span class="st">"Could not open file\n"</span>; <span class="kw">return</span>; }
+
+    <span class="tp">std::ofstream</span> outFile(outName.c_str());
+    <span class="kw">if</span> (!outFile.is_open()) { std::cerr &lt;&lt; <span class="st">"Could not create output file\n"</span>; <span class="kw">return</span>; }
+
+    <span class="tp">std::string</span> line;
+    <span class="kw">while</span> (std::getline(inFile, line))
+        outFile &lt;&lt; _replaceLine(line) &lt;&lt; <span class="st">"\n"</span>;
+    inFile.close();
+    outFile.close();
+}</pre>
+      <p><code>.c_str()</code> is required here because C++98's <code>ifstream</code>/<code>ofstream</code> constructors only accept <code>const char*</code>, not <code>std::string</code> directly. Both files get checked with <code>is_open()</code> before use. Each line gets read, replaced, and written out with its own newline.</p>
+
+      <h3>main.cpp <span class="filebadge">the empty-s1 guard</span></h3>
+      <pre><span class="kw">if</span> (s1.empty()) {
+    std::cerr &lt;&lt; <span class="st">"s1 cannot be empty\n"</span>;
+    <span class="kw">return</span> 1;
+}</pre>
+      <p>This matters more than it looks. If s1 were empty, <code>find()</code> would match at every position and the replace loop would never advance, an infinite loop. Catching it here before <code>Replacer</code> ever runs avoids that entirely.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">What happens if s1 doesn't appear anywhere in the file?</div><div class="a">find() returns npos immediately on every line, the while loop in _replaceLine never runs, and each line comes back through the tail-append line unchanged.</div></div>
+      <div class="qa"><div class="q">Why check s1.empty() in main instead of inside Replacer?</div><div class="a">An empty s1 would make find() match at every position with zero length, so pos never advances, that's an infinite loop. Catching it in main before a Replacer is ever created is the simplest place to stop it.</div></div>
+      <div class="qa"><div class="q">Could a match that spans two lines get missed?</div><div class="a">Yes, technically, since this reads and replaces one line at a time. In practice s1 comes from a command-line argument, so it can't realistically contain an actual embedded newline character, which is why this wasn't worth solving for here.</div></div>
+
+      <div class="checklist-note">Important: </div>
+      <div class="qa checklist"><div class="q">Have you tested a file that doesn't exist, one with changed permissions, and an empty file?</div><div class="a">Missing file: <code>is_open()</code> catches it, clean error message, no crash. Empty file: <code>getline</code> just never succeeds, the loop body never runs, and an empty <code>.replace</code> file is produced, which is correct behavior, not a bug. Permissions I can demo live with <code>chmod</code> to show <code>is_open()</code> still catches an unreadable file the same way.</div></div>
+      <div class="qa checklist"><div class="q">Is the implementation done with std::string functions, not character by character?</div><div class="a">Yes, the whole replace logic is find() plus substr(), no manual char-by-char scanning. That's the actual point being checked here, not just that it works, but that it works the C++ way.</div></div>
+    </section>
+
+    <!-- ============ EX05 ============ -->
+    <section class="sheet" id="ex05">
+      <div class="exnum">ex05</div>
+      <h2>Harl 2.0</h2>
+      <p class="tagline">Dispatch through an array of pointers to member functions, no if/else chain.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>pointer to member function</dt>
+          <dd>A function pointer scoped to a class. It can't be called alone &mdash; it needs an object supplied alongside it via <code>.*</code> or <code>-&gt;*</code>.</dd>
+          <dt>dispatch table</dt>
+          <dd>An array of these pointers, indexed the same way as a parallel array of names, used as a lookup instead of branching logic.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"Harl always says the same four things, so instead of branching on the level string with if/else, I built a small lookup: an array of pointers to member functions, indexed the same way as an array of level names."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Harl.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> Harl {
+<span class="kw">private</span>:
+    <span class="kw">void</span> debug(<span class="kw">void</span>);
+    <span class="kw">void</span> info(<span class="kw">void</span>);
+    <span class="kw">void</span> warning(<span class="kw">void</span>);
+    <span class="kw">void</span> error(<span class="kw">void</span>);
+<span class="kw">public</span>:
+    <span class="kw">void</span> complain(<span class="tp">std::string</span> level);
+};</pre>
+      <p>The four rants are private, <code>complain()</code> is the only public entry point, callers pick a level, not a specific method.</p>
+
+      <h3>Harl.cpp <span class="filebadge">complain</span></h3>
+      <pre><span class="kw">void</span> Harl::complain(<span class="tp">std::string</span> level) {
+    <span class="kw">typedef</span> <span class="kw">void</span> (Harl::*HarlFunc)(<span class="kw">void</span>);
+    HarlFunc funcs[4] = {&amp;Harl::debug, &amp;Harl::info, &amp;Harl::warning, &amp;Harl::error};
+    <span class="tp">std::string</span> levels[4] = {<span class="st">"DEBUG"</span>, <span class="st">"INFO"</span>, <span class="st">"WARNING"</span>, <span class="st">"ERROR"</span>};
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; 4; i++) {
+        <span class="kw">if</span> (levels[i] == level) {
+            (this-&gt;*funcs[i])();
+            <span class="kw">return</span>;
+        }
+    }
+}</pre>
+      <p>The <code>typedef</code> just gives the pointer-to-member-function type a readable name. <code>funcs</code> and <code>levels</code> are parallel arrays, same index means "this name goes with this function." The loop finds which index matches the level string, then calls that function on <code>this</code>, that's the whole dispatch, no if/else chain at all.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">What does &amp;Harl::debug actually mean, why not just &amp;debug?</div><div class="a">A member function needs a class to be scoped to, that's what makes it a pointer-to-member instead of an ordinary function pointer. Even from inside the class, you have to qualify it with Harl::.</div></div>
+      <div class="qa"><div class="q">What does (this->*funcs[i])() do?</div><div class="a">It binds the function pointer in funcs[i] to the current object via this, then calls it. Without an object, a pointer to a member function can't actually be called, it needs something to run against.</div></div>
+      <div class="qa"><div class="q">What happens if level doesn't match any of the four strings?</div><div class="a">The loop finishes without ever calling anything, complain() just returns silently. That's fine for this exercise, ex06 is the one that adds a fallback for unmatched input.</div></div>
+
+      <div class="checklist-note">Important: </div>
+      <div class="qa checklist"><div class="q">The sheet says any implementation is valid as long as it's not an ugly if/elseif/else, and matching strings to function pointers is only the "ideal" approach. Why did you pick this one anyway?</div><div class="a">Because it's what the subject is actually testing &mdash; pointers to member functions specifically, not just "avoid if/else somehow." A switch on a hashed string or a map, if STL were allowed here, would also dodge if/else without touching the actual concept the exercise wants demonstrated.</div></div>
+      <div class="qa checklist"><div class="q">The sheet says you could display your own messages instead of the subject's examples. Did you, and why?</div><div class="a">I used the subject's own examples. Either is marked valid, I just didn't see a reason to write new ones when the exercise isn't really about the content of the complaints, it's about the dispatch mechanism getting to them.</div></div>
+    </section>
+
+    <!-- ============ EX06 ============ -->
+    <section class="sheet" id="ex06">
+      <div class="exnum">ex06 <span class="optional">optional</span></div>
+      <h2>Harl filter</h2>
+      <p class="tagline">Same four rants, now filtered by level-and-above using a switch with fallthrough.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>switch / case / default</dt>
+          <dd>Jumps to the matching case label and keeps executing forward through every following case until it hits a <code>break</code>.</dd>
+          <dt>fallthrough</dt>
+          <dd>Deliberately omitting <code>break</code> so execution continues into the next case &mdash; here, that's what makes "this level and above" work.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"harlFilter takes one level and prints every message at that level or above. The trick is a switch with no break between cases on purpose, matching WARNING falls straight through into ERROR, which is exactly the behavior the subject's example shows."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Harl.cpp <span class="filebadge">debug, info, warning, error</span></h3>
+      <pre><span class="kw">void</span> Harl::debug(<span class="kw">void</span>) {
+    std::cout &lt;&lt; <span class="st">"[ DEBUG ]"</span> &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"I love having extra bacon..."</span> &lt;&lt; std::endl;
+}
+<span class="cm">// info(), warning(), error() follow the same shape</span></pre>
+      <p>Each function now prints its own level tag before the message, that's what produces the <code>[ WARNING ]</code> style headers the subject's example output shows.</p>
+
+      <h3>Harl.cpp <span class="filebadge">complain &mdash; find the index</span></h3>
+      <pre><span class="kw">void</span> Harl::complain(<span class="tp">std::string</span> level) {
+    <span class="tp">std::string</span> levels[4] = {<span class="st">"DEBUG"</span>, <span class="st">"INFO"</span>, <span class="st">"WARNING"</span>, <span class="st">"ERROR"</span>};
+    <span class="kw">int</span> index = -1;
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; 4; i++) {
+        <span class="kw">if</span> (levels[i] == level) {
+            index = i;
+            <span class="kw">break</span>;
+        }
+    }</pre>
+      <p><code>switch</code> only works on integral types, not <code>std::string</code>, so the level string has to be translated to an index first. <code>index</code> stays <code>-1</code> if nothing matches, that's what routes into <code>default</code> below.</p>
+
+      <h3>Harl.cpp <span class="filebadge">complain &mdash; the switch itself</span></h3>
+      <pre>    <span class="kw">switch</span> (index) {
+        <span class="kw">case</span> 0: debug();    <span class="cm">// no break, falls through on purpose</span>
+        <span class="kw">case</span> 1: info();
+        <span class="kw">case</span> 2: warning();
+        <span class="kw">case</span> 3: error();
+            <span class="kw">break</span>;
+        <span class="kw">default</span>:
+            std::cout &lt;&lt; <span class="st">"[ Probably complaining about insignificant problems ]"</span>
+                      &lt;&lt; std::endl;
+    }
+}</pre>
+      <p>This is the whole exercise in one block. Match at <code>case 2</code> (WARNING) and execution runs <code>warning()</code>, then falls into <code>case 3</code> and runs <code>error()</code> too, only stopping at that final <code>break</code>. Match at <code>case 0</code> (DEBUG) and all four run in order. <code>default</code> catches <code>index == -1</code>, an unrecognized level.</p>
+
+      <h3>main.cpp <span class="filebadge">entry point</span></h3>
+      <pre><span class="kw">if</span> (argc != 2) {
+    std::cerr &lt;&lt; <span class="st">"Usage: ./harlFilter &lt;level&gt;\n"</span>;
+    <span class="kw">return</span> 1;
+}
+<span class="tp">std::string</span> complainAbout = argv[1];
+harl.complain(complainAbout);</pre>
+      <p>One argument in, straight into <code>complain()</code>. The executable name matches the subject's requirement, <code>harlFilter</code>, and the whole level-and-above behavior lives entirely inside the switch, not in main.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why no break between the cases?</div><div class="a">That's the actual mechanism the subject wants. Without a break, matching one case keeps executing forward through every case below it, which is exactly "this level and above" without writing that logic out manually.</div></div>
+      <div class="qa"><div class="q">Why does GCC complain about implicit fallthrough here, and how did you handle it?</div><div class="a"><code>-Werror</code> turns the implicit-fallthrough warning into a hard error, since accidentally missing a break is a common real bug. I added <code>__attribute__((fallthrough))</code> at each intentional fallthrough point to tell the compiler this one's deliberate.</div></div>
+      <div class="qa"><div class="q">What happens with an argument that isn't one of the four levels?</div><div class="a">index stays -1, none of the case labels match it, so switch jumps straight to default and prints the insignificant-problems line, same as the subject's own example.</div></div>
+
+      <div class="checklist-note">Important: </div>
+      <div class="qa checklist"><div class="q">Is this implemented with a switch statement and a default case, and no if/elseif/else?</div><div class="a">Yes. The only if in the file is the one-line argc check in main, the actual level-based logic is entirely the switch block, with default handling anything that doesn't match.</div></div>
+      <div class="qa checklist"><div class="q">Does harlFilter WARNING correctly print both WARNING and ERROR, in order?</div><div class="a">Yes, that's the fallthrough from case 2 into case 3, I can run it live: WARNING's tag and message print first, then ERROR's, nothing printed for DEBUG or INFO.</div></div>
+    </section>
+
+  </main>
+</div>
+
+<footer>cpp01 &middot; rehearsed before it's defended</footer>
+
+<script>
+  var links = document.querySelectorAll('nav.sidebar a');
+  var sections = Array.prototype.map.call(links, function(l){ return document.querySelector(l.getAttribute('href')); });
+  function setActive(){
+    var y = window.scrollY + 120;
+    var current = sections[0];
+    sections.forEach(function(s){ if(s && s.offsetTop <= y) current = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    var idx = sections.indexOf(current);
+    if(idx >= 0) links[idx].classList.add('active');
+  }
+  document.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>
