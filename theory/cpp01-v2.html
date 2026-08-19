@@ -621,8 +621,46 @@ printf(<span class="tp">"%s"</span>, name);          <span class="cm">// prints 
       </div>
 
       <h3>Why <code>find()</code> + a loop actually terminates</h3>
-      <p><code>std::string::npos</code> is not "negative one" conceptually, even though it's implemented as the largest possible value of an unsigned type — it's a dedicated sentinel meaning "no valid position exists." Every call to <code>find(s1, pos)</code> either returns a real index strictly greater than or equal to <code>pos</code>, or returns <code>npos</code>. Because each successful match advances your search position past the end of that match before the next call, the sequence of returned positions is strictly increasing until the moment it can't find anything else — which is exactly when the loop is guaranteed to end.</p>
+      <p><code>std::string::npos</code> isn't conceptually "negative one" — it's a sentinel meaning "no match found," even though it's implemented as the largest possible unsigned value. Each successful <code>find()</code> call moves <code>pos</code> forward past the match before the next call, so the search position strictly increases every iteration until <code>find()</code> finally returns <code>npos</code> — that's what guarantees the loop terminates.</p>
 
+      <div class="diagram">
+        <span class="fig">Fig. 04c &mdash; pos advances past every match until find() returns npos</span>
+        <svg viewBox="0 0 640 200" role="img" aria-label="Diagram showing pos advancing through repeated find calls on a string until find returns npos and the loop ends">
+          <defs>
+            <marker id="a5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5FC7EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+
+          <!-- highlighted matches in the source string: s1 = "is" -->
+          <rect x="88"  y="34" width="16" height="24" rx="3" fill="#F2A65A" opacity="0.3"/>
+          <rect x="192" y="34" width="16" height="24" rx="3" fill="#F2A65A" opacity="0.3"/>
+          <rect x="328" y="34" width="16" height="24" rx="3" fill="#F2A65A" opacity="0.3"/>
+          <text x="40" y="52" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">space is the place is here or there is everywhere</text>
+          <text x="40" y="78" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">s1 = "is" &mdash; three matches highlighted</text>
+
+          <!-- four find() steps: 3 matches, then npos -->
+          <rect x="20" y="110" width="130" height="56" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="85" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#E7F1F9">find(is, 0)</text>
+          <text x="85" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">match@6 &rarr; pos=8</text>
+
+          <rect x="170" y="110" width="130" height="56" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="235" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#E7F1F9">find(is, 8)</text>
+          <text x="235" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">match@19 &rarr; pos=21</text>
+
+          <rect x="320" y="110" width="130" height="56" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="385" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#E7F1F9">find(is, 21)</text>
+          <text x="385" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">match@36 &rarr; pos=38</text>
+
+          <rect x="470" y="110" width="130" height="56" rx="6" fill="#122B4B" stroke="#5C7690" stroke-width="1"/>
+          <text x="535" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#E7F1F9">find(is, 38)</text>
+          <text x="535" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">no match &rarr; npos, stop</text>
+
+          <line x1="150" y1="138" x2="168" y2="138" stroke="#5FC7EC" stroke-width="1.4" marker-end="url(#a5)"/>
+          <line x1="300" y1="138" x2="318" y2="138" stroke="#5FC7EC" stroke-width="1.4" marker-end="url(#a5)"/>
+          <line x1="450" y1="138" x2="468" y2="138" stroke="#5FC7EC" stroke-width="1.4" marker-end="url(#a5)"/>
+        </svg>
+      </div>
       <p class="dim">Edge cases worth testing yourself, since the subject asks for your own tests: an empty file, <code>s1</code> not present at all, <code>s1</code> and <code>s2</code> being the same string, and <code>s1</code> occurring at the very start or end of the file.</p>
     </section>
 
