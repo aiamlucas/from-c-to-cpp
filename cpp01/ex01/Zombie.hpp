@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 19:17:10 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/18 23:26:18 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/19 18:09:27 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ private:
 public:
     Zombie(); // default constructor
     ~Zombie();
-    void setName(const std::string &name);
+    void setName(std::string name);
     void announce(void);
 };
 
