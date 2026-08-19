@@ -562,7 +562,7 @@ printf(<span class="tp">"%s"</span>, name);          <span class="cm">// prints 
       </div>
 
       <h3>The danger both versions share: dangling references</h3>
-      <p>Neither a reference nor a pointer member <em>owns</em> the <code>Weapon</code> it refers to — <code>HumanA</code> and <code>HumanB</code> both borrow it. In the subject's own <code>main</code>, the <code>Weapon club</code> is declared before the <code>Human</code> and destroyed after it goes out of scope, so this is safe. But nothing in the type system stops you from constructing a <code>Human</code> whose <code>Weapon</code> is destroyed first — a local <code>Weapon</code> that goes out of scope while a <code>Human</code> still refers to it leaves that reference (or pointer) dangling, referring to memory that's no longer a valid <code>Weapon</code>. This is a lifetime bug the compiler cannot catch for you; it's on you to reason about which object outlives which.</p>
+      <p>Neither a reference nor a pointer member <em>owns</em> the <code>Weapon</code> it refers to, both just borrow it. In the subject's own <code>main</code>, the <code>Weapon</code> outlives the <code>Human</code>, so it's safe. But nothing stops you from constructing a <code>Human</code> whose <code>Weapon</code> is destroyed first, leaving that reference or pointer dangling; pointing at memory that's no longer valid. The compiler can't catch this; it's on you to reason about which object outlives which.</p>
 
       <div class="note">
         <span class="tag">Also worth noticing</span>

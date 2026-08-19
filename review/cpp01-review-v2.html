@@ -369,12 +369,12 @@ std::cout &lt;&lt; stringREF &lt;&lt; std::endl;</pre>
       <div class="qa checklist"><div class="q">Is the content displayed all three ways too?</div><div class="a">Yes, same pattern one level down: brain directly, *stringPTR dereferenced, and stringREF used as-is since it already is the string.</div></div>
     </section>
 
-    <!-- ============ EX03 ============ -->
+<!-- ============ EX03 ============ -->
     <section class="sheet" id="ex03">
       <div class="exnum">ex03</div>
       <h2>Unnecessary violence</h2>
       <p class="tagline">HumanA always has a weapon, HumanB might not &mdash; the member type follows from that guarantee.</p>
-
+ 
       <div class="concepts">
         <span class="clabel">New concepts this exercise introduces</span>
         <dl>
@@ -386,23 +386,23 @@ std::cout &lt;&lt; stringREF &lt;&lt; std::endl;</pre>
           <dd>A reference member has no legal default state, so it must be bound in the constructor's initializer list, never assigned in the body.</dd>
         </dl>
       </div>
-
+ 
       <h4>The pitch</h4>
       <p class="pitch">"This one's about picking the right member type for a relationship. HumanA always has a weapon, so it holds a reference, HumanB might not, so it holds a pointer that can start null and get set later through setWeapon."</p>
-
+ 
       <h4>Walk the code</h4>
-
+ 
       <h3>Weapon.hpp <span class="filebadge">header</span></h3>
       <pre><span class="kw">class</span> Weapon {
 <span class="kw">private</span>:
     <span class="tp">std::string</span> _type;
 <span class="kw">public</span>:
-    Weapon(<span class="kw">const</span> <span class="tp">std::string</span> &amp;type);
-    <span class="kw">void</span> setType(<span class="kw">const</span> <span class="tp">std::string</span> &amp;type);
+    Weapon(<span class="tp">std::string</span> type);
+    <span class="kw">void</span> setType(<span class="tp">std::string</span> type);
     <span class="kw">const</span> <span class="tp">std::string</span> &amp;getType() <span class="kw">const</span>;
 };</pre>
-      <p>Same encapsulation shape as before, but <code>getType()</code> returns a const reference instead of a copy, so reading the type never copies the string, while <code>const</code> on the method itself promises it won't modify the Weapon.</p>
-
+      <p>The constructor and <code>setType()</code> take <code>type</code> by value here &mdash; simple, and the subject doesn't specify an exact signature for either, so this is a valid choice. <code>getType()</code> is the one method the subject <em>does</em> pin down exactly: it must return a const reference, not a copy, so reading the type never copies the string, while <code>const</code> on the method itself promises it won't modify the Weapon.</p>
+ 
       <h3>HumanA.hpp <span class="filebadge">header</span></h3>
       <pre><span class="kw">class</span> HumanA {
 <span class="kw">private</span>:
@@ -412,39 +412,39 @@ std::cout &lt;&lt; stringREF &lt;&lt; std::endl;</pre>
     HumanA(<span class="tp">std::string</span> name, Weapon &amp;weapon);
     <span class="kw">void</span> attack() <span class="kw">const</span>;
 };</pre>
-      <p><code>_weapon</code> is a reference, not a pointer. It has to be handed a real Weapon at construction, can never be null, and can never be pointed at a different Weapon later, that's exactly what "always armed" means.</p>
-
+      <p><code>_weapon</code> is a reference, not a pointer &mdash; that part is the actual point of the exercise and isn't up for style choices. It has to be handed a real Weapon at construction, can never be null, and can never be pointed at a different Weapon later, that's exactly what "always armed" means. <code>name</code>, by contrast, is just a plain <code>std::string</code> by value here, since the subject doesn't specify that signature.</p>
+ 
       <h3>HumanA.cpp <span class="filebadge">constructor, attack</span></h3>
-      <pre>HumanA::HumanA(<span class="kw">const</span> <span class="tp">std::string</span> name, Weapon &amp;weapon)
+      <pre>HumanA::HumanA(<span class="tp">std::string</span> name, Weapon &amp;weapon)
     : _name(name), _weapon(weapon) {}
 <span class="kw">void</span> HumanA::attack() <span class="kw">const</span> {
     std::cout &lt;&lt; _name &lt;&lt; <span class="st">" attacks with their "</span> &lt;&lt; _weapon.getType()
               &lt;&lt; std::endl;
 }</pre>
       <p>The reference gets bound in the initialization list, that's the only place it's allowed to happen. Because <code>_weapon</code> is an alias for the exact Weapon passed in, if that Weapon's type changes later, <code>attack()</code> sees the change too, without HumanA doing anything.</p>
-
+ 
       <h3>HumanB.hpp <span class="filebadge">header</span></h3>
       <pre><span class="kw">class</span> HumanB {
 <span class="kw">private</span>:
     <span class="tp">std::string</span> _name;
     Weapon *_weapon;
 <span class="kw">public</span>:
-    HumanB(<span class="kw">const</span> <span class="tp">std::string</span> &amp;name);
+    HumanB(<span class="tp">std::string</span> name);
     <span class="kw">void</span> attack() <span class="kw">const</span>;
     <span class="kw">void</span> setWeapon(Weapon &amp;weapon);
 };</pre>
-      <p><code>_weapon</code> is a pointer here, on purpose. It can start out null, and <code>setWeapon</code> can point it at a Weapon after construction, neither of those is possible with a reference.</p>
-
+      <p><code>_weapon</code> is a pointer here, on purpose &mdash; that's the actual point being tested. It can start out null, and <code>setWeapon</code> can point it at a Weapon after construction, neither of those is possible with a reference. <code>name</code> is plain <code>std::string</code> by value, same simplification as HumanA, since the subject leaves this signature open.</p>
+ 
       <h3>HumanB.cpp <span class="filebadge">constructor, setWeapon, attack</span></h3>
-      <pre>HumanB::HumanB(<span class="kw">const</span> <span class="tp">std::string</span> &amp;name) : _name(name), _weapon(NULL) {}
+      <pre>HumanB::HumanB(<span class="tp">std::string</span> name) : _name(name), _weapon(NULL) {}
 <span class="kw">void</span> HumanB::setWeapon(Weapon &amp;weapon) { _weapon = &amp;weapon; }
 <span class="kw">void</span> HumanB::attack() <span class="kw">const</span> {
     <span class="kw">if</span> (_weapon)
         std::cout &lt;&lt; _name &lt;&lt; <span class="st">" attacks with their "</span> &lt;&lt; _weapon-&gt;getType()
                   &lt;&lt; std::endl;
 }</pre>
-      <p>Jim starts with <code>_weapon</code> set to NULL. <code>setWeapon</code> stores the address of whatever Weapon it's given. <code>attack()</code> checks <code>_weapon</code> before dereferencing it, that check exists specifically because this pointer might still be null.</p>
-
+      <p>Jim starts with <code>_weapon</code> set to NULL. <code>setWeapon</code> stores the address of whatever Weapon it's given &mdash; this parameter stays a reference, since a pointer address can't be handed a temporary and the exercise's whole point is capturing the real Weapon's address. <code>attack()</code> checks <code>_weapon</code> before dereferencing it, that check exists specifically because this pointer might still be null.</p>
+ 
       <h3>main.cpp <span class="filebadge">tests</span></h3>
       <pre>Weapon club(<span class="st">"crude spiked club"</span>);
 HumanA bob(<span class="st">"Bob"</span>, club);
@@ -452,7 +452,7 @@ bob.attack();
 club.setType(<span class="st">"some other type of club"</span>);
 bob.attack();</pre>
       <p>Bob's reference is bound to this exact <code>club</code>. Changing <code>club</code>'s type after construction changes what bob reports too, since there's only ever one Weapon here.</p>
-
+ 
       <pre>Weapon club(<span class="st">"crude spiked club"</span>);
 HumanB jim(<span class="st">"Jim"</span>);
 jim.setWeapon(club);
@@ -460,17 +460,18 @@ jim.attack();
 club.setType(<span class="st">"some other type of club"</span>);
 jim.attack();</pre>
       <p>Jim starts unarmed, gets armed via <code>setWeapon</code>, and then sees the same type change club does afterward, same underlying reasoning as bob, just wired through a pointer instead of a reference.</p>
-
+ 
       <h4>Questions to expect</h4>
       <div class="qa"><div class="q">Why does HumanA take its Weapon in the constructor, but HumanB doesn't?</div><div class="a">HumanA's _weapon is a reference, and a reference has to be bound the moment the object is constructed, there's no way to set it later. HumanB's pointer can be left null and assigned afterward.</div></div>
       <div class="qa"><div class="q">What happens if you call jim.attack() before setWeapon?</div><div class="a">Nothing prints. _weapon is still NULL at that point, and attack() checks for that before trying to use it, so it just skips the output instead of crashing.</div></div>
       <div class="qa"><div class="q">Why does getType() return a const reference instead of a plain std::string?</div><div class="a">To avoid copying the string on every call, while the const still stops the caller from modifying the Weapon's actual type through what's returned.</div></div>
-
-      <div class="checklist-note">Important: </div>
-      <div class="qa checklist"><div class="q">Could HumanA have used a pointer instead of a reference? Would that still pass?</div><div class="a">Reference is a more precise choice. HumanA is guaranteed to always have a Weapon from construction onward and never swap it, a reference enforces that at compile time, a pointer would only enforce it by convention, nothing would stop me from accidentally reassigning or nulling it.</div></div>
+      <div class="qa"><div class="q">Why do HumanA, HumanB, and Weapon take name/type by plain std::string instead of const std::string&amp;?</div><div class="a">The subject doesn't specify an exact signature for these, only for getType(). I'm using plain by-value for now while I build confidence with const&amp; — it costs one extra string copy per call, nothing more, no behavior changes. The _weapon member itself is the one piece that has to stay a reference or pointer, that's the actual thing being tested here.</div></div>
+ 
+      <div class="checklist-note">from the evaluation sheet</div>
+      <div class="qa checklist"><div class="q">Could HumanA have used a pointer instead of a reference? Would that still pass?</div><div class="a">The sheet accepts either, but reference is the more precise choice. HumanA is guaranteed to always have a Weapon from construction onward and never swap it, a reference enforces that at compile time, a pointer would only enforce it by convention, nothing would stop me from accidentally reassigning or nulling it.</div></div>
       <div class="qa checklist"><div class="q">Why must HumanB use a pointer, not a reference?</div><div class="a">HumanB's Weapon isn't set at construction, it can be NULL, and setWeapon can assign it after the fact. A reference can't be null and can't be rebound, so it's not an option here, this is the one case the sheet is strict about.</div></div>
     </section>
-
+ 
     <!-- ============ EX04 ============ -->
     <section class="sheet" id="ex04">
       <div class="exnum">ex04</div>
