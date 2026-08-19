@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/08 19:49:09 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/14 21:28:44 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/19 13:26:40 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 // initializer list
 // reference must be at the construction, it's not possible to assign it later
-HumanA::HumanA(const std::string name, Weapon &weapon)
+HumanA::HumanA(std::string name, Weapon &weapon)
     : _name(name), _weapon(weapon) {}
 
 void HumanA::attack() const {

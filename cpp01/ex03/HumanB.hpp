@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/08 19:34:25 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/14 21:31:38 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/19 13:27:10 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ private:
 
 public:
     // no weapon in the constructor -> HumanB starts unarmed
-    HumanB(const std::string &name);
+    HumanB(std::string name);
     void attack() const; // const -> only reads never writes
 
     void setWeapon(Weapon &weapon); // assigns a weapon later
