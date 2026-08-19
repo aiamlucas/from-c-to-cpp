@@ -517,7 +517,7 @@ printf(<span class="tp">"%s"</span>, name);          <span class="cm">// prints 
       </div>
 
       <h3>Why reference members force the initializer list</h3>
-      <p>This isn't a style preference — it's a direct consequence of the two rules from ex02 (must bind at declaration, can never be reseated), applied to the timing of object construction. By the time a constructor's <em>body</em> starts running, all members already exist — construction of members happens before the opening brace <code>{</code> of the constructor is reached. If a reference member had no initializer list entry, the compiler would need to default-construct it first and let you assign a value in the body afterward — but a reference has no default state to construct, and an assignment after the fact would be a reseat, which is illegal. The initializer list is the only point in the object's life early enough to satisfy "must bind at declaration."</p>
+      <p>A reference must be bound the moment it's declared. Members are constructed before the constructor's body runs, so the initializer list is the only point early enough to bind one. Skipping it is a compile-time error. The compiler refuses to build rather than let you assign into an unbound reference.</p>
 
       <pre><span class="kw">class</span> HumanA {
     Weapon &amp;_weapon;
