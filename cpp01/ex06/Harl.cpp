@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/17 10:46:23 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/17 11:28:26 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/20 14:01:56 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ void Harl::error(void) {
 void Harl::complain(std::string level) {
     std::string levels[4] = {"DEBUG", "INFO", "WARNING", "ERROR"};
 
+    // find which index matches the level string (-1 if no match)
     int index = -1;
     for (int i = 0; i < 4; i++) {
         if (levels[i] == level) {
@@ -49,6 +50,9 @@ void Harl::complain(std::string level) {
             break;
         }
     }
+    // no break between cases
+    // __attribute__((fallthrough)) tells the compiler
+    // that no breaks between cases is intentional
     switch (index) {
     case 0:
         debug();
@@ -62,7 +66,7 @@ void Harl::complain(std::string level) {
     case 3:
         error();
         break;
-    default:
+    default: // index is still -1, didn't match any case
         std::cout << " [ Probably complaining about insignificant problems ]"
                   << std::endl;
     }
