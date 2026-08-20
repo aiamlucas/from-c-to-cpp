@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/16 18:31:23 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/20 11:40:05 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/20 12:00:33 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,5 +70,11 @@ int main(void) {
     std::cout << "input:  doesnotexist.txt s1 = space, s2 = earth\n";
     std::cout << "output: ";
     Replacer("doesnotexist.txt", "space", "earth").run();
+
+    std::cout << "\n--- test 6: empty file ---\n";
+    std::cout << "s1 = space, s2 = earth\n";
+    createFile("t6", "");
+    std::cout << "check t6 and t6.replace both should be empty\n";
+    Replacer("t6", "space", "earth").run();
     return 0;
 }
