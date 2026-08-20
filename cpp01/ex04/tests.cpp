@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/16 18:31:23 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/16 18:42:06 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/20 11:40:05 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,13 @@
 #include <fstream>
 #include <iostream>
 
+// write the content in a new file
 static void createFile(const std::string &name, const std::string &content) {
     std::ofstream file(name.c_str());
     file << content;
 }
 
+// reads the file line by line and print it
 static void printFile(const std::string &name) {
     std::ifstream file(name.c_str());
     std::string line;
@@ -42,9 +44,10 @@ int main(void) {
     printFile("t2.replace");
 
     std::cout << "\n--- test 3: multiline ---\n";
-    std::cout << "input:  3 lines with space, s1 = space, s2 = earth\n";
     createFile("t3",
                "space is the place\nthe place is space\nspace is space\n");
+    std::cout << "input:\n";
+    printFile("t3");
     Replacer("t3", "space", "earth").run();
     std::cout << "output:\n";
     printFile("t3.replace");
