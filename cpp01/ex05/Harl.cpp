@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/17 08:40:27 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/17 10:39:17 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/20 13:57:25 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,15 +36,19 @@ void Harl::error(void) {
               << std::endl;
 }
 void Harl::complain(std::string level) {
+    // HarlFunc = pointer to a member function of Harl
     typedef void (Harl::*HarlFunc)(void);
 
+    // function holds the ADDRES of each level (&Harl::debug, etc)
+    // Harl:: is required even inside the class
+    // this is a member function pointer not a normal one
     HarlFunc funcs[4] = {&Harl::debug, &Harl::info, &Harl::warning,
                          &Harl::error};
     std::string levels[4] = {"DEBUG", "INFO", "WARNING", "ERROR"};
 
     for (int i = 0; i < 4; i++) {
         if (levels[i] == level) {
-            (this->*funcs[i])();
+            (this->*funcs[i])(); // call the matched function on this object
             return;
         }
     }
