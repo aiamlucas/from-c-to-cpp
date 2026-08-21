@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C++ Module 02 — Canonical Form &amp; Operator Overloading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1729;
+    --bg-2:#0D2036;
+    --card:#0F2540;
+    --card-2:#122B4B;
+    --grid:rgba(120,180,220,0.07);
+    --cyan:#5FC7EC;
+    --cyan-dim:rgba(95,199,236,0.32);
+    --amber:#F2A65A;
+    --green:#7FD9A8;
+    --pink:#E88FB0;
+    --text:#E7F1F9;
+    --text-dim:#8CA6BC;
+    --text-faint:#5C7690;
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 40px),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  .titleblock{
+    border-bottom:1px solid var(--cyan-dim);
+    padding:56px 0 32px;
+    position:relative;
+  }
+  .titleblock .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.18em;
+    color:var(--cyan); text-transform:uppercase; margin-bottom:14px;
+  }
+  .titleblock h1{
+    font-family:var(--mono); font-weight:700; text-transform:uppercase;
+    letter-spacing:.02em; font-size:clamp(28px,4.2vw,46px);
+    line-height:1.15; max-width:900px;
+  }
+  .titleblock .sub{
+    font-size:17px; color:var(--text-dim); max-width:640px; margin-top:14px;
+  }
+  .stamp{
+    margin-top:32px; display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border:1px solid var(--cyan-dim);
+  }
+  .stamp div{
+    padding:12px 16px; border-right:1px solid var(--cyan-dim);
+  }
+  .stamp div:last-child{border-right:none;}
+  .stamp .k{font-family:var(--mono); font-size:10px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase;}
+  .stamp .v{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-top:4px;}
+
+  .layout{display:grid; grid-template-columns:230px 1fr; gap:48px; padding:40px 0 100px;}
+  nav.sidebar{position:sticky; top:24px; align-self:start; height:fit-content;}
+  nav.sidebar .navlabel{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--text-faint);
+    text-transform:uppercase; margin-bottom:14px;
+  }
+  nav.sidebar ol{list-style:none; border-left:1px solid var(--cyan-dim);}
+  nav.sidebar li{margin:0;}
+  nav.sidebar a{
+    display:block; padding:9px 0 9px 16px; font-family:var(--mono); font-size:13px;
+    color:var(--text-dim); text-decoration:none; border-left:2px solid transparent; margin-left:-1px;
+    transition:color .15s, border-color .15s;
+  }
+  nav.sidebar a .num{color:var(--text-faint); margin-right:8px;}
+  nav.sidebar a:hover{color:var(--text);}
+  nav.sidebar a.active{color:var(--cyan); border-left-color:var(--cyan);}
+
+  main{min-width:0;}
+  section.sheet{
+    padding-top:8px; margin-bottom:96px; scroll-margin-top:24px;
+  }
+  section.sheet .sheetnum{
+    font-family:var(--mono); font-size:12px; color:var(--text-faint); letter-spacing:.14em;
+    text-transform:uppercase; margin-bottom:8px;
+  }
+  section.sheet h2{
+    font-family:var(--mono); font-size:clamp(22px,2.6vw,30px); font-weight:600;
+    letter-spacing:.01em; margin-bottom:6px;
+  }
+  section.sheet .tagline{color:var(--text-dim); font-size:15px; margin-bottom:28px; max-width:680px;}
+  section.sheet h3{
+    font-family:var(--mono); font-size:15px; font-weight:600; color:var(--cyan);
+    text-transform:uppercase; letter-spacing:.06em; margin:36px 0 12px;
+  }
+  section.sheet p{max-width:700px; margin-bottom:14px; color:var(--text);}
+  section.sheet p.dim{color:var(--text-dim);}
+  code, .inline-code{
+    font-family:var(--mono); font-size:.92em; background:var(--card);
+    padding:2px 6px; border-radius:3px; color:var(--green);
+  }
+  pre{
+    font-family:var(--mono); font-size:13.5px; line-height:1.6; background:var(--card);
+    border:1px solid var(--cyan-dim); border-radius:6px; padding:18px 20px; overflow-x:auto;
+    margin:16px 0 22px; color:var(--text);
+  }
+  pre .kw{color:var(--pink);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;}
+
+  .diagram{
+    border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card);
+    padding:18px; margin:18px 0 26px; position:relative;
+  }
+  .diagram .fig{
+    position:absolute; top:-11px; left:16px; background:var(--bg-2);
+    font-family:var(--mono); font-size:11px; color:var(--text-faint); padding:0 8px; letter-spacing:.08em;
+  }
+  .diagram svg{display:block; width:100%; height:auto;}
+
+  .note{
+    border-left:3px solid var(--cyan); background:var(--card); border-radius:0 6px 6px 0;
+    padding:14px 18px; margin:18px 0; max-width:700px;
+  }
+  .note.warn{border-left-color:var(--amber);}
+  .note.think{border-left-color:var(--pink);}
+  .note .tag{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--cyan); margin-bottom:6px; display:block;
+  }
+  .note.warn .tag{color:var(--amber);}
+  .note.think .tag{color:var(--pink);}
+  .note p{margin-bottom:0; font-size:14.5px; color:var(--text-dim);}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:18px 0 26px;}
+  .cardmini{border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:16px 18px;}
+  .cardmini h4{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-bottom:8px; letter-spacing:.03em;}
+  .cardmini p{font-size:13.5px; color:var(--text-dim); margin-bottom:0;}
+
+  .annot{
+    border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:20px 22px; margin:16px 0 26px;
+  }
+  .annot pre{border:none; background:none; padding:0; margin-bottom:14px;}
+  .annot ul{list-style:none;}
+  .annot li{
+    font-size:13.5px; color:var(--text-dim); padding:7px 0 7px 16px; border-left:2px solid var(--cyan-dim);
+    margin-bottom:2px;
+  }
+  .annot li b{color:var(--text); font-family:var(--mono); font-weight:500;}
+
+  .cmp-wrap{overflow-x:auto; margin:18px 0 26px;}
+  .cmp{width:100%; border-collapse:collapse; font-size:13.5px; min-width:480px;}
+  .cmp th, .cmp td{padding:10px 16px; border:1px solid var(--cyan-dim); text-align:left; vertical-align:top;}
+  .cmp thead th{background:var(--card-2); color:var(--cyan); font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;}
+  .cmp tbody th{background:var(--card); color:var(--text); font-family:var(--mono); font-weight:500; font-size:13px; white-space:nowrap;}
+  .cmp tbody td{background:var(--card); color:var(--text-dim);}
+  .cmp tbody tr:nth-child(odd) th, .cmp tbody tr:nth-child(odd) td{background:var(--card-2);}
+
+  .keyterm{
+    display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
+    color:var(--amber); border:1px solid rgba(242,166,90,0.35); border-radius:4px;
+    padding:1px 7px; margin:2px 4px 2px 0; background:rgba(242,166,90,0.06);
+  }
+
+  footer{border-top:1px solid var(--cyan-dim); padding:28px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.sidebar{position:relative; top:0; margin-bottom:8px;}
+    nav.sidebar ol{display:flex; flex-wrap:wrap; border-left:none;}
+    nav.sidebar li{margin-right:4px;}
+    nav.sidebar a{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+    .cols{grid-template-columns:1fr;}
+    .stamp{grid-template-columns:1fr 1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <div class="wrap">
+    <div class="eyebrow">42 Berlin — C++ Common Core</div>
+    <h1>Module 02 — Ad-hoc polymorphism, operator overloading<br>&amp; the Orthodox Canonical class form</h1>
+    <p class="sub">A theory reference, not a solution set. Each sheet covers the underlying concepts one exercise is built to test — what's actually happening when your class is copied, compared, or added together — with diagrams for the parts that are easier to see than to read.</p>
+    <div class="stamp">
+      <div><div class="k">autor</div><div class="v">aiamlucas</div></div>
+      <div><div class="k">Standard</div><div class="v">c++98</div></div>
+      <div><div class="k">Scope</div><div class="v">ex00 &ndash; ex03</div></div>
+      <div><div class="k">Sheet</div><div class="v">1 of 1 &middot; theory pass</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="sidebar">
+    <div class="navlabel">Index</div>
+    <ol id="navlist">
+      <li><a href="#overview"><span class="num">00</span>Big picture</a></li>
+      <li><a href="#ocf"><span class="num">01</span>Canonical form</a></li>
+      <li><a href="#ex00"><span class="num">02</span>Fixed-point basics</a></li>
+      <li><a href="#ex01"><span class="num">03</span>Conversions &amp; &lt;&lt;</a></li>
+      <li><a href="#ex02"><span class="num">04</span>Operator overloading</a></li>
+      <li><a href="#ex03"><span class="num">05</span>BSP &amp; composition</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="sheet" id="overview">
+      <div class="sheetnum">Sheet 00</div>
+      <h2>The big picture</h2>
+      <p class="tagline">Module 02 asks what it means for your own type to behave like a real value &mdash; something you can copy, compare, and do arithmetic on, the same way you already do with <code>int</code> or <code>float</code>.</p>
+
+      <p>Module 01 taught you to build classes and manage memory. Module 02 is about giving a class the same rights built-in types get automatically. Two threads run through every exercise here:</p>
+
+      <div class="cols">
+        <div class="cardmini">
+          <h4>Orthodox Canonical Form</h4>
+          <p>A guarantee that your class copies, assigns, and destroys itself correctly, spelled out explicitly instead of left to whatever the compiler silently generates.</p>
+        </div>
+        <div class="cardmini">
+          <h4>Ad-hoc polymorphism</h4>
+          <p>The module's own name for operator overloading &mdash; teaching <code>+</code>, <code>==</code>, <code>&lt;&lt;</code> and friends to understand your type, resolved entirely at compile time.</p>
+        </div>
+      </div>
+
+      <p>Everything in ex00&ndash;ex03 builds one running example: a fixed-point number class, <code>Fixed</code>. By the end it behaves close enough to a built-in numeric type that you can write <code>a + b</code>, <code>a &lt; b</code>, <code>++a</code>, and <code>std::cout &lt;&lt; a</code> and have all of it just work &mdash; because you defined what each of those means for <code>Fixed</code>, one exercise at a time.</p>
+    </section>
+
+    <!-- ============ ORTHODOX CANONICAL FORM ============ -->
+    <section class="sheet" id="ocf">
+      <div class="sheetnum">Sheet 01</div>
+      <h2>The Orthodox Canonical Form</h2>
+      <p class="tagline">Four member functions every class secretly has already &mdash; canonical form just means writing them yourself, on purpose.</p>
+
+      <p>Here's the part that surprises people coming from Module 01: <strong style="color:var(--text)">every class you've ever written already has these four member functions</strong>, whether you wrote them or not. If you declare none of them, the compiler silently generates all four for you, doing the simplest possible thing &mdash; copy each member, do nothing special on destruction. Orthodox Canonical Form means you stop relying on that silent, automatic version and write all four explicitly, even when the implementation ends up trivial.</p>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Member</th><th>Signature</th><th>Runs when&hellip;</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Default constructor</th><td><code>Fixed();</code></td><td>an object is created with no arguments: <code>Fixed a;</code></td></tr>
+            <tr><th scope="row">Copy constructor</th><td><code>Fixed(const Fixed &amp;src);</code></td><td>a <em>new</em> object is created directly from an existing one: <code>Fixed b(a);</code></td></tr>
+            <tr><th scope="row">Copy assignment operator</th><td><code>Fixed &amp;operator=(const Fixed &amp;rhs);</code></td><td>an <em>already-existing</em> object is overwritten by another: <code>c = b;</code></td></tr>
+            <tr><th scope="row">Destructor</th><td><code>~Fixed();</code></td><td>the object's lifetime ends &mdash; scope exit, <code>delete</code>, or program end</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="diagram">
+        <span class="fig">Fig. 01 &mdash; the four canonical members, at a glance</span>
+        <svg viewBox="0 0 640 240" role="img" aria-label="A 2 by 2 grid showing the four canonical members: default constructor, copy constructor, copy assignment operator, and destructor, each with the code pattern that triggers it">
+          <rect x="30" y="20" width="280" height="90" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="170" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#5FC7EC">Default constructor</text>
+          <text x="170" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Fixed a;</text>
+          <text x="170" y="94" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">no arguments given</text>
+
+          <rect x="330" y="20" width="280" height="90" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="470" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">Copy constructor</text>
+          <text x="470" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Fixed b(a);</text>
+          <text x="470" y="94" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">a NEW object, built from a</text>
+
+          <rect x="30" y="130" width="280" height="90" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="170" y="156" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">Copy assignment</text>
+          <text x="170" y="182" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">c = b;</text>
+          <text x="170" y="204" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">c already exists</text>
+
+          <rect x="330" y="130" width="280" height="90" rx="6" fill="#122B4B" stroke="#E88FB0" stroke-width="1"/>
+          <text x="470" y="156" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E88FB0">Destructor</text>
+          <text x="470" y="182" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">&#125; // scope ends</text>
+          <text x="470" y="204" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">lifetime is over</text>
+        </svg>
+      </div>
+
+      <h3>The distinction everyone trips on: construction vs assignment</h3>
+      <p>The subject's own example in ex00 is designed to make this exact point:</p>
+
+      <div class="annot">
+        <pre><span class="tp">Fixed</span> a;        <span class="cm">// default constructor</span>
+<span class="tp">Fixed</span> b( a );   <span class="cm">// copy CONSTRUCTOR — b doesn't exist yet</span>
+<span class="tp">Fixed</span> c;        <span class="cm">// default constructor, again</span>
+c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span></pre>
+        <ul>
+          <li><b>Fixed b( a );</b> &mdash; there is no <code>b</code> before this line. C++ has to build one from scratch, using <code>a</code>'s value as the source. That's the <em>copy constructor's</em> job.</li>
+          <li><b>c = b;</b> &mdash; <code>c</code> already exists (it was default-constructed one line earlier). This line doesn't create anything new &mdash; it overwrites <code>c</code>'s existing value with <code>b</code>'s. That's the <em>copy assignment operator's</em> job.</li>
+        </ul>
+      </div>
+
+      <p>Same-looking syntax can hide the same distinction: <code>Fixed b = a;</code> (with an <code>=</code> at the point of declaration) is <em>still</em> the copy constructor, not assignment &mdash; because <code>b</code> is being created on that line, not overwritten. The rule is purely about whether the left-hand object already exists the moment before this line runs.</p>
+
+      <div class="note warn">
+        <span class="tag">Gotcha in the subject's own sample output</span>
+        <p>The subject marks one line <em>"may be missing depending on your implementation"</em>. That's <span class="keyterm">copy elision</span>: compilers are allowed to skip a copy entirely in certain situations (most commonly, returning a local object by value). Fewer "copy constructor called" prints than you expected is very likely the compiler legally optimizing a copy away &mdash; not a bug in your class.</p>
+      </div>
+
+      <h3>Why bother, if the compiler already writes these for free?</h3>
+      <p>For <code>Fixed</code> specifically &mdash; a class holding one plain <code>int</code> &mdash; the compiler-generated versions would actually work fine. The real payoff of this discipline shows up later, once a class owns something the compiler <em>can't</em> safely copy by just duplicating bytes: a pointer to heap memory, a file handle, anything with a lifetime of its own. Copying a pointer byte-for-byte gives you two objects pointing at the <em>same</em> memory &mdash; a shallow copy &mdash; and the first one to get destroyed frees memory the second one still thinks it owns.</p>
+
+      <p>This is often called the <span class="keyterm">Rule of Three</span> (the C++98-era version of what later standards extended into a Rule of Five): if a class needs a custom destructor, copy constructor, or copy assignment operator, it almost certainly needs <em>all three</em> &mdash; because all three exist to answer the same question: <em>what does it actually mean to copy or destroy this object?</em> <code>Fixed</code> doesn't need custom logic yet to answer that question correctly. Writing the four members explicitly now is the habit that pays off the moment a class does.</p>
+
+      <div class="note">
+        <span class="tag">Also from Module 01, still true here</span>
+        <p>Construction order and destruction order haven't changed: members are constructed in the order they're declared in the class, and objects (and members) are destroyed in the exact reverse order. Splitting the class into a <code>.hpp</code> (definition) and a <code>.cpp</code> (implementation) is also still required &mdash; same rule as every class since Module 00.</p>
+      </div>
+    </section>
+
+    <!-- ============ EX00 ============ -->
+    <section class="sheet" id="ex00">
+      <div class="sheetnum">Sheet 02 &middot; Exercise 00 &mdash; My First Class in Orthodox Canonical Form</div>
+      <h2>Fixed-point numbers, in their simplest form</h2>
+      <p class="tagline">A class that can only represent the value 0.0 &mdash; on purpose, so the canonical form itself is the entire exercise.</p>
+
+      <p>Fixed-point isn't a C++ feature &mdash; it's a convention. <code>Fixed</code> stores one plain <code>int</code>, and the class simply agrees to <em>interpret</em> that integer as if it had an imaginary binary point somewhere in the middle. With 8 fractional bits, the raw integer <code>256</code> is <em>understood</em> to mean <code>1.0</code>, because <code>256 / 2⁸ = 1</code>. Nothing about the bits themselves changed &mdash; only how the class chooses to read them.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 02 &mdash; one raw int, read as an integer part and a fractional part</span>
+        <svg viewBox="0 0 640 150" role="img" aria-label="Diagram of a raw integer split conceptually into an integer part and 8 fractional bits, with example raw values mapped to their real fixed-point values">
+          <rect x="40" y="20" width="440" height="40" rx="4" fill="#122B4B" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="260" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">integer part (the whole-number bits)</text>
+          <rect x="480" y="20" width="120" height="40" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="540" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">8 frac bits</text>
+          <text x="40" y="80" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">one 32-bit int, no separate storage for "the fraction" &mdash; just an agreed reading of the same bits</text>
+
+          <text x="40" y="112" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">raw = 256  &rarr;  256 / 256  =  1.0</text>
+          <text x="40" y="132" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">raw = 384  &rarr;  384 / 256  =  1.5</text>
+        </svg>
+      </div>
+
+      <h3>Why fixed-point exists at all, next to float</h3>
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th></th><th>Floating point</th><th>Fixed-point</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Representation</th><td>mantissa + exponent, position of the point moves</td><td>plain integer, position of the point is fixed and agreed in advance</td></tr>
+            <tr><th scope="row">Precision</th><td>varies with magnitude &mdash; less precise for very large or very small values</td><td>constant across the whole representable range</td></tr>
+            <tr><th scope="row">Determinism</th><td>rounding behavior can differ subtly across operations/hardware</td><td>plain integer math &mdash; fully deterministic, reproducible</td></tr>
+            <tr><th scope="row">Speed</th><td>needs FPU hardware for good performance</td><td>ordinary integer ops &mdash; fast even without an FPU</td></tr>
+            <tr><th scope="row">Typical use</th><td>general scientific computing</td><td>graphics, audio, embedded systems, anything needing predictable rounding</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><code>static const int</code> &mdash; the fractional bit count</h3>
+      <p><code>static</code> on a member means there is exactly <strong style="color:var(--text)">one</strong> copy of it, shared by every <code>Fixed</code> object that will ever exist &mdash; it is not stored inside each individual object the way <code>_rawValue</code> is. Conceptually it belongs to the <em>class</em>, not to any particular instance.</p>
+
+      <div class="note warn">
+        <span class="tag">C++98 gotcha</span>
+        <p>A <code>static const int</code> is one of the few members you're allowed to give a value directly inside the class body: <code>static const int fractionalBits = 8;</code>. This is a special-case exception in the standard for const integral types. But if that member's <em>address</em> is ever taken or it's bound to a reference anywhere, you may still need a matching out-of-class definition in the <code>.cpp</code> (without the initializer) to satisfy the linker. Worth knowing before a mysterious "undefined reference" shows up.</p>
+      </div>
+
+      <h3>What the constructor/destructor print statements are actually for</h3>
+      <p>Same instinct as <code>Zombie</code>'s destructor print back in Module 01 &mdash; construction and destruction are otherwise invisible events. Here, the print statements are the only way to <em>prove</em>, by reading your own program's output, that the compiler is calling the constructor or the assignment operator you think it's calling on any given line &mdash; which is exactly what this exercise is designed to make you verify for yourself.</p>
+    </section>
+
+    <!-- ============ EX01 ============ -->
+    <section class="sheet" id="ex01">
+      <div class="sheetnum">Sheet 03 &middot; Exercise 01 &mdash; Towards a more useful fixed-point number class</div>
+      <h2>Conversions, and the insertion operator</h2>
+      <p class="tagline">Turning an int or a float into raw bits, turning raw bits back, and teaching <code>&lt;&lt;</code> to print the result.</p>
+
+      <p>Two new constructors need to do the opposite jobs of each other: take a familiar number, and store it as the raw fixed-point representation this class actually keeps internally.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 03 &mdash; converting into Fixed's raw representation</span>
+        <svg viewBox="0 0 640 220" role="img" aria-label="Diagram showing an int converted to raw bits via a left shift, and a float converted to raw bits via multiplication and rounding">
+          <text class="cap" x="170" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">from int</text>
+          <rect x="40" y="46" width="260" height="56" rx="8" fill="#122B4B" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="170" y="66" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">int n = 10</text>
+          <text x="170" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">no fractional part to worry about</text>
+          <path d="M170 102 L170 130" stroke="#5FC7EC" stroke-width="1.4" fill="none" marker-end="url(#a01)"/>
+          <rect x="40" y="130" width="260" height="56" rx="8" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="170" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">raw = n &lt;&lt; 8  =  2560</text>
+          <text x="170" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">exact &mdash; same as n &times; 256</text>
+
+          <text x="470" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">from float</text>
+          <rect x="340" y="46" width="260" height="56" rx="8" fill="#122B4B" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="470" y="66" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">float f = 42.42f</text>
+          <text x="470" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">has a fractional part</text>
+          <path d="M470 102 L470 130" stroke="#5FC7EC" stroke-width="1.4" fill="none" marker-end="url(#a01)"/>
+          <rect x="340" y="130" width="260" height="56" rx="8" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="470" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">raw = roundf(f &times; 256)</text>
+          <text x="470" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">must round to the nearest int</text>
+
+          <defs>
+            <marker id="a01" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5FC7EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <p>Going the other direction reverses the same scale factor: <code>toInt()</code> divides (or shifts) the raw value back down by the fractional bit count, truncating whatever fraction is left; <code>toFloat()</code> divides by the same factor but as a floating-point division, keeping the fraction intact. <code>roundf</code> is explicitly authorized for exactly one reason &mdash; multiplying a float by 256 essentially never lands on a whole number, so something has to decide how to round it into the integer <code>_rawValue</code> actually stores.</p>
+
+      <h3>Why <code>operator&lt;&lt;</code> can't be a member function</h3>
+      <p>A member function's implicit first parameter is always the object it's called on &mdash; the left-hand side. If <code>operator&lt;&lt;</code> were a member of <code>Fixed</code>, the only syntax that would type-check is <code>a &lt;&lt; std::cout;</code>, with <code>Fixed</code> on the left. But the entire point is to write <code>std::cout &lt;&lt; a;</code>, with the stream on the left. That forces <code>operator&lt;&lt;</code> to be a free function instead, taking the stream as its first parameter explicitly:</p>
+
+      <pre><span class="tp">std::ostream</span> &amp;operator&lt;&lt;( <span class="tp">std::ostream</span> &amp;o, <span class="kw">const</span> Fixed &amp;f ) {
+    o &lt;&lt; f.toFloat();
+    <span class="kw">return</span> o; <span class="cm">// return by reference, so calls can chain</span>
+}</pre>
+
+      <p>Returning <code>std::ostream&amp;</code> is what makes <code>std::cout &lt;&lt; a &lt;&lt; b &lt;&lt; std::endl;</code> legal at all &mdash; each <code>&lt;&lt;</code> hands back the same stream, ready for the next one, the same reference-chaining reasoning behind why C++ functions return references in the first place.</p>
+
+      <div class="note">
+        <span class="tag">Where <code>friend</code> would normally show up &mdash; and why you don't need it</span>
+        <p>In ordinary C++, a free <code>operator&lt;&lt;</code> that needs a class's private data is often declared <code>friend</code> inside the class. This module explicitly forbids <code>friend</code>. The way around it: implement <code>operator&lt;&lt;</code> using <code>Fixed</code>'s own public interface &mdash; <code>toFloat()</code> &mdash; instead of reaching into <code>_rawValue</code> directly. If a class's public interface is complete enough, external functions rarely need special access at all; that's the encapsulation this restriction is quietly testing.</p>
+      </div>
+    </section>
+
+    <!-- ============ EX02 ============ -->
+    <section class="sheet" id="ex02">
+      <div class="sheetnum">Sheet 04 &middot; Exercise 02 &mdash; Now we're talking</div>
+      <h2>Ad-hoc polymorphism: teaching operators to understand Fixed</h2>
+      <p class="tagline">The module's own title, spelled out: the same operator behaves differently depending on the types involved &mdash; decided entirely at compile time.</p>
+
+      <p><span class="keyterm">Polymorphism</span> just means "many forms" &mdash; one name, several behaviors depending on context. <span class="keyterm">Ad-hoc</span> polymorphism (also called static or compile-time polymorphism) is the kind where the compiler decides <em>which</em> version to run purely by looking at the types of the operands, before the program ever runs. <code>a + b</code> compiles to a completely different instruction sequence depending on whether <code>a</code> and <code>b</code> are <code>int</code> or <code>Fixed</code> &mdash; there's no runtime lookup involved, no vtable, nothing dynamic. (The other kind &mdash; <em>subtype</em> polymorphism, decided at runtime through virtual functions &mdash; is what Module 04 introduces.)</p>
+
+      <h3>Comparisons and arithmetic</h3>
+      <p>Comparison operators return <code>bool</code>, and can compare raw bits directly &mdash; since both operands share the same fractional-bit scale, comparing the raw integers gives the exact same ordering as comparing the real values, with none of the surprises float comparison usually carries.</p>
+
+      <p>Arithmetic operators return a brand-new <code>Fixed</code> <em>by value</em>, and take their operand by <code>const&amp;</code>:</p>
+
+      <pre>Fixed Fixed::operator+( <span class="kw">const</span> Fixed &amp;rhs ) <span class="kw">const</span> {
+    <span class="kw">return</span> Fixed( <span class="kw">this</span>-&gt;toFloat() + rhs.toFloat() );
+}</pre>
+
+      <p>The trailing <code>const</code> promises <code>+</code> won't modify the object it's called on; <code>const Fixed&amp;</code> avoids copying <code>rhs</code> just to read it; returning by value is required because the result is a genuinely new number that has to outlive this function call &mdash; there's no existing object to hand back a reference to.</p>
+
+      <h3>Pre-increment vs post-increment</h3>
+      <p>These look almost identical but do fundamentally different things, and the syntax exists specifically to tell the compiler which one you mean:</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 04 &mdash; ++a modifies then returns itself; a++ saves, modifies, returns the old copy</span>
+        <svg viewBox="0 0 680 220" role="img" aria-label="Diagram contrasting pre-increment, which modifies the object and returns a reference to it, with post-increment, which saves a copy of the old value before modifying the object and returns the old copy">
+          <text x="30" y="24" font-family="IBM Plex Mono" font-size="12" fill="#5FC7EC">++a  (pre)</text>
+          <rect x="30" y="34" width="220" height="50" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="140" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">modify a in place</text>
+          <path d="M250 59 L290 59" stroke="#5FC7EC" stroke-width="1.4" marker-end="url(#a02)"/>
+          <rect x="290" y="34" width="260" height="50" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="420" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">return *this (same object, by ref)</text>
+
+          <text x="30" y="120" font-family="IBM Plex Mono" font-size="12" fill="#F2A65A">a++  (post)</text>
+          <rect x="30" y="130" width="160" height="50" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="110" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">save old copy</text>
+          <path d="M190 155 L225 155" stroke="#5FC7EC" stroke-width="1.4" marker-end="url(#a02)"/>
+          <rect x="225" y="130" width="160" height="50" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="305" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">modify a in place</text>
+          <path d="M385 155 L420 155" stroke="#5FC7EC" stroke-width="1.4" marker-end="url(#a02)"/>
+          <rect x="420" y="130" width="230" height="50" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="535" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">return old copy (by value)</text>
+
+          <defs>
+            <marker id="a02" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5FC7EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <pre>Fixed &amp;Fixed::operator++() {              <span class="cm">// pre: ++a</span>
+    _rawValue += 1;
+    <span class="kw">return</span> *<span class="kw">this</span>;
+}
+Fixed Fixed::operator++( <span class="kw">int</span> ) {          <span class="cm">// post: a++  — the unused int marks "postfix"</span>
+    Fixed old = *<span class="kw">this</span>;
+    _rawValue += 1;
+    <span class="kw">return</span> old;
+}</pre>
+
+      <p>That unnamed <code>int</code> parameter in the postfix version carries no value at all &mdash; it exists purely as a marker so overload resolution can tell prefix and postfix apart, since otherwise both would have the exact same signature. Pre-increment returns by <em>reference</em> because there's no new object &mdash; you're handing back the same one you just changed. Post-increment <em>must</em> return by value, because the object itself has already moved on; only the saved copy still holds the pre-increment value.</p>
+
+      <p>The step size, <span class="keyterm">epsilon</span>, is the smallest possible change to a <code>Fixed</code>: one raw bit, which represents <code>1/256</code> in real terms with 8 fractional bits. Incrementing is just <code>_rawValue += 1</code> &mdash; no float math anywhere, which is precisely the kind of thing fixed-point representations make trivially exact.</p>
+
+      <h3>Static <code>min</code> / <code>max</code></h3>
+      <p><code>static</code> on a member function means it has no implicit <code>this</code> &mdash; it isn't "this object's minimum compared to another," it's a function that operates purely on the two arguments it's explicitly given, called as <code>Fixed::min(a, b)</code> rather than <code>a.min(b)</code>. Two overloads exist &mdash; one taking <code>Fixed&amp;</code>, one taking <code>const Fixed&amp;</code> &mdash; so the right version gets picked automatically whether you're comparing mutable objects or <code>const</code> ones, exactly like the <code>b</code> and <code>c</code> in the subject's own example.</p>
+
+      <p class="dim">Both return a <em>reference</em> to whichever argument is smaller/larger &mdash; not a new copy. You get back an alias to one of the two objects you already had, which avoids an unnecessary copy and means the non-const version can still be used to modify whichever one "won."</p>
+    </section>
+
+    <!-- ============ EX03 ============ -->
+    <section class="sheet" id="ex03">
+      <div class="sheetnum">Sheet 05 &middot; Exercise 03 &mdash; BSP</div>
+      <h2>Composition with const members, and a sign test</h2>
+      <p class="tagline">A Point made of two immutable Fixed coordinates, and a geometric test that decides inside vs outside using nothing but comparisons.</p>
+
+      <p><code>Point</code>'s two coordinates are declared <code>Fixed const x</code> and <code>Fixed const y</code> &mdash; and that immediately reconnects to a Module 01 rule: a <code>const</code> member has no legal "assign later," so <code>x</code> and <code>y</code> <strong style="color:var(--text)">must</strong> be set in <code>Point</code>'s constructor initializer list, exactly like the reference members from ex03 of Module 01. Same underlying rule, new context.</p>
+
+      <p>The design reasoning behind choosing <code>const</code> here, beyond the mechanical requirement: a <code>Point</code> represents one specific location. Once created, its coordinates shouldn't be able to silently drift &mdash; if you want a different location, you construct a different <code>Point</code>. That's the same immutable-value philosophy <code>Fixed</code> itself already follows.</p>
+
+      <h3>The point-in-triangle test</h3>
+      <p>The natural fit here, given everything <code>Fixed</code> can already compare and multiply, is a <span class="keyterm">sign test</span> using the 2D cross product. For each edge of the triangle, compute a value whose <em>sign</em> tells you which side of that edge's line the test point falls on. If the point lands on the same side for all three edges, it's inside.</p>
+
+      <p>For an edge from point <code>P1</code> to <code>P2</code>, and a test point <code>P</code>, the sign check is:</p>
+      <pre>cross = (P2.x - P1.x) * (P.y - P1.y) - (P2.y - P1.y) * (P.x - P1.x)</pre>
+      <p class="dim">Run this once per edge (a&rarr;b, b&rarr;c, c&rarr;a). If all three results share the same sign, the point is inside. If any result is exactly zero, the point lies precisely on that edge's line &mdash; which the subject defines as outside (not strictly inside).</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 05 &mdash; same sign on every edge = inside; a differing sign = outside</span>
+        <svg viewBox="0 0 640 260" role="img" aria-label="Two triangles side by side. The left triangle shows a point inside, with all three edges giving the same sign. The right triangle shows a point outside, near an edge whose sign differs from the other two.">
+          <polygon points="60,220 260,220 160,40" fill="none" stroke="#7FD9A8" stroke-width="1.6"/>
+          <circle cx="160" cy="165" r="5" fill="#F2A65A"/>
+          <text x="160" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#F2A65A">P</text>
+          <text x="160" y="245" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#E7F1F9">inside &mdash; same sign, all 3 edges</text>
+
+          <polygon points="380,220 580,220 480,40" fill="none" stroke="#E88FB0" stroke-width="1.6"/>
+          <line x1="580" y1="220" x2="480" y2="40" stroke="#E88FB0" stroke-width="2.4" stroke-dasharray="5 4"/>
+          <circle cx="565" cy="95" r="5" fill="#F2A65A"/>
+          <text x="565" y="82" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#F2A65A">Q</text>
+          <text x="480" y="245" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#E7F1F9">outside &mdash; sign flips on the dashed edge</text>
+        </svg>
+      </div>
+
+      <p>This is the actual payoff of ex01 and ex02: <code>bsp()</code> is implementable using only the public interface you already built &mdash; <code>Fixed</code>'s <code>+</code>, <code>-</code>, <code>*</code>, and comparisons &mdash; never touching a raw integer directly. The whole class exists to make code like this read naturally.</p>
+
+      <div class="note">
+        <span class="tag">Prototype is exact, same rule as Module 01</span>
+        <p><code>bool bsp( Point const a, Point const b, Point const c, Point const point );</code> &mdash; parameters by value, not <code>const&amp;</code>. The subject fixes this signature exactly, same as <code>zombieHorde</code> back in Module 01: when a prototype is given, match it literally, regardless of what would otherwise be the "better" choice.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>C++ Module 02 theory reference &middot; concepts only, exercises are yours to write</footer>
+
+<script>
+  var links = document.querySelectorAll('nav.sidebar a');
+  var sections = Array.prototype.map.call(links, function(l){ return document.querySelector(l.getAttribute('href')); });
+  function setActive(){
+    var y = window.scrollY + 120;
+    var current = sections[0];
+    sections.forEach(function(s){ if(s && s.offsetTop <= y) current = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    var idx = sections.indexOf(current);
+    if(idx >= 0) links[idx].classList.add('active');
+  }
+  document.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>
