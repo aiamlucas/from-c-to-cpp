@@ -6,19 +6,20 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/21 09:42:48 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/23 22:43:55 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/23 22:48:02 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef FIXED_HPP
 #define FIXED_HPP
 
-// Orthodox Canonical Form
+// Orthodox Canonical Form: default constructor, copy constructor\
+// copy assignment operator and destructor
 
 class Fixed {
 private:
-    int _fixedPoint;
-    static const int fractionalBits = 8;
+    int _fixedPoint;                     // storing the raw fixed-point
+    static const int fractionalBits = 8; // shared by all objects, never change
 
 public:
     Fixed(void);                          // 1) constructor

@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/21 09:42:42 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/23 22:44:23 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/23 22:51:07 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,15 +18,15 @@ Fixed::Fixed(void) : _fixedPoint(0) {
     std::cout << "Default constructor called" << std::endl;
 }
 
-// copy constructor
+// copy constructor - builds a new Fixed copying other's raw value
 Fixed::Fixed(const Fixed &other) : _fixedPoint(other._fixedPoint) {
     std::cout << "Copy constructor called" << std::endl;
 }
 
-// copy assign operator
+// copy assign operator - overwrite an existing Fixed with other's value
 Fixed &Fixed::operator=(const Fixed &other) {
     std::cout << "Copy assignment operator called" << std::endl;
-    if (this == &other)
+    if (this == &other) // guard again self-assignment (a = a);
         return *this;
     _fixedPoint = other._fixedPoint;
     return *this;
@@ -34,8 +34,10 @@ Fixed &Fixed::operator=(const Fixed &other) {
 
 Fixed::~Fixed() { std::cout << "Destructor called" << std::endl; }
 
+// return the raw store value
 int Fixed::getRawBits(void) const {
     std::cout << "getRawBits member function called" << std::endl;
     return _fixedPoint;
 }
+// overwrite the raw stored value
 void Fixed::setRawBits(int const raw) { _fixedPoint = raw; }
