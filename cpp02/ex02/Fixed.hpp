@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 22:21:51 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/25 22:36:41 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/25 23:24:00 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,24 @@ public:
     Fixed operator-(const Fixed &other) const;
     Fixed operator*(const Fixed &other) const;
     Fixed operator/(const Fixed &other) const;
+
+    Fixed &operator++();   // pre-increment ++a;
+    Fixed operator++(int); // pos-increment a++;
+    Fixed &operator--();   //  pre-decrement --a;
+    Fixed operator--(int); // pre-decrement a--;
+
+    static Fixed &min(Fixed &a, Fixed &b);
+    static const Fixed &min(const Fixed &a, const Fixed &b);
+    //
+    // static member function min that takes two references to fixed-point
+    // numbers as parameters, and returns a reference to the smallest one. • A
+    // static member function min that takes two references to constant
+    // fixed-point numbers as parameters, and returns a reference to the
+    // smallest one. • A static member function max that takes two references to
+    // fixed-point numbers as parameters, and returns a reference to the
+    // greatest one. • A static member function max that takes two references to
+    // constant fixed-point numbers as parameters, and returns a reference to
+    // the greatest one.
 };
 
 // An overload of the insertion («) operator
