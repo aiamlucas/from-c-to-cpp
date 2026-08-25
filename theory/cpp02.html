@@ -369,7 +369,7 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
       <h2>Conversions, and the insertion operator</h2>
       <p class="tagline">Turning an int or a float into raw bits, turning raw bits back, and teaching <code>&lt;&lt;</code> to print the result.</p>
 
-      <p>Two new constructors need to do the opposite jobs of each other: take a familiar number, and store it as the raw fixed-point representation this class actually keeps internally.</p>
+      <p>Two new constructors need to do the opposite jobs of each other: take a familiar number, and store it as the raw fixed-point representation this class actually keeps internally. And two more member functions, <code>toFloat()</code> and <code>toInt()</code>, need to undo that exact process &mdash; take the raw representation and hand back something readable again.</p>
 
       <div class="diagram">
         <span class="fig">Fig. 03 &mdash; converting into Fixed's raw representation</span>
@@ -400,7 +400,143 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
         </svg>
       </div>
 
-      <p>Going the other direction reverses the same scale factor: <code>toInt()</code> divides (or shifts) the raw value back down by the fractional bit count, truncating whatever fraction is left; <code>toFloat()</code> divides by the same factor but as a floating-point division, keeping the fraction intact. <code>roundf</code> is explicitly authorized for exactly one reason &mdash; multiplying a float by 256 essentially never lands on a whole number, so something has to decide how to round it into the integer <code>_rawValue</code> actually stores.</p>
+      <h3>Watching the bits actually move</h3>
+      <p><code>num &lt;&lt; fractionalBits</code> isn't a metaphor for multiplying by 256 &mdash; it <em>is</em> multiplying by 256, at the bit level, with nothing else going on. Every bit of <code>num</code> slides left by 8 positions. Whatever opens up on the right doesn't stay empty &mdash; it gets filled with brand-new zero bits.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 03a &mdash; 10 &lt;&lt; 8: the value bits slide left, zeros fill in behind them</span>
+        <svg viewBox="0 0 640 250" role="img" aria-label="Binary representation of 10 on top, with the four value bits 1010 highlighted in green. Below, after shifting left by 8, those same green bits have moved 8 places to the left, and 8 new zero bits, highlighted in amber, have filled in on the right, producing 2560.">
+          <defs>
+            <marker id="a01b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5FC7EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <text x="310" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">num = 10</text>
+
+          <rect x="118" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="133" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="152" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="167" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="186" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="201" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="220" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="235" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="254" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="269" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="288" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="303" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="322" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="337" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="356" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="371" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="390" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="405" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+          <rect x="424" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="439" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">0</text>
+          <rect x="458" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="473" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+          <rect x="492" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="507" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">0</text>
+
+          <path d="M310 92 L310 138" stroke="#5FC7EC" stroke-width="1.4" fill="none" marker-end="url(#a01b)"/>
+          <text x="326" y="120" font-family="IBM Plex Mono" font-size="11.5" fill="#5FC7EC">&lt;&lt; 8</text>
+
+          <rect x="118" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="133" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+          <rect x="152" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="167" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">0</text>
+          <rect x="186" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="201" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+          <rect x="220" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="235" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">0</text>
+          <rect x="254" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="269" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+          <rect x="288" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="303" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+          <rect x="322" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="337" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+          <rect x="356" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="371" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+          <rect x="390" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="405" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+          <rect x="424" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="439" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+          <rect x="458" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="473" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+          <rect x="492" y="150" width="30" height="36" rx="4" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/><text x="507" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F2A65A">0</text>
+
+          <text x="310" y="216" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">raw = 2560</text>
+        </svg>
+      </div>
+
+      <p class="dim">Green marks the four bits that actually carry <code>10</code>'s value (<code>1010</code>). Watch them: same four bits, same order, just relocated 8 places left. Amber marks the 8 brand-new zero bits that filled the gap behind them. Nothing was recalculated &mdash; the value bits simply moved, which is exactly why this conversion is exact, with zero rounding error, unlike the float path below.</p>
+
+      <h3>Reading bits by hand: the powers-of-two chart</h3>
+      <p>The same tool used for subnet masks in networking works here too &mdash; a row of column headers, each one a power of 2, doubling every step:</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 03b &mdash; converting 10 to binary by hand, one power of 2 at a time</span>
+        <svg viewBox="0 0 640 190" role="img" aria-label="Eight columns headed 128, 64, 32, 16, 8, 4, 2, 1. Below, the bit pattern for decimal 10 is shown as 0 0 0 0 1 0 1 0, with the 8 and 2 columns highlighted in green since 8 plus 2 equals 10.">
+          <rect x="52"  y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="82"  y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">128</text>
+          <rect x="120" y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="150" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">64</text>
+          <rect x="188" y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="218" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">32</text>
+          <rect x="256" y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="286" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">16</text>
+          <rect x="324" y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="354" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">8</text>
+          <rect x="392" y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="422" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">4</text>
+          <rect x="460" y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="490" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">2</text>
+          <rect x="528" y="40" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="558" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">1</text>
+
+          <rect x="52"  y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="82"  y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="120" y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="150" y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="188" y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="218" y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="256" y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="286" y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="324" y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="354" y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+          <rect x="392" y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="422" y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="460" y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="490" y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+          <rect x="528" y="96" width="60" height="40" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="558" y="121" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+
+          <text x="320" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">8 + 2 = 10 — only the highlighted columns are "on"</text>
+        </svg>
+      </div>
+
+      <p>Decimal &rarr; binary: walk the columns left to right, asking "does this power of 2 still fit in what's left?" For <code>10</code>: <code>128</code>? no. <code>64</code>? no. <code>32</code>? no. <code>16</code>? no. <code>8</code>? yes, remainder <code>2</code>. <code>4</code>? no. <code>2</code>? yes, remainder <code>0</code>. <code>1</code>? no. Binary &rarr; decimal is just the reverse: add up the powers of 2 sitting under every <code>1</code>.</p>
+
+      <p class="dim">Connecting this straight back to the shift: every column here has a fixed power-of-2 value. <code>&lt;&lt; 8</code> doesn't touch those values &mdash; it slides every bit eight columns to the left, so whatever sat under <code>8</code> now sits under <code>2048</code>, and whatever sat under <code>2</code> now sits under <code>512</code>. Each bit's value gets multiplied by <code>2⁸ = 256</code>, which is exactly why the whole number does too.</p>
+
+      <div class="note">
+        <span class="tag">Doing it at the terminal with bc</span>
+        <p><code>bc</code> converts between bases directly. <code>echo "obase=2; 10" | bc</code> prints <code>1010</code>. <code>echo "ibase=2; 1010" | bc</code> prints <code>10</code>. One gotcha: set <code>ibase</code> before <code>obase</code> if you need both &mdash; once <code>ibase=2</code> is set, <code>bc</code> reads every number after it, including a subsequent <code>obase</code> value, as binary too.</p>
+      </div>
+
+      <h3>Going back the other way: toFloat and toInt</h3>
+      <pre><span class="tp">float</span> Fixed::toFloat( <span class="kw">void</span> ) <span class="kw">const</span> {
+    <span class="kw">return</span> static_cast&lt;<span class="tp">float</span>&gt;(_fixedPoint) / (1 &lt;&lt; fractionalBits);
+}
+<span class="tp">int</span> Fixed::toInt( <span class="kw">void</span> ) <span class="kw">const</span> {
+    <span class="kw">return</span> _fixedPoint &gt;&gt; fractionalBits;
+}</pre>
+
+      <p>Both functions reverse the exact scale factor the constructors applied &mdash; but each one has to reverse it in a way that matches its own return type.</p>
+
+      <p><b style="color:var(--text)">toInt()</b> mirrors the int constructor exactly: <code>&gt;&gt;</code> is the inverse of <code>&lt;&lt;</code>, sliding every bit back to the right by <code>fractionalBits</code> positions. This is why truncation happens automatically and silently: any bits that represented fractional value simply fall off the right edge of the integer and are gone &mdash; there's nowhere for them to go once the shift discards them. <code>toInt()</code> never rounds; it always throws the fraction away.</p>
+
+      <p><b style="color:var(--text)">toFloat()</b> can't use a shift at all, for the same reason the float constructor couldn't &mdash; shifting is only meaningful for a type whose bits directly encode "value &times; 2ⁿ", and <code>_fixedPoint</code> is that type, but the <em>result</em> we want back is a <code>float</code>, which encodes numbers completely differently (mantissa and exponent). So the reversal has to happen through division instead: <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> undoes the earlier multiplication by 256.</p>
+
+      <div class="note warn">
+        <span class="tag">Why static_cast&lt;float&gt; comes first</span>
+        <p>Without the cast, <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> is <code>int / int</code> &mdash; plain integer division, which truncates before a <code>float</code> ever enters the picture. <code>2560 / 256</code> gives the correct whole number <code>10</code> by luck, but something like <code>2600 / 256</code> would silently truncate to <code>10</code> instead of the correct <code>10.15625</code>, losing the fraction before division even has a chance to preserve it. <code>static_cast&lt;float&gt;(_fixedPoint)</code> converts the numerator to a <code>float</code> <em>first</em>, so the division that follows is real floating-point division, keeping the fractional part intact.</p>
+      </div>
+
+      <div class="diagram">
+        <span class="fig">Fig. 03c &mdash; reversing the conversion: toInt() shifts back, toFloat() casts then divides</span>
+        <svg viewBox="0 0 640 220" role="img" aria-label="Diagram showing raw bits converted back with toInt via a right shift, and converted back with toFloat via a cast to float followed by division">
+          <text x="170" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">toInt()</text>
+          <rect x="40" y="46" width="260" height="56" rx="8" fill="#122B4B" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="170" y="66" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">_fixedPoint = 2560</text>
+          <text x="170" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">raw stored value</text>
+          <path d="M170 102 L170 130" stroke="#5FC7EC" stroke-width="1.4" fill="none" marker-end="url(#a01c)"/>
+          <rect x="40" y="130" width="260" height="56" rx="8" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="170" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">raw &gt;&gt; 8  =  10</text>
+          <text x="170" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">shift discards any fraction</text>
+
+          <text x="470" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">toFloat()</text>
+          <rect x="340" y="46" width="260" height="56" rx="8" fill="#122B4B" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="470" y="66" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">_fixedPoint = 804</text>
+          <text x="470" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">raw stored value</text>
+          <path d="M470 102 L470 130" stroke="#5FC7EC" stroke-width="1.4" fill="none" marker-end="url(#a01c)"/>
+          <rect x="340" y="130" width="260" height="56" rx="8" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="470" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">static_cast&lt;float&gt;(raw) / 256</text>
+          <text x="470" y="172" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">= 3.140625</text>
+
+          <defs>
+            <marker id="a01c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5FC7EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="note think">
+        <span class="tag">The round trip isn't always exact</span>
+        <p><code>Fixed(3.14f)</code> stores <code>roundf(3.14 &times; 256) = 804</code>. Calling <code>toFloat()</code> on that gives <code>804 / 256 = 3.140625</code> &mdash; not exactly <code>3.14</code> back. This is the precision half of the fixed-vs-float trade-off made concrete: with 8 fractional bits, the smallest representable step is <code>1/256 &asymp; 0.0039</code>, so any value that doesn't land exactly on a multiple of that step gets rounded to the nearest one representable, and stays rounded. This isn't a bug in <code>toFloat()</code> &mdash; it's a direct, visible consequence of choosing 8 fractional bits, and it's the same <code>&epsilon;</code> that ex02's increment/decrement operators step by.</p>
+      </div>
 
       <h3>Why <code>operator&lt;&lt;</code> can't be a member function</h3>
       <p>A member function's implicit first parameter is always the object it's called on &mdash; the left-hand side. If <code>operator&lt;&lt;</code> were a member of <code>Fixed</code>, the only syntax that would type-check is <code>a &lt;&lt; std::cout;</code>, with <code>Fixed</code> on the left. But the entire point is to write <code>std::cout &lt;&lt; a;</code>, with the stream on the left. That forces <code>operator&lt;&lt;</code> to be a free function instead, taking the stream as its first parameter explicitly:</p>
@@ -414,7 +550,7 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
 
       <div class="note">
         <span class="tag">Where <code>friend</code> would normally show up &mdash; and why you don't need it</span>
-        <p>In ordinary C++, a free <code>operator&lt;&lt;</code> that needs a class's private data is often declared <code>friend</code> inside the class. This module explicitly forbids <code>friend</code>. The way around it: implement <code>operator&lt;&lt;</code> using <code>Fixed</code>'s own public interface &mdash; <code>toFloat()</code> &mdash; instead of reaching into <code>_rawValue</code> directly. If a class's public interface is complete enough, external functions rarely need special access at all; that's the encapsulation this restriction is quietly testing.</p>
+        <p>In ordinary C++, a free <code>operator&lt;&lt;</code> that needs a class's private data is often declared <code>friend</code> inside the class. This module explicitly forbids <code>friend</code>. The way around it: implement <code>operator&lt;&lt;</code> using <code>Fixed</code>'s own public interface &mdash; <code>toFloat()</code> &mdash; instead of reaching into <code>_fixedPoint</code> directly. If a class's public interface is complete enough, external functions rarely need special access at all; that's the encapsulation this restriction is quietly testing.</p>
       </div>
     </section>
 
