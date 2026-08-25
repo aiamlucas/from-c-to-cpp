@@ -4,8 +4,10 @@
 *.exe
 
 # executables
+# cpp00
 phonebook
 megaphone
+#cpp01
 zombie
 brain
 game
@@ -13,6 +15,8 @@ sedpp
 harl
 harlFilter
 tests
+# cpp02
+fixed
 
 # build artifacts
 *.dSYM/
