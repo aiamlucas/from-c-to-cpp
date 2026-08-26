@@ -1,3 +1,6 @@
+# Bear / clangd
+compile_commands.json
+.cache/
 # compiled binaries
 *.o
 *.out
