@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/24 10:34:19 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/24 12:17:26 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/26 16:13:31 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,9 @@ float Fixed::toFloat(void) const {
 }
 int Fixed::toInt(void) const { return _fixedPoint >> fractionalBits; }
 
+// example: stream=std::cout, fix=b (a Fixed holding a raw value of 2560)
+//          "b is " << b  ->  fix = b  ->  fix.toFloat() = 2560/256 = 10.0
+//          prints: b is 10
 std::ostream &operator<<(std::ostream &stream, const Fixed &fix) {
     stream << fix.toFloat();
     return stream;
