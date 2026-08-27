@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cpp02 — Evaluation Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f18;
+    --bg-2:#13141f;
+    --card:#181926;
+    --card-2:#1e2030;
+    --border:rgba(96,192,186,0.20);
+    --cyan:#4fbfb2;
+    --amber:#cf9247;
+    --green:#9db54a;
+    --red:#e0645f;
+    --violet:#b58ad9;
+    --text:#c9d2f0;
+    --text-dim:#8b93b8;
+    --text-faint:#5c6390;
+    --sans:'Roboto', sans-serif;
+    --mono:'Roboto Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(79,191,178,0.05), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  .titleblock{border-bottom:1px solid var(--border); padding:44px 0 26px;}
+  .titleblock .tag{font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--cyan); text-transform:uppercase; margin-bottom:10px;}
+  .titleblock h1{font-family:var(--sans); font-weight:700; font-size:clamp(28px,4vw,42px); color:#fff;}
+  .titleblock .sub{font-size:16px; color:var(--text-dim); max-width:620px; margin-top:10px;}
+  .titleblock .genrow{margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;}
+  .titleblock .genchip{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); background:var(--card); border:1px solid var(--border); border-radius:20px; padding:6px 14px;}
+  .titleblock .genchip b{color:var(--cyan); font-weight:500;}
+
+  .layout{display:grid; grid-template-columns:220px 1fr; gap:44px; padding:36px 0 100px;}
+  nav.sidebar{position:sticky; top:24px; align-self:start; height:fit-content;}
+  nav.sidebar .navlabel{font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--text-faint); text-transform:uppercase; margin-bottom:14px;}
+  nav.sidebar ol{list-style:none; border-left:1px solid var(--border);}
+  nav.sidebar a{display:block; padding:9px 0 9px 16px; font-family:var(--mono); font-size:13px; color:var(--text-dim); text-decoration:none; border-left:2px solid transparent; margin-left:-1px; transition:color .15s, border-color .15s;}
+  nav.sidebar a:hover{color:var(--text);}
+  nav.sidebar a.active{color:var(--cyan); border-left-color:var(--cyan);}
+
+  main{min-width:0;}
+  section.sheet{padding-top:8px; margin-bottom:88px; scroll-margin-top:24px;}
+  section.sheet .exnum{font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--text-faint); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:10px;}
+  section.sheet h2{font-family:var(--sans); font-weight:700; font-size:clamp(22px,2.6vw,30px); color:#fff; margin-bottom:6px;}
+  section.sheet .tagline{color:var(--text-dim); font-size:15px; margin-bottom:20px; max-width:680px;}
+  section.sheet h3{font-family:var(--mono); font-size:13px; font-weight:600; color:var(--text); letter-spacing:.03em; margin:34px 0 12px; display:flex; align-items:center; gap:9px;}
+  section.sheet h3 .filebadge{font-size:10px; color:var(--cyan); background:var(--card-2); border:1px solid var(--border); border-radius:4px; padding:2px 8px; text-transform:uppercase; letter-spacing:.06em;}
+  section.sheet h4{font-family:var(--sans); font-weight:700; font-size:15px; color:var(--cyan); margin:30px 0 10px;}
+  section.sheet p{max-width:700px; margin:0 0 20px; color:var(--text); font-size:15px;}
+  code{font-family:var(--mono); font-size:.9em; background:var(--card); padding:2px 6px; border-radius:3px; color:var(--green);}
+  pre{font-family:var(--mono); font-size:13px; line-height:1.65; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; overflow-x:auto; margin:0 0 10px; color:var(--text);}
+  pre .kw{color:var(--violet);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;} pre .st{color:var(--green);}
+
+  .concepts{
+    border:1px solid var(--border); border-radius:8px; background:var(--card-2);
+    padding:16px 20px; margin:0 0 26px; max-width:700px;
+  }
+  .concepts .clabel{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); margin-bottom:12px; display:block;}
+  .concepts dl{display:grid; grid-template-columns:auto 1fr; gap:8px 16px; margin:0;}
+  .concepts dt{font-family:var(--mono); font-size:13px; color:var(--cyan); white-space:nowrap; font-weight:500; align-self:baseline;}
+  .concepts dd{font-size:13.5px; color:var(--text-dim); margin:0; align-self:baseline;}
+
+  .qa{border:1px solid var(--border); border-radius:8px; margin:0 0 14px; overflow:hidden; max-width:700px;}
+  .qa .q{background:var(--card-2); padding:12px 18px; font-family:var(--sans); font-weight:500; font-size:14.5px; color:#fff; display:flex; gap:10px;}
+  .qa .q::before{content:"Q"; font-family:var(--mono); color:var(--amber); font-weight:700;}
+  .qa .a{background:var(--card); padding:14px 18px; font-size:14.5px; color:var(--text-dim); display:flex; gap:10px;}
+  .qa .a::before{content:"A"; font-family:var(--mono); color:var(--cyan); font-weight:700; flex-shrink:0;}
+  .qa.checklist{border-color:rgba(157,181,74,0.35);}
+  .qa.checklist .q{border-left:3px solid var(--green);}
+  .qa.checklist .q::before{content:"✓"; color:var(--green);}
+
+  .checklist-note{
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--green); margin:34px 0 12px; display:flex; align-items:center; gap:8px;
+  }
+  .checklist-note::before{content:""; width:16px; height:1px; background:var(--green); display:inline-block;}
+
+  .pitch{font-size:17px; color:#fff; max-width:680px; margin:0 0 22px; padding:16px 20px; border:1px dashed var(--border); border-radius:8px; font-style:italic;}
+
+  footer{border-top:1px solid var(--border); padding:26px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.sidebar{position:relative; top:0; margin-bottom:8px;}
+    nav.sidebar ol{display:flex; flex-wrap:wrap; border-left:none;}
+    nav.sidebar a{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+    .concepts dl{grid-template-columns:1fr;}
+    .concepts dd{margin-bottom:4px;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <div class="wrap">
+    <p class="tag">cpp02</p>
+    <h1>Evaluation Walkthrough</h1>
+    <p class="sub">Peer-evaluation prep, exercise by exercise — a quick concept recap up front, the code walked through, then the questions an evaluator is likely to ask.</p>
+    <div class="genrow">
+      <span class="genchip">Every exercise: <b>Makefile</b> compiles clean with <b>-Wall -Wextra -Werror -std=c++98</b></span>
+      <span class="genchip">Every exercise: Orthodox Canonical Form, split into <b>.hpp</b> / <b>.cpp</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="sidebar">
+    <div class="navlabel">Index</div>
+    <ol id="navlist">
+      <li><a href="#ex00">ex00 &mdash; Canonical Fixed</a></li>
+      <li><a href="#ex01">ex01 &mdash; Conversions &amp; &lt;&lt;</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ EX00 ============ -->
+    <section class="sheet" id="ex00">
+      <div class="exnum">ex00</div>
+      <h2>My First Class in Orthodox Canonical Form</h2>
+      <p class="tagline">A fixed-point class that can only represent 0.0 &mdash; on purpose, so the canonical form itself is the whole point of the exercise.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>Orthodox Canonical Form</dt>
+          <dd>Writing the default constructor, copy constructor, copy assignment operator, and destructor explicitly, instead of relying on the compiler's silent versions.</dd>
+          <dt>static const int</dt>
+          <dd>One value shared by every Fixed object, not stored per-instance &mdash; and one of the few members C++98 lets you initialize directly in the class body.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"This class can only represent 0.0 right now, and that's the point &mdash; the exercise isn't about the number, it's about proving I can write all four canonical members myself and show, with print statements, exactly which one fires on each line."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Fixed.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> Fixed {
+<span class="kw">private</span>:
+    <span class="tp">int</span> _fixedPoint;                     <span class="cm">// storing the raw fixed-point value</span>
+    <span class="kw">static</span> <span class="kw">const</span> <span class="tp">int</span> fractionalBits = 8; <span class="cm">// shared by all objects, never changes</span>
+<span class="kw">public</span>:
+    Fixed(<span class="kw">void</span>);                          <span class="cm">// default constructor</span>
+    Fixed(<span class="kw">const</span> Fixed &amp;other);            <span class="cm">// copy constructor</span>
+    Fixed &amp;operator=(<span class="kw">const</span> Fixed &amp;other); <span class="cm">// copy assignment operator</span>
+    ~Fixed();                             <span class="cm">// destructor</span>
+    <span class="tp">int</span> getRawBits(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="kw">void</span> setRawBits(<span class="tp">int</span> <span class="kw">const</span> raw);
+};</pre>
+      <p>One private member, one shared constant, and exactly the four canonical members plus the two functions the subject asks for. <code>fractionalBits</code> is given its value right here in the class body &mdash; a special-case exception in C++98 for <code>static const</code> integral types.</p>
+
+      <h3>Fixed.cpp <span class="filebadge">default constructor</span></h3>
+      <pre>Fixed::Fixed(<span class="kw">void</span>) : _fixedPoint(0) {
+    std::cout &lt;&lt; <span class="st">"Default constructor called"</span> &lt;&lt; std::endl;
+}</pre>
+      <p>Initializer list sets <code>_fixedPoint</code> to <code>0</code> &mdash; the only value this class can hold until ex01 adds real conversions. The print statement is the only way to prove, from the program's own output, that this constructor actually ran.</p>
+
+      <h3>Fixed.cpp <span class="filebadge">copy constructor</span></h3>
+      <pre>Fixed::Fixed(<span class="kw">const</span> Fixed &amp;other) : _fixedPoint(other._fixedPoint) {
+    std::cout &lt;&lt; <span class="st">"Copy constructor called"</span> &lt;&lt; std::endl;
+}</pre>
+      <p>Builds a brand-new <code>Fixed</code> from an existing one. Only ever runs once, at the exact moment an object like <code>Fixed b(a)</code> is born &mdash; never again after that for the same object.</p>
+
+      <h3>Fixed.cpp <span class="filebadge">copy assignment operator</span></h3>
+      <pre>Fixed &amp;Fixed::operator=(<span class="kw">const</span> Fixed &amp;other) {
+    std::cout &lt;&lt; <span class="st">"Copy assignment operator called"</span> &lt;&lt; std::endl;
+    <span class="kw">if</span> (<span class="kw">this</span> == &amp;other) <span class="cm">// guard against self-assignment (a = a);</span>
+        <span class="kw">return</span> *<span class="kw">this</span>;
+    _fixedPoint = other._fixedPoint;
+    <span class="kw">return</span> *<span class="kw">this</span>;
+}</pre>
+      <p>Different job from the copy constructor: this one overwrites an <em>already-existing</em> object's value. Returns <code>Fixed&amp;</code> so assignments can chain (<code>a = b = c;</code>), and guards against <code>a = a;</code> before touching anything.</p>
+
+      <h3>Fixed.cpp <span class="filebadge">destructor, getRawBits, setRawBits</span></h3>
+      <pre>Fixed::~Fixed() { std::cout &lt;&lt; <span class="st">"Destructor called"</span> &lt;&lt; std::endl; }
+
+<span class="tp">int</span> Fixed::getRawBits(<span class="kw">void</span>) <span class="kw">const</span> {
+    std::cout &lt;&lt; <span class="st">"getRawBits member function called"</span> &lt;&lt; std::endl;
+    <span class="kw">return</span> _fixedPoint;
+}
+
+<span class="kw">void</span> Fixed::setRawBits(<span class="tp">int</span> <span class="kw">const</span> raw) { _fixedPoint = raw; }</pre>
+      <p>Nothing to release in the destructor &mdash; <code>_fixedPoint</code> is a plain <code>int</code>, so an empty body plus the print statement is the fully correct implementation. <code>getRawBits</code> and <code>setRawBits</code> are the only way anything outside the class ever touches <code>_fixedPoint</code>.</p>
+
+      <h3>main.cpp <span class="filebadge">tests</span></h3>
+      <pre><span class="tp">int</span> main(<span class="kw">void</span>) {
+    Fixed a;    <span class="cm">// default constructor</span>
+    Fixed b(a); <span class="cm">// copy constructor</span>
+    Fixed c;    <span class="cm">// default constructor</span>
+    c = b;      <span class="cm">// copy assignment operator</span>
+    std::cout &lt;&lt; a.getRawBits() &lt;&lt; std::endl;
+    std::cout &lt;&lt; b.getRawBits() &lt;&lt; std::endl;
+    std::cout &lt;&lt; c.getRawBits() &lt;&lt; std::endl;
+    <span class="kw">return</span> 0;
+}</pre>
+      <p>This is the exact test that the subject's own sample output is built around: four lines, four different canonical members firing, in a sequence chosen specifically to make construction and assignment impossible to confuse if the print statements are read carefully.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why does Fixed b(a) call the copy constructor and not copy assignment?</div><div class="a">b doesn't exist before that line runs. C++ has to build it from scratch using a's value, and building a new object from an existing one is exactly the copy constructor's job. c = b is different: c already exists from the line above, so that's assignment overwriting it, not construction.</div></div>
+      <div class="qa"><div class="q">Why write all four canonical members if the compiler already generates them for free?</div><div class="a">For a class holding one plain int, the compiler's automatic versions would actually work fine. The habit matters because the moment a class owns something like a heap pointer, the automatic version just copies the address, not the data — two objects end up sharing one resource, and the first one destroyed frees memory the second still thinks it owns. Writing all four explicitly now is the discipline that prevents that bug once it's actually possible.</div></div>
+      <div class="qa"><div class="q">Why is fractionalBits static?</div><div class="a">static means there's exactly one copy shared by every Fixed object, not one per instance. It belongs to the class itself, not to any particular object — which makes sense since the scale factor never changes between objects.</div></div>
+      <div class="qa"><div class="q">Why is the self-assignment guard in operator= there — what would break without it?</div><div class="a">For this class specifically, nothing would actually break, since there's no resource to free before copying. I included it anyway because it's the correct shape for a copy assignment operator in general — the day a class does own a resource, skipping that check causes it to free its own data right before trying to read from itself.</div></div>
+
+      <div class="checklist-note">Important</div>
+      <div class="qa checklist"><div class="q">Are all four canonical members present, with correct signatures, split between .hpp and .cpp?</div><div class="a">Yes — default constructor, copy constructor, copy assignment operator (returning Fixed&), and destructor, all declared in Fixed.hpp and defined in Fixed.cpp, none implemented inline in the header.</div></div>
+      <div class="qa checklist"><div class="q">Does getRawBits/setRawBits match the exact required signature: int getRawBits(void) const; and void setRawBits(int const raw);?</div><div class="a">Yes, both match literally — getRawBits is const since it only reads _fixedPoint, setRawBits is not const since it modifies it.</div></div>
+      <div class="qa checklist"><div class="q">Do the print statements make it possible to verify, just from the output, which constructor or operator ran on each line of main?</div><div class="a">Yes — running main prints Default, Copy constructor, Default, Copy assignment in that exact order, matching the four lines of the test one-to-one.</div></div>
+    </section>
+
+    <!-- ============ EX01 ============ -->
+    <section class="sheet" id="ex01">
+      <div class="exnum">ex01</div>
+      <h2>Towards a more useful fixed-point number class</h2>
+      <p class="tagline">Two converting constructors turn an int or float into raw bits; toInt/toFloat undo that; operator&lt;&lt; makes the whole thing printable.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>converting constructors</dt>
+          <dd>Fixed(const int) and Fixed(const float) — same class, two more entry points, picked automatically based on the argument's type.</dd>
+          <dt>bit shift as multiply/divide</dt>
+          <dd>num &lt;&lt; fractionalBits is exact — same as num &times; 256, at the bit level, no rounding.</dd>
+          <dt>free function operator&lt;&lt;</dt>
+          <dd>Can't be a member — Fixed would have to sit on the left of &lt;&lt;, and the whole point is std::cout on the left.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"ex00's Fixed could only ever be 0 — this one can represent any int or float. Two new constructors convert into the raw representation, toFloat/toInt convert back out, and operator&lt;&lt; means I can just write std::cout &lt;&lt; a instead of manually calling toFloat every time."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Fixed.hpp <span class="filebadge">header, extended</span></h3>
+      <pre><span class="kw">class</span> Fixed {
+<span class="kw">private</span>:
+    <span class="tp">int</span> _fixedPoint;
+    <span class="kw">static</span> <span class="kw">const</span> <span class="tp">int</span> fractionalBits = 8;
+<span class="kw">public</span>:
+    Fixed(<span class="kw">void</span>);
+    Fixed(<span class="kw">const</span> <span class="tp">int</span> num);                 <span class="cm">// constructor overloading (for int)</span>
+    Fixed(<span class="kw">const</span> <span class="tp">float</span> num);               <span class="cm">// constructor overloading (for float)</span>
+    Fixed(<span class="kw">const</span> Fixed &amp;other);
+    Fixed &amp;operator=(<span class="kw">const</span> Fixed &amp;other);
+    ~Fixed();
+    <span class="tp">float</span> toFloat(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="tp">int</span> toInt(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="tp">int</span> getRawBits(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="kw">void</span> setRawBits(<span class="tp">int</span> <span class="kw">const</span> raw);
+};
+<span class="cm">// An overload of the insertion (&lt;&lt;) operator</span>
+std::ostream &amp;operator&lt;&lt;(std::ostream &amp;stream, <span class="kw">const</span> Fixed &amp;fix);</pre>
+      <p>Two new constructors sit alongside the default one &mdash; constructor overloading, same idea as any other overloaded function, resolved by argument type. <code>operator&lt;&lt;</code> is declared <em>outside</em> the class entirely, right after the closing brace: it's a free function, not a member.</p>
+
+      <h3>Fixed.cpp <span class="filebadge">int and float constructors</span></h3>
+      <pre>Fixed::Fixed(<span class="kw">const</span> <span class="tp">int</span> num) : _fixedPoint(num &lt;&lt; fractionalBits) {
+    std::cout &lt;&lt; <span class="st">"Int constructor called"</span> &lt;&lt; std::endl;
+}
+Fixed::Fixed(<span class="kw">const</span> <span class="tp">float</span> num)
+    : _fixedPoint(roundf(num * (1 &lt;&lt; fractionalBits))) {
+    std::cout &lt;&lt; <span class="st">"Float constructor called"</span> &lt;&lt; std::endl;
+}</pre>
+      <p>The int version shifts &mdash; exact, no rounding needed, since an int has no fraction to lose. The float version can't shift a <code>float</code>'s bits at all, so it multiplies instead, then rounds to the nearest whole number before that value can be stored in the integer <code>_fixedPoint</code>. <code>roundf</code> is explicitly authorized for exactly this reason.</p>
+
+      <h3>Fixed.cpp <span class="filebadge">toFloat, toInt</span></h3>
+      <pre><span class="tp">float</span> Fixed::toFloat(<span class="kw">void</span>) <span class="kw">const</span> {
+    <span class="kw">return</span> static_cast&lt;<span class="tp">float</span>&gt;(_fixedPoint) / (1 &lt;&lt; fractionalBits);
+}
+<span class="tp">int</span> Fixed::toInt(<span class="kw">void</span>) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint &gt;&gt; fractionalBits; }</pre>
+      <p><code>toInt()</code> mirrors the int constructor exactly &mdash; <code>&gt;&gt;</code> undoes <code>&lt;&lt;</code>, and any fractional bits simply fall off the right edge and are gone, no rounding involved. <code>toFloat()</code> can't shift for the same reason the float constructor couldn't, so it divides instead &mdash; and the <code>static_cast&lt;float&gt;</code> has to come first, or <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> would be plain integer division, silently truncating the fraction before a <code>float</code> ever entered the picture.</p>
+
+      <h3>Fixed.cpp <span class="filebadge">operator&lt;&lt;</span></h3>
+      <pre><span class="cm">// example: stream=std::cout, fix=b (a Fixed holding a raw value of 2560)
+//          "b is " &lt;&lt; b  ->  fix = b  ->  fix.toFloat() = 2560/256 = 10.0
+//          prints: b is 10</span>
+std::ostream &amp;operator&lt;&lt;(std::ostream &amp;stream, <span class="kw">const</span> Fixed &amp;fix) {
+    stream &lt;&lt; fix.toFloat();
+    <span class="kw">return</span> stream;
+}</pre>
+      <p>Written using <code>Fixed</code>'s own public <code>toFloat()</code>, not by reaching into <code>_fixedPoint</code> directly &mdash; there's no <code>friend</code> to fall back on in this module, so the public interface has to already be complete enough on its own. Returns <code>std::ostream&amp;</code> so calls like <code>std::cout &lt;&lt; a &lt;&lt; b &lt;&lt; std::endl;</code> chain correctly.</p>
+
+      <h3>main.cpp <span class="filebadge">tests</span></h3>
+      <pre><span class="tp">int</span> main(<span class="kw">void</span>) {
+    Fixed a;               <span class="cm">// default constructor</span>
+    Fixed <span class="kw">const</span> b(10);     <span class="cm">// int constructor</span>
+    Fixed <span class="kw">const</span> c(42.42f); <span class="cm">// float constructor</span>
+    Fixed <span class="kw">const</span> d(b);      <span class="cm">// copy constructor</span>
+    a = Fixed(1234.4321f); <span class="cm">// float ctor builds a temporary, then copy assignment</span>
+
+    std::cout &lt;&lt; <span class="st">"a is "</span> &lt;&lt; a &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"b is "</span> &lt;&lt; b &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"c is "</span> &lt;&lt; c &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"d is "</span> &lt;&lt; d &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"a is "</span> &lt;&lt; a.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"b is "</span> &lt;&lt; b.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"c is "</span> &lt;&lt; c.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="st">"d is "</span> &lt;&lt; d.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
+    <span class="kw">return</span> 0;
+}</pre>
+      <p>This is the subject's own example, essentially unchanged. <code>a = Fixed(1234.4321f);</code> is the one line worth pausing on during evaluation: it builds an unnamed temporary via the float constructor, assigns its value into <code>a</code> via copy assignment, then immediately destroys that temporary &mdash; three canonical members firing on a single line.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why does the int constructor shift, but the float constructor multiply?</div><div class="a">Shifting only makes sense for a type whose bits directly encode value times a power of 2 — that's exactly what an int is. A float encodes numbers completely differently (mantissa and exponent), so there's no shift that could scale it. Multiplying by (1 &lt;&lt; fractionalBits) achieves the same scaling through arithmetic instead of bit manipulation.</div></div>
+      <div class="qa"><div class="q">Why is roundf needed for the float constructor but not the int one?</div><div class="a">An int has no fractional part to begin with, so shifting it is always exact — nothing to round. A float almost never lands on a whole number after multiplying by 256, so something has to decide how to turn that into the integer _fixedPoint actually stores. roundf picks the nearest whole number instead of silently truncating and always rounding down.</div></div>
+      <div class="qa"><div class="q">Why can't operator&lt;&lt; be a member function of Fixed?</div><div class="a">A member function's implicit first parameter is always the object it's called on — the left-hand side. If operator&lt;&lt; were a member, the only working syntax would be a &lt;&lt; std::cout, with Fixed on the left. Since the actual goal is std::cout &lt;&lt; a, with the stream on the left, it has to be a free function that takes the stream as its first explicit parameter.</div></div>
+      <div class="qa"><div class="q">Why does static_cast&lt;float&gt; have to come before the division in toFloat()?</div><div class="a">Without it, _fixedPoint / (1 &lt;&lt; fractionalBits) is int divided by int — plain integer division, which truncates before a float ever enters the picture. Casting the numerator to float first means the division that follows is real floating-point division, so the fractional part survives.</div></div>
+      <div class="qa"><div class="q">What actually happens on the line a = Fixed(1234.4321f);?</div><div class="a">Fixed(1234.4321f) builds a temporary, unnamed Fixed using the float constructor. a already exists, so a = ... is copy assignment, not construction — the temporary's value gets copied into a. Then, since the temporary has no name and its job is done, it's destroyed immediately, right there on that line.</div></div>
+
+      <div class="checklist-note">from the evaluation sheet</div>
+      <div class="qa checklist"><div class="q">Do the int and float constructors produce the correct raw value, verifiable through getRawBits()?</div><div class="a">Yes — Fixed(10)'s raw value is 2560 (10 &lt;&lt; 8), and Fixed(3.14f)'s raw value is 804 (roundf(3.14 &times; 256)), both checkable directly with getRawBits().</div></div>
+      <div class="qa checklist"><div class="q">Is operator&lt;&lt; a free function, not a member, and does it correctly print a float representation?</div><div class="a">Yes — declared outside the class in Fixed.hpp, defined outside the class in Fixed.cpp, takes std::ostream&amp; as the first parameter, and prints via toFloat().</div></div>
+      <div class="qa checklist"><div class="q">Does the test in main cover both constructors, both conversion functions, and printing, matching the subject's own example?</div><div class="a">Yes — b and c cover the int and float constructors, d covers the copy constructor, a covers reassignment through a temporary, and every object is printed both via operator&lt;&lt; and via toInt().</div></div>
+    </section>
+
+  </main>
+</div>
+
+<footer>cpp02 &middot; rehearsed before it's defended</footer>
+
+<script>
+  var links = document.querySelectorAll('nav.sidebar a');
+  var sections = Array.prototype.map.call(links, function(l){ return document.querySelector(l.getAttribute('href')); });
+  function setActive(){
+    var y = window.scrollY + 120;
+    var current = sections[0];
+    sections.forEach(function(s){ if(s && s.offsetTop <= y) current = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    var idx = sections.indexOf(current);
+    if(idx >= 0) links[idx].classList.add('active');
+  }
+  document.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>
