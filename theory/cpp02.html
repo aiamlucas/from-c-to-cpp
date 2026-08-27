@@ -235,7 +235,7 @@
         </div>
       </div>
 
-      <p>Everything in ex00&ndash;ex03 builds one running example: a fixed-point number class, <code>Fixed</code>. By the end it behaves close enough to a built-in numeric type that you can write <code>a + b</code>, <code>a &lt; b</code>, <code>++a</code>, and <code>std::cout &lt;&lt; a</code> and have all of it just work &mdash; because you defined what each of those means for <code>Fixed</code>, one exercise at a time.</p>
+      <p>Everything in ex00&ndash;ex03 builds one running example: a fixed-point number class, <code>Fixed</code>. By the end it behaves close enough to a built-in numeric type that you can write <code>a + b</code>, <code>a &lt; b</code>, <code>++a</code>, and <code>std::cout &lt;&lt; a</p>
     </section>
 
     <!-- ============ ORTHODOX CANONICAL FORM ============ -->
@@ -283,7 +283,7 @@
         </svg>
       </div>
 
-      <h3>The distinction everyone trips on: construction vs assignment</h3>
+      <h3>construction vs assignment</h3>
       <p>The subject's own example in ex00 is designed to make this exact point:</p>
 
       <div class="annot">
@@ -297,22 +297,17 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
         </ul>
       </div>
 
-      <p>Same-looking syntax can hide the same distinction: <code>Fixed b = a;</code> (with an <code>=</code> at the point of declaration) is <em>still</em> the copy constructor, not assignment &mdash; because <code>b</code> is being created on that line, not overwritten. The rule is purely about whether the left-hand object already exists the moment before this line runs.</p>
+      <p>Same-looking syntax can hide the same distinction: <code>Fixed b = a;</code> (with an <code>=</code> at the point of declaration) is <em>still</em> the copy constructor, not assignment; because <code>b</code> is being created on that line, not overwritten. The rule is purely about whether the left-hand object already exists the moment before this line runs.</p>
 
       <div class="note warn">
         <span class="tag">Gotcha in the subject's own sample output</span>
         <p>The subject marks one line <em>"may be missing depending on your implementation"</em>. That's <span class="keyterm">copy elision</span>: compilers are allowed to skip a copy entirely in certain situations (most commonly, returning a local object by value). Fewer "copy constructor called" prints than you expected is very likely the compiler legally optimizing a copy away &mdash; not a bug in your class.</p>
       </div>
 
-      <h3>Why bother, if the compiler already writes these for free?</h3>
-      <p>For <code>Fixed</code> specifically &mdash; a class holding one plain <code>int</code> &mdash; the compiler-generated versions would actually work fine. The real payoff of this discipline shows up later, once a class owns something the compiler <em>can't</em> safely copy by just duplicating bytes: a pointer to heap memory, a file handle, anything with a lifetime of its own. Copying a pointer byte-for-byte gives you two objects pointing at the <em>same</em> memory &mdash; a shallow copy &mdash; and the first one to get destroyed frees memory the second one still thinks it owns.</p>
+      <h3>Why bother, if the compiler already writes these by default?</h3>
+      <p>For <code>Fixed</code> specifically a class holding one plain <code>int</code>, the compiler-generated versions would actually work fine. The real payoff of this discipline shows up later, once a class owns something the compiler <em>can't</em> safely copy by just duplicating bytes: a pointer to heap memory, a file handle, anything with a lifetime of its own. Copying a pointer byte-for-byte gives you two objects pointing at the <em>same</em> memory &mdash; <b>a shallow copy</b> &mdash; and the first one to get destroyed frees memory the second one still thinks it owns.</p>
 
-      <p>This is often called the <span class="keyterm">Rule of Three</span> (the C++98-era version of what later standards extended into a Rule of Five): if a class needs a custom destructor, copy constructor, or copy assignment operator, it almost certainly needs <em>all three</em> &mdash; because all three exist to answer the same question: <em>what does it actually mean to copy or destroy this object?</em> <code>Fixed</code> doesn't need custom logic yet to answer that question correctly. Writing the four members explicitly now is the habit that pays off the moment a class does.</p>
-
-      <div class="note">
-        <span class="tag">Also from Module 01, still true here</span>
-        <p>Construction order and destruction order haven't changed: members are constructed in the order they're declared in the class, and objects (and members) are destroyed in the exact reverse order. Splitting the class into a <code>.hpp</code> (definition) and a <code>.cpp</code> (implementation) is also still required &mdash; same rule as every class since Module 00.</p>
-      </div>
+      <p>This is often called the <span class="keyterm">Rule of Three</span> (the C++98-era version of what later standards extended into a Rule of Five): if a class needs a custom destructor, copy constructor, or copy assignment operator, it almost certainly needs <em>all three</em>, because all three exist to answer the same question: <em>what does it actually mean to copy or destroy this object?</em> <code>Fixed</code> doesn't need custom logic yet to answer that question correctly. Writing the four members explicitly now is the habit that pays off the moment a class does.</p>
     </section>
 
     <!-- ============ EX00 ============ -->
@@ -321,7 +316,7 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
       <h2>Fixed-point numbers, in their simplest form</h2>
       <p class="tagline">A class that can only represent the value 0.0 &mdash; on purpose, so the canonical form itself is the entire exercise.</p>
 
-      <p>Fixed-point isn't a C++ feature &mdash; it's a convention. <code>Fixed</code> stores one plain <code>int</code>, and the class simply agrees to <em>interpret</em> that integer as if it had an imaginary binary point somewhere in the middle. With 8 fractional bits, the raw integer <code>256</code> is <em>understood</em> to mean <code>1.0</code>, because <code>256 / 2⁸ = 1</code>. Nothing about the bits themselves changed &mdash; only how the class chooses to read them.</p>
+      <p>Fixed-point isn't a C++ feature, it's a convention. <code>Fixed</code> stores one plain <code>int</code>, and the class simply agrees to <em>interpret</em> that integer as if it had an imaginary binary point somewhere in the middle. With 8 fractional bits, the raw integer <code>256</code> is <em>understood</em> to mean <code>1.0</code>, because <code>256 / 2⁸ = 1</code>. Nothing about the bits themselves changed, only how the class chooses to read them.</p>
 
       <div class="diagram">
         <span class="fig">Fig. 02 &mdash; one raw int, read as an integer part and a fractional part</span>
@@ -352,15 +347,12 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
       </div>
 
       <h3><code>static const int</code> &mdash; the fractional bit count</h3>
-      <p><code>static</code> on a member means there is exactly <strong style="color:var(--text)">one</strong> copy of it, shared by every <code>Fixed</code> object that will ever exist &mdash; it is not stored inside each individual object the way <code>_rawValue</code> is. Conceptually it belongs to the <em>class</em>, not to any particular instance.</p>
+      <p><code>static</code> on a member means there is exactly <strong style="color:var(--text)">one</strong> copy of it, shared by every <code>Fixed</code> object that will ever exist. Conceptually it belongs to the <em>class</em>, not to any particular instance.</p>
 
       <div class="note warn">
         <span class="tag">C++98 gotcha</span>
-        <p>A <code>static const int</code> is one of the few members you're allowed to give a value directly inside the class body: <code>static const int fractionalBits = 8;</code>. This is a special-case exception in the standard for const integral types. But if that member's <em>address</em> is ever taken or it's bound to a reference anywhere, you may still need a matching out-of-class definition in the <code>.cpp</code> (without the initializer) to satisfy the linker. Worth knowing before a mysterious "undefined reference" shows up.</p>
+        <p>A <code>static const int</code> is one of the few members you're allowed to give a value directly inside the class body: <code>static const int fractionalBits = 8;</code></p>
       </div>
-
-      <h3>What the constructor/destructor print statements are actually for</h3>
-      <p>Same instinct as <code>Zombie</code>'s destructor print back in Module 01 &mdash; construction and destruction are otherwise invisible events. Here, the print statements are the only way to <em>prove</em>, by reading your own program's output, that the compiler is calling the constructor or the assignment operator you think it's calling on any given line &mdash; which is exactly what this exercise is designed to make you verify for yourself.</p>
     </section>
 
     <!-- ============ EX01 ============ -->
@@ -537,6 +529,44 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
         <span class="tag">The round trip isn't always exact</span>
         <p><code>Fixed(3.14f)</code> stores <code>roundf(3.14 &times; 256) = 804</code>. Calling <code>toFloat()</code> on that gives <code>804 / 256 = 3.140625</code> &mdash; not exactly <code>3.14</code> back. This is the precision half of the fixed-vs-float trade-off made concrete: with 8 fractional bits, the smallest representable step is <code>1/256 &asymp; 0.0039</code>, so any value that doesn't land exactly on a multiple of that step gets rounded to the nearest one representable, and stays rounded. This isn't a bug in <code>toFloat()</code> &mdash; it's a direct, visible consequence of choosing 8 fractional bits, and it's the same <code>&epsilon;</code> that ex02's increment/decrement operators step by.</p>
       </div>
+
+      <h3>The complete round trip, all four directions</h3>
+      <p><code>_fixedPoint</code> sits in the middle of everything, holding the raw representation the whole time &mdash; it's the one thing that never changes once set. Every constructor and conversion function exists purely to translate something familiar (<code>int</code>, <code>float</code>) into that raw form, or translate the raw form back into something familiar again.</p>
+
+      <pre><span class="tp">int</span>   &rarr; raw   :  num &lt;&lt; fractionalBits                    <span class="cm">// int constructor</span>
+<span class="tp">float</span> &rarr; raw   :  roundf(num * (1 &lt;&lt; fractionalBits))    <span class="cm">// float constructor</span>
+raw &rarr; <span class="tp">int</span>   :  raw &gt;&gt; fractionalBits                    <span class="cm">// toInt()</span>
+raw &rarr; <span class="tp">float</span> :  raw / (1 &lt;&lt; fractionalBits)              <span class="cm">// toFloat()</span></pre>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Direction</th><th>Expression</th><th>Example input</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">int &rarr; raw</th><td><code>num &lt;&lt; fractionalBits</code></td><td><code>10</code></td><td><code>2560</code></td></tr>
+            <tr><th scope="row">float &rarr; raw</th><td><code>roundf(num * (1 &lt;&lt; fractionalBits))</code></td><td><code>3.14f</code></td><td><code>804</code></td></tr>
+            <tr><th scope="row">raw &rarr; int</th><td><code>raw &gt;&gt; fractionalBits</code></td><td><code>2560</code></td><td><code>10</code></td></tr>
+            <tr><th scope="row">raw &rarr; float</th><td><code>raw / (1 &lt;&lt; fractionalBits)</code></td><td><code>804</code></td><td><code>3.140625</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Why <code>roundf</code> specifically, worked through</h3>
+      <p>The float &rarr; raw direction is the only one of the four that needs rounding at all &mdash; here's exactly why, with the numbers that make it concrete:</p>
+
+      <div class="annot">
+        <pre><span class="tp">float</span> f = 3.14f;
+<span class="tp">int</span> raw = roundf(f * (1 &lt;&lt; fractionalBits));
+
+<span class="cm">// f * 256        = 803.84   (scaled, but not a whole number)
+// (int)803.84    = 803      (plain truncation — chops the .84, WRONG)
+// roundf(803.84) = 804      (nearest whole number — CORRECT)</span></pre>
+        <ul>
+          <li><b>f * 256</b> &mdash; scales the float up by the usual factor, landing on <code>803.84</code>.</li>
+          <li><b>plain truncation</b> &mdash; casting straight to <code>int</code> without <code>roundf</code> would simply chop off everything after the decimal point, always rounding toward zero, giving <code>803</code> &mdash; the wrong nearest raw value.</li>
+          <li><b>roundf</b> &mdash; picks whichever whole number is actually closest. <code>803.84</code> is closer to <code>804</code> than to <code>803</code>, so that's what gets stored.</li>
+        </ul>
+      </div>
+      <p class="dim">None of the other three directions need this: the int &rarr; raw shift is always exact (no fraction exists yet to lose), and both raw &rarr; int and raw &rarr; float are just reversing a scale factor on an already-whole raw integer &mdash; there's nothing left to round.</p>
 
       <h3>Why <code>operator&lt;&lt;</code> can't be a member function</h3>
       <p>A member function's implicit first parameter is always the object it's called on &mdash; the left-hand side. If <code>operator&lt;&lt;</code> were a member of <code>Fixed</code>, the only syntax that would type-check is <code>a &lt;&lt; std::cout;</code>, with <code>Fixed</code> on the left. But the entire point is to write <code>std::cout &lt;&lt; a;</code>, with the stream on the left. That forces <code>operator&lt;&lt;</code> to be a free function instead, taking the stream as its first parameter explicitly:</p>
