@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/24 09:26:27 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/24 10:32:33 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/27 18:24:26 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,6 @@ public:
 };
 
 // An overload of the insertion («) operator
-std::ostream &operator<<(std::ostream &stream, const Fixed &fix);
+std::ostream &operator<<(std::ostream &stream, const Fixed &fixed);
 
 #endif

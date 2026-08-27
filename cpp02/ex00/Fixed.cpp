@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/21 09:42:42 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/24 10:56:44 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/27 16:12:35 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ Fixed::Fixed(const Fixed &other) : _fixedPoint(other._fixedPoint) {
 // copy assign operator - overwrite an existing Fixed with other's value
 Fixed &Fixed::operator=(const Fixed &other) {
     std::cout << "Copy assignment operator called" << std::endl;
+    // this = current object's address
+    // &other = address of the object passed in
     if (this == &other) // guard against self-assignment (a = a);
         return *this;
     _fixedPoint = other._fixedPoint;
