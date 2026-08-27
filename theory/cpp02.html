@@ -493,9 +493,9 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
           <text x="310" y="226" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">raw &gt;&gt; 8 = 10</text>
         </svg>
       </div>
-      <p class="dim">The amber bits from the top row aren't preserved anywhere &mdash; they fall off the right edge and are gone the instant the shift happens. The green bits (the actual value) just relocate, same as before, only now moving right instead of left. Notice the bottom row here is identical to the very first row in Fig. 03a &mdash; shifting <code>2560</code> right by 8 exactly reconstructs the original <code>10</code>.</p>
+      <p class="dim">The green bits (the actual value) just relocate, same as before, only now moving right instead of left.</p>
 
-
+      <p>Once we have the raw bits stored in <code>_fixedPoint</code>, we need a way to convert them back into a normal, usable type (int, float, etc). that's what <code>toInt()</code> and <code>toFloat()</code> are for: two custom functions that take the raw fixed-point value and hand back a plain <code>int</code> or <code>float</code>. Both functions reverse the scaling the constructors applied, but each has to do it differently, because only <code>int</code>'s bits support a shift.</p>
 
       <pre><span class="tp">float</span> Fixed::toFloat( <span class="kw">void</span> ) <span class="kw">const</span> {
     <span class="kw">return</span> static_cast&lt;<span class="tp">float</span>&gt;(_fixedPoint) / (1 &lt;&lt; fractionalBits);
@@ -504,15 +504,62 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
     <span class="kw">return</span> _fixedPoint &gt;&gt; fractionalBits;
 }</pre>
 
-      <p>Both functions reverse the exact scale factor the constructors applied &mdash; but each one has to reverse it in a way that matches its own return type.</p>
+      <p><b style="color:var(--text)">toInt()</b> mirrors the int constructor exactly: <code>&gt;&gt;</code> is the inverse of <code>&lt;&lt;</code>, sliding every bit back to the right by <code>fractionalBits</code> positions. This is why truncation happens automatically and silently: any bits that represented fractional value simply fall off the right edge of the integer and are gone <code>toInt()</code> never rounds; it always throws the fraction away.</p>
 
-      <p><b style="color:var(--text)">toInt()</b> mirrors the int constructor exactly: <code>&gt;&gt;</code> is the inverse of <code>&lt;&lt;</code>, sliding every bit back to the right by <code>fractionalBits</code> positions. This is why truncation happens automatically and silently: any bits that represented fractional value simply fall off the right edge of the integer and are gone &mdash; there's nowhere for them to go once the shift discards them. <code>toInt()</code> never rounds; it always throws the fraction away.</p>
+      <p><b style="color:var(--text)">toFloat()</b> can't use a shift at all for same reason as the float constructor. A shift only makes sense for <code>int</code>, because an <code>int</code>'s bits directly represent a number times a power of 2. A <code>float</code> stores numbers in a totally different way, so there's no shift that could reverse the scaling for it. That's why <code>toFloat()</code> uses division instead: <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> undoes the earlier multiplication by 256.</p>
 
-      <p><b style="color:var(--text)">toFloat()</b> can't use a shift at all, for the same reason the float constructor couldn't &mdash; shifting is only meaningful for a type whose bits directly encode "value &times; 2ⁿ", and <code>_fixedPoint</code> is that type, but the <em>result</em> we want back is a <code>float</code>, which encodes numbers completely differently (mantissa and exponent). So the reversal has to happen through division instead: <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> undoes the earlier multiplication by 256.</p>
+      <h3>What (1 &lt;&lt; fractionalBits) actually computes</h3>
+      <p><code>fractionalBits</code> is just <code>8</code> a count of bits, not the number we actually need. <code>toFloat()</code> needs to divide by the <em>scale</em> those 8 bits represent, which is <code>2</code> raised to the power of <code>8</code>, or <code>256</code>. <code>(1 &lt;&lt; fractionalBits)</code> is how that number gets produced: take the literal <code>1</code>, and shift it left by <code>fractionalBits</code> positions. Wherever that single bit lands, that column's value <em>is</em> the answer &mdash; because in binary, every column is worth a power of 2.</p>
 
+      <div class="diagram">
+        <span class="fig">Fig. 03e &mdash; demystifying (1 &lt;&lt; fractionalBits): it always computes 256, nothing else</span>
+        <svg viewBox="0 0 640 260" role="img" aria-label="Binary representation of 1 on top, a single green bit in the rightmost position. Below, after shifting left by 8, that same single bit has moved 8 places left, landing on the 256 column, with the rest of the bits staying zero. This expression never touches the number being converted — it only ever computes the constant 256.">
+          <defs>
+            <marker id="a01e" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5FC7EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <text x="310" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">1</text>
+
+          <rect x="118" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="133" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="152" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="167" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="186" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="201" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="220" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="235" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="254" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="269" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="288" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="303" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="322" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="337" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="356" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="371" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="390" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="405" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="424" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="439" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="458" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="473" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="492" y="46" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="507" y="68" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+
+          <path d="M310 90 L310 148" stroke="#5FC7EC" stroke-width="1.4" fill="none" marker-end="url(#a01e)"/>
+          <text x="326" y="110" font-family="IBM Plex Mono" font-size="11.5" fill="#5FC7EC">&lt;&lt; 8</text>
+          <text x="326" y="128" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">one bit, moved 8 places</text>
+
+          <rect x="118" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="133" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="152" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="167" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="186" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="201" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="220" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.5"/><text x="235" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#7FD9A8">1</text>
+          <rect x="254" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="269" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="288" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="303" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="322" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="337" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="356" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="371" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="390" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="405" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="424" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="439" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="458" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="473" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+          <rect x="492" y="158" width="30" height="36" rx="4" fill="#122B4B" stroke="#5C7690" stroke-width="1"/><text x="507" y="180" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#8CA6BC">0</text>
+
+          <text x="310" y="226" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E7F1F9">1 &lt;&lt; fractionalBits = 256</text>
+        </svg>
+      </div>
+
+      <p><code>toFloat()</code> then takes that <code>256</code> and uses it in an ordinary division, since <code>float</code> can't be shifted.</p>
+      <p class="dim">Only one bit is ever "on" here &mdash; the l
       <div class="note warn">
         <span class="tag">Why static_cast&lt;float&gt; comes first</span>
-        <p>Without the cast, <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> is <code>int / int</code> &mdash; plain integer division, which truncates before a <code>float</code> ever enters the picture. <code>2560 / 256</code> gives the correct whole number <code>10</code> by luck, but something like <code>2600 / 256</code> would silently truncate to <code>10</code> instead of the correct <code>10.15625</code>, losing the fraction before division even has a chance to preserve it. <code>static_cast&lt;float&gt;(_fixedPoint)</code> converts the numerator to a <code>float</code> <em>first</em>, so the division that follows is real floating-point division, keeping the fractional part intact.</p>
+        <p>Without the cast, <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> is <code>int / int</code> plain integer division, which truncates before a <code>float</code> ever enters the picture. <code>2560 / 256</code> gives the correct whole number <code>10</code> by luck, but something like <code>2600 / 256</code> would silently truncate to <code>10</code> instead of the correct <code>10.15625</code>, losing the fraction before division even has a chance to preserve it. <code>static_cast&lt;float&gt;(_fixedPoint)</code> converts the numerator to a <code>float</code> <em>first</em>, so the division that follows is real floating-point division, keeping the fractional part intact.</p>
       </div>
 
       <div class="diagram">
