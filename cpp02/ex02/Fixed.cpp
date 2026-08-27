@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 22:21:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/25 22:21:14 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/28 00:07:04 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,4 +58,83 @@ int Fixed::toInt(void) const { return _fixedPoint >> fractionalBits; }
 std::ostream &operator<<(std::ostream &stream, const Fixed &fix) {
     stream << fix.toFloat();
     return stream;
+}
+
+bool Fixed::operator>(const Fixed &other) const {
+    return _fixedPoint > other._fixedPoint;
+}
+bool Fixed::operator<(const Fixed &other) const {
+    return _fixedPoint < other._fixedPoint;
+}
+bool Fixed::operator>=(const Fixed &other) const {
+    return _fixedPoint >= other._fixedPoint;
+}
+bool Fixed::operator<=(const Fixed &other) const {
+    return _fixedPoint <= other._fixedPoint;
+}
+bool Fixed::operator==(const Fixed &other) const {
+    return _fixedPoint == other._fixedPoint;
+}
+bool Fixed::operator!=(const Fixed &other) const {
+    return _fixedPoint != other._fixedPoint;
+}
+
+Fixed Fixed::operator+(const Fixed &other) const {
+    Fixed result;
+    result.setRawBits(_fixedPoint + other._fixedPoint);
+    return result;
+}
+
+Fixed Fixed::operator-(const Fixed &other) const {
+    Fixed result;
+    result.setRawBits(_fixedPoint - other._fixedPoint);
+    return result;
+}
+Fixed Fixed::operator*(const Fixed &other) const {
+    return Fixed(this->toFloat() * other.toFloat());
+}
+Fixed Fixed::operator/(const Fixed &other) const {
+    return Fixed(this->toFloat() / other.toFloat());
+}
+
+Fixed &Fixed::operator++() {
+    _fixedPoint += 1;
+    return *this;
+}
+Fixed Fixed::operator++(int) {
+    Fixed old = *this;
+    _fixedPoint += 1;
+    return old;
+}
+Fixed &Fixed::operator--() {
+    _fixedPoint -= 1;
+    return *this;
+}
+Fixed Fixed::operator--(int) {
+    Fixed old = *this;
+    _fixedPoint -= 1;
+    return old;
+}
+
+Fixed &Fixed::min(Fixed &a, Fixed &b) {
+    if (a < b)
+        return a;
+    return b;
+}
+const Fixed &Fixed::min(const Fixed &a, const Fixed &b) {
+    if (a < b)
+        return a;
+    return b;
+}
+
+Fixed &Fixed::max(Fixed &a, Fixed &b) {
+    if (a > b)
+        return a;
+    return b;
+}
+
+const Fixed &Fixed::max(const Fixed &a, const Fixed &b) {
+    if (a > b)
+        return a;
+    return b;
 }

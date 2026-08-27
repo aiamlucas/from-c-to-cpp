@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 22:21:51 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/25 23:24:00 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/28 00:03:16 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,16 +56,8 @@ public:
 
     static Fixed &min(Fixed &a, Fixed &b);
     static const Fixed &min(const Fixed &a, const Fixed &b);
-    //
-    // static member function min that takes two references to fixed-point
-    // numbers as parameters, and returns a reference to the smallest one. • A
-    // static member function min that takes two references to constant
-    // fixed-point numbers as parameters, and returns a reference to the
-    // smallest one. • A static member function max that takes two references to
-    // fixed-point numbers as parameters, and returns a reference to the
-    // greatest one. • A static member function max that takes two references to
-    // constant fixed-point numbers as parameters, and returns a reference to
-    // the greatest one.
+    static Fixed &max(Fixed &a, Fixed &b);
+    static const Fixed &max(const Fixed &a, const Fixed &b);
 };
 
 // An overload of the insertion («) operator
