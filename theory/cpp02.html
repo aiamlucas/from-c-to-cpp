@@ -597,7 +597,7 @@ c = b;          <span class="cm">// copy ASSIGNMENT — c already exists</span><
       </div>
 
       <h3>The complete round trip, all four directions</h3>
-      <p><code>_fixedPoint</code> sits in the middle of everything, holding the raw representation the whole time &mdash; it's the one thing that never changes once set. Every constructor and conversion function exists purely to translate something familiar (<code>int</code>, <code>float</code>) into that raw form, or translate the raw form back into something familiar again.</p>
+      <p><code>_fixedPoint</code> sits in the middle of everything, holding the raw value. It's the one thing that never changes once set. Every constructor and conversion function exists purely to translate something familiar (<code>int</code>, <code>float</code>) into that raw form, or translate the raw form back into something familiar again.</p>
 
       <pre><span class="tp">int</span>   &rarr; raw   :  num &lt;&lt; fractionalBits                    <span class="cm">// int constructor</span>
 <span class="tp">float</span> &rarr; raw   :  roundf(num * (1 &lt;&lt; fractionalBits))    <span class="cm">// float constructor</span>
@@ -617,7 +617,7 @@ raw &rarr; <span class="tp">float</span> :  raw / (1 &lt;&lt; fractionalBits)   
       </div>
 
       <h3>Why <code>roundf</code> specifically, worked through</h3>
-      <p>The float &rarr; raw direction is the only one of the four that needs rounding at all &mdash; here's exactly why, with the numbers that make it concrete:</p>
+      <p>The float &rarr; raw direction is the only one of the four that needs rounding at all</p>
 
       <div class="annot">
         <pre><span class="tp">float</span> f = 3.14f;
@@ -632,22 +632,18 @@ raw &rarr; <span class="tp">float</span> :  raw / (1 &lt;&lt; fractionalBits)   
           <li><b>roundf</b> &mdash; picks whichever whole number is actually closest. <code>803.84</code> is closer to <code>804</code> than to <code>803</code>, so that's what gets stored.</li>
         </ul>
       </div>
-      <p class="dim">None of the other three directions need this: the int &rarr; raw shift is always exact (no fraction exists yet to lose), and both raw &rarr; int and raw &rarr; float are just reversing a scale factor on an already-whole raw integer &mdash; there's nothing left to round.</p>
+      <p class="dim">None of the other three directions need this: the int &rarr; raw shift is always exact (no fraction exists yet to lose), and both raw &rarr; int and raw &rarr; float are just reversing a scale factor on an already-whole raw integer, there's nothing left to round.</p>
 
       <h3>Why <code>operator&lt;&lt;</code> can't be a member function</h3>
-      <p>A member function's implicit first parameter is always the object it's called on &mdash; the left-hand side. If <code>operator&lt;&lt;</code> were a member of <code>Fixed</code>, the only syntax that would type-check is <code>a &lt;&lt; std::cout;</code>, with <code>Fixed</code> on the left. But the entire point is to write <code>std::cout &lt;&lt; a;</code>, with the stream on the left. That forces <code>operator&lt;&lt;</code> to be a free function instead, taking the stream as its first parameter explicitly:</p>
+      <p>A member function's implicit first parameter is always the object it's called on the left-hand side. If <code>operator&lt;&lt;</code> were a member of <code>Fixed</code>, the only syntax that would type-check is <code>a &lt;&lt; std::cout;</code>, with <code>Fixed</code> on the left. But the entire point is to write <code>std::cout &lt;&lt; a;</code>, with the stream on the left. That forces <code>operator&lt;&lt;</code> to be a free function instead, taking the stream as its first parameter explicitly:</p>
 
       <pre><span class="tp">std::ostream</span> &amp;operator&lt;&lt;( <span class="tp">std::ostream</span> &amp;o, <span class="kw">const</span> Fixed &amp;f ) {
     o &lt;&lt; f.toFloat();
     <span class="kw">return</span> o; <span class="cm">// return by reference, so calls can chain</span>
 }</pre>
 
-      <p>Returning <code>std::ostream&amp;</code> is what makes <code>std::cout &lt;&lt; a &lt;&lt; b &lt;&lt; std::endl;</code> legal at all &mdash; each <code>&lt;&lt;</code> hands back the same stream, ready for the next one, the same reference-chaining reasoning behind why C++ functions return references in the first place.</p>
+      <p>Returning <code>std::ostream&amp;</code> is what makes <code>std::cout &lt;&lt; a &lt;&lt; b &lt;&lt; std::endl;</code> legal at all, each <code>&lt;&lt;</code> hands back the same stream, ready for the next one, the same reference-chaining reasoning behind why C++ functions return references in the first place.</p>
 
-      <div class="note">
-        <span class="tag">Where <code>friend</code> would normally show up &mdash; and why you don't need it</span>
-        <p>In ordinary C++, a free <code>operator&lt;&lt;</code> that needs a class's private data is often declared <code>friend</code> inside the class. This module explicitly forbids <code>friend</code>. The way around it: implement <code>operator&lt;&lt;</code> using <code>Fixed</code>'s own public interface &mdash; <code>toFloat()</code> &mdash; instead of reaching into <code>_fixedPoint</code> directly. If a class's public interface is complete enough, external functions rarely need special access at all; that's the encapsulation this restriction is quietly testing.</p>
-      </div>
     </section>
 
     <!-- ============ EX02 ============ -->
