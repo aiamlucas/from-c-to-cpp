@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 22:21:51 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/28 00:03:16 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/28 17:18:10 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,12 @@ private:
     static const int fractionalBits = 8; // shared by all objects, never change
 
 public:
-    Fixed(void);                          // 1) default constructor
-    Fixed(const int num);                 // constructor overloading (for int)
-    Fixed(const float num);               // constructor overloading (for float)
-    Fixed(const Fixed &other);            // 2) copy constructor
-    Fixed &operator=(const Fixed &other); // 3) copy assignment operator
-    ~Fixed();                             // 4) destructor
+    Fixed(void);                          // default constructor
+    Fixed(const int num);                 // int constructor
+    Fixed(const float num);               // float constructor
+    Fixed(const Fixed &other);            // copy constructor
+    Fixed &operator=(const Fixed &other); // copy assignment operator
+    ~Fixed();                             // destructor
 
     float toFloat(void) const;
     int toInt(void) const;
@@ -50,9 +50,9 @@ public:
     Fixed operator/(const Fixed &other) const;
 
     Fixed &operator++();   // pre-increment ++a;
-    Fixed operator++(int); // pos-increment a++;
+    Fixed operator++(int); // post-increment a++;
     Fixed &operator--();   //  pre-decrement --a;
-    Fixed operator--(int); // pre-decrement a--;
+    Fixed operator--(int); // post-decrement a--;
 
     static Fixed &min(Fixed &a, Fixed &b);
     static const Fixed &min(const Fixed &a, const Fixed &b);
