@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 22:21:51 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/28 17:18:10 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/30 23:25:45 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,7 @@
 
 #include <iostream>
 
-// Orthodox Canonical Form: default constructor, copy constructor
-// copy assignment operator and destructor
-
+// Orthodox Canonical Form
 class Fixed {
 private:
     int _fixedPoint;                     // storing the raw fixed-point
