@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/24 10:34:19 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/27 18:24:13 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/31 13:16:04 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,4 +61,5 @@ int Fixed::toInt(void) const { return _fixedPoint >> fractionalBits; }
 std::ostream &operator<<(std::ostream &stream, const Fixed &fixed) {
     stream << fixed.toFloat();
     return stream;
-}
+} /// std::ostream &stream -> left side
+  /// const Fixes &fixed -> right side

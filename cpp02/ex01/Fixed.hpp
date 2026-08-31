@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/24 09:26:27 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/30 23:25:08 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/31 13:48:43 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,8 @@ public:
     Fixed &operator=(const Fixed &other); // 3) copy assignment operator
     ~Fixed();                             // 4) destructor
 
-    float toFloat(void) const;
-    int toInt(void) const;
+    float toFloat(void) const; // raw / 256
+    int toInt(void) const;     // raw >> 8
 
     int getRawBits(void) const;
     void setRawBits(int const raw);

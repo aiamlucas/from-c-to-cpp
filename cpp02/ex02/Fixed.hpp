@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 22:21:51 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/08/30 23:25:45 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/08/31 13:29:50 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 class Fixed {
 private:
     int _fixedPoint;                     // storing the raw fixed-point
-    static const int fractionalBits = 8; // shared by all objects, never change
+    static const int fractionalBits = 8; // shared by all objects
 
 public:
     Fixed(void);                          // default constructor
@@ -29,12 +29,13 @@ public:
     Fixed &operator=(const Fixed &other); // copy assignment operator
     ~Fixed();                             // destructor
 
-    float toFloat(void) const;
-    int toInt(void) const;
+    float toFloat(void) const; // raw / 256
+    int toInt(void) const;     // raw >> 8
 
     int getRawBits(void) const;
     void setRawBits(int const raw);
 
+    // comparison (made with raw bits)
     bool operator>(const Fixed &other) const;
     bool operator<(const Fixed &other) const;
     bool operator>=(const Fixed &other) const;
@@ -42,16 +43,19 @@ public:
     bool operator==(const Fixed &other) const;
     bool operator!=(const Fixed &other) const;
 
+    // + and - implemented with raw bits // * and / converts to float first
     Fixed operator+(const Fixed &other) const;
     Fixed operator-(const Fixed &other) const;
     Fixed operator*(const Fixed &other) const;
     Fixed operator/(const Fixed &other) const;
 
-    Fixed &operator++();   // pre-increment ++a;
-    Fixed operator++(int); // post-increment a++;
-    Fixed &operator--();   //  pre-decrement --a;
-    Fixed operator--(int); // post-decrement a--;
+    Fixed &operator++();   // ++a - modify then return *this
+    Fixed operator++(int); // a++ - save copy, modify, return
+    Fixed &operator--();   // --a - modify ten return *this
+    Fixed operator--(int); // a-- - save copy, modify, return
 
+    // min max takes two independent objects and compate then (no owner)
+    // the function belongs to the class and not to any instance
     static Fixed &min(Fixed &a, Fixed &b);
     static const Fixed &min(const Fixed &a, const Fixed &b);
     static Fixed &max(Fixed &a, Fixed &b);
