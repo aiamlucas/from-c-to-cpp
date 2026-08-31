@@ -95,6 +95,10 @@
 
   .pitch{font-size:17px; color:#fff; max-width:680px; margin:0 0 22px; padding:16px 20px; border:1px dashed var(--border); border-radius:8px; font-style:italic;}
 
+  .diagram{background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; margin:0 0 24px; max-width:700px; overflow-x:auto;}
+  .diagram svg{display:block; max-width:100%;}
+  .diagram .fig{font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-top:10px; display:block;}
+
   footer{border-top:1px solid var(--border); padding:26px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
 
   @media (max-width:860px){
@@ -128,6 +132,7 @@
     <ol id="navlist">
       <li><a href="#ex00">ex00 &mdash; Canonical Fixed</a></li>
       <li><a href="#ex01">ex01 &mdash; Conversions &amp; &lt;&lt;</a></li>
+      <li><a href="#ex02">ex02 &mdash; All operators</a></li>
     </ol>
   </nav>
 
@@ -184,10 +189,10 @@
       <h3>Fixed.cpp <span class="filebadge">copy assignment operator</span></h3>
       <pre>Fixed &amp;Fixed::operator=(<span class="kw">const</span> Fixed &amp;other) {
     std::cout &lt;&lt; <span class="st">"Copy assignment operator called"</span> &lt;&lt; std::endl;
-    <span class="kw">if</span> (<span class="kw">this</span> == &amp;other) <span class="cm">// guard against self-assignment (a = a);</span>
+    <span class="kw">if</span> (<span class="kw">this</span> == &amp;other) <span class="cm">// guard against self-assignment (a = a)</span>
         <span class="kw">return</span> *<span class="kw">this</span>;
     _fixedPoint = other._fixedPoint;
-    <span class="kw">return</span> *<span class="kw">this</span>;
+    <span class="kw">return</span> *<span class="kw">this</span>; <span class="cm">// return *this so chains work: a = b = c</span>
 }</pre>
       <p>Different job from the copy constructor: this one overwrites an <em>already-existing</em> object's value. Returns <code>Fixed&amp;</code> so assignments can chain (<code>a = b = c;</code>), and guards against <code>a = a;</code> before touching anything.</p>
 
@@ -200,7 +205,7 @@
 }
 
 <span class="kw">void</span> Fixed::setRawBits(<span class="tp">int</span> <span class="kw">const</span> raw) { _fixedPoint = raw; }</pre>
-      <p>Nothing to release in the destructor &mdash; <code>_fixedPoint</code> is a plain <code>int</code>, so an empty body plus the print statement is the fully correct implementation. <code>getRawBits</code> and <code>setRawBits</code> are the only way anything outside the class ever touches <code>_fixedPoint</code>.</p>
+      <p>Nothing to release in the destructor &mdash; <code>_fixedPoint</code> is a plain <code>int</code>, so an empty body plus the print statement is the fully correct implementation.</p>
 
       <h3>main.cpp <span class="filebadge">tests</span></h3>
       <pre><span class="tp">int</span> main(<span class="kw">void</span>) {
@@ -213,7 +218,6 @@
     std::cout &lt;&lt; c.getRawBits() &lt;&lt; std::endl;
     <span class="kw">return</span> 0;
 }</pre>
-      <p>This is the exact test that the subject's own sample output is built around: four lines, four different canonical members firing, in a sequence chosen specifically to make construction and assignment impossible to confuse if the print statements are read carefully.</p>
 
       <h4>Questions to expect</h4>
       <div class="qa"><div class="q">Why does Fixed b(a) call the copy constructor and not copy assignment?</div><div class="a">b doesn't exist before that line runs. C++ has to build it from scratch using a's value, and building a new object from an existing one is exactly the copy constructor's job. c = b is different: c already exists from the line above, so that's assignment overwriting it, not construction.</div></div>
@@ -222,9 +226,9 @@
       <div class="qa"><div class="q">Why is the self-assignment guard in operator= there — what would break without it?</div><div class="a">For this class specifically, nothing would actually break, since there's no resource to free before copying. I included it anyway because it's the correct shape for a copy assignment operator in general — the day a class does own a resource, skipping that check causes it to free its own data right before trying to read from itself.</div></div>
 
       <div class="checklist-note">Important</div>
-      <div class="qa checklist"><div class="q">Are all four canonical members present, with correct signatures, split between .hpp and .cpp?</div><div class="a">Yes — default constructor, copy constructor, copy assignment operator (returning Fixed&), and destructor, all declared in Fixed.hpp and defined in Fixed.cpp, none implemented inline in the header.</div></div>
-      <div class="qa checklist"><div class="q">Does getRawBits/setRawBits match the exact required signature: int getRawBits(void) const; and void setRawBits(int const raw);?</div><div class="a">Yes, both match literally — getRawBits is const since it only reads _fixedPoint, setRawBits is not const since it modifies it.</div></div>
-      <div class="qa checklist"><div class="q">Do the print statements make it possible to verify, just from the output, which constructor or operator ran on each line of main?</div><div class="a">Yes — running main prints Default, Copy constructor, Default, Copy assignment in that exact order, matching the four lines of the test one-to-one.</div></div>
+      <div class="qa checklist"><div class="q">Are all four canonical members present, with correct signatures, split between .hpp and .cpp?</div><div class="a">Yes — default constructor, copy constructor, copy assignment operator (returning Fixed&amp;), and destructor, all declared in Fixed.hpp and defined in Fixed.cpp, none implemented inline in the header.</div></div>
+      <div class="qa checklist"><div class="q">Does getRawBits/setRawBits match the exact required signature?</div><div class="a">Yes — int getRawBits(void) const; and void setRawBits(int const raw); — getRawBits is const since it only reads, setRawBits is not const since it modifies.</div></div>
+      <div class="qa checklist"><div class="q">Do the print statements make it possible to verify which constructor or operator ran on each line?</div><div class="a">Yes — running main prints Default, Copy constructor, Default, Copy assignment in that exact order, matching the four lines of the test one-to-one.</div></div>
     </section>
 
     <!-- ============ EX01 ============ -->
@@ -250,27 +254,6 @@
 
       <h4>Walk the code</h4>
 
-      <h3>Fixed.hpp <span class="filebadge">header, extended</span></h3>
-      <pre><span class="kw">class</span> Fixed {
-<span class="kw">private</span>:
-    <span class="tp">int</span> _fixedPoint;
-    <span class="kw">static</span> <span class="kw">const</span> <span class="tp">int</span> fractionalBits = 8;
-<span class="kw">public</span>:
-    Fixed(<span class="kw">void</span>);
-    Fixed(<span class="kw">const</span> <span class="tp">int</span> num);                 <span class="cm">// constructor overloading (for int)</span>
-    Fixed(<span class="kw">const</span> <span class="tp">float</span> num);               <span class="cm">// constructor overloading (for float)</span>
-    Fixed(<span class="kw">const</span> Fixed &amp;other);
-    Fixed &amp;operator=(<span class="kw">const</span> Fixed &amp;other);
-    ~Fixed();
-    <span class="tp">float</span> toFloat(<span class="kw">void</span>) <span class="kw">const</span>;
-    <span class="tp">int</span> toInt(<span class="kw">void</span>) <span class="kw">const</span>;
-    <span class="tp">int</span> getRawBits(<span class="kw">void</span>) <span class="kw">const</span>;
-    <span class="kw">void</span> setRawBits(<span class="tp">int</span> <span class="kw">const</span> raw);
-};
-<span class="cm">// An overload of the insertion (&lt;&lt;) operator</span>
-std::ostream &amp;operator&lt;&lt;(std::ostream &amp;stream, <span class="kw">const</span> Fixed &amp;fix);</pre>
-      <p>Two new constructors sit alongside the default one &mdash; constructor overloading, same idea as any other overloaded function, resolved by argument type. <code>operator&lt;&lt;</code> is declared <em>outside</em> the class entirely, right after the closing brace: it's a free function, not a member.</p>
-
       <h3>Fixed.cpp <span class="filebadge">int and float constructors</span></h3>
       <pre>Fixed::Fixed(<span class="kw">const</span> <span class="tp">int</span> num) : _fixedPoint(num &lt;&lt; fractionalBits) {
     std::cout &lt;&lt; <span class="st">"Int constructor called"</span> &lt;&lt; std::endl;
@@ -279,56 +262,334 @@ Fixed::Fixed(<span class="kw">const</span> <span class="tp">float</span> num)
     : _fixedPoint(roundf(num * (1 &lt;&lt; fractionalBits))) {
     std::cout &lt;&lt; <span class="st">"Float constructor called"</span> &lt;&lt; std::endl;
 }</pre>
-      <p>The int version shifts &mdash; exact, no rounding needed, since an int has no fraction to lose. The float version can't shift a <code>float</code>'s bits at all, so it multiplies instead, then rounds to the nearest whole number before that value can be stored in the integer <code>_fixedPoint</code>. <code>roundf</code> is explicitly authorized for exactly this reason.</p>
+      <p>The int version shifts &mdash; exact, no rounding needed. The float version multiplies then rounds to the nearest whole number before storing in <code>_fixedPoint</code>. <code>roundf</code> is explicitly authorized for exactly this reason.</p>
 
-      <h3>Fixed.cpp <span class="filebadge">toFloat, toInt</span></h3>
+      <h3>Fixed.cpp <span class="filebadge">toFloat, toInt, operator&lt;&lt;</span></h3>
       <pre><span class="tp">float</span> Fixed::toFloat(<span class="kw">void</span>) <span class="kw">const</span> {
     <span class="kw">return</span> static_cast&lt;<span class="tp">float</span>&gt;(_fixedPoint) / (1 &lt;&lt; fractionalBits);
 }
-<span class="tp">int</span> Fixed::toInt(<span class="kw">void</span>) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint &gt;&gt; fractionalBits; }</pre>
-      <p><code>toInt()</code> mirrors the int constructor exactly &mdash; <code>&gt;&gt;</code> undoes <code>&lt;&lt;</code>, and any fractional bits simply fall off the right edge and are gone, no rounding involved. <code>toFloat()</code> can't shift for the same reason the float constructor couldn't, so it divides instead &mdash; and the <code>static_cast&lt;float&gt;</code> has to come first, or <code>_fixedPoint / (1 &lt;&lt; fractionalBits)</code> would be plain integer division, silently truncating the fraction before a <code>float</code> ever entered the picture.</p>
+<span class="tp">int</span> Fixed::toInt(<span class="kw">void</span>) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint &gt;&gt; fractionalBits; }
 
-      <h3>Fixed.cpp <span class="filebadge">operator&lt;&lt;</span></h3>
-      <pre><span class="cm">// example: stream=std::cout, fix=b (a Fixed holding a raw value of 2560)
-//          "b is " &lt;&lt; b  ->  fix = b  ->  fix.toFloat() = 2560/256 = 10.0
-//          prints: b is 10</span>
 std::ostream &amp;operator&lt;&lt;(std::ostream &amp;stream, <span class="kw">const</span> Fixed &amp;fix) {
     stream &lt;&lt; fix.toFloat();
-    <span class="kw">return</span> stream;
+    <span class="kw">return</span> stream; <span class="cm">// return stream so << chains: cout &lt;&lt; a &lt;&lt; b &lt;&lt; endl</span>
 }</pre>
-      <p>Written using <code>Fixed</code>'s own public <code>toFloat()</code>, not by reaching into <code>_fixedPoint</code> directly &mdash; there's no <code>friend</code> to fall back on in this module, so the public interface has to already be complete enough on its own. Returns <code>std::ostream&amp;</code> so calls like <code>std::cout &lt;&lt; a &lt;&lt; b &lt;&lt; std::endl;</code> chain correctly.</p>
-
-      <h3>main.cpp <span class="filebadge">tests</span></h3>
-      <pre><span class="tp">int</span> main(<span class="kw">void</span>) {
-    Fixed a;               <span class="cm">// default constructor</span>
-    Fixed <span class="kw">const</span> b(10);     <span class="cm">// int constructor</span>
-    Fixed <span class="kw">const</span> c(42.42f); <span class="cm">// float constructor</span>
-    Fixed <span class="kw">const</span> d(b);      <span class="cm">// copy constructor</span>
-    a = Fixed(1234.4321f); <span class="cm">// float ctor builds a temporary, then copy assignment</span>
-
-    std::cout &lt;&lt; <span class="st">"a is "</span> &lt;&lt; a &lt;&lt; std::endl;
-    std::cout &lt;&lt; <span class="st">"b is "</span> &lt;&lt; b &lt;&lt; std::endl;
-    std::cout &lt;&lt; <span class="st">"c is "</span> &lt;&lt; c &lt;&lt; std::endl;
-    std::cout &lt;&lt; <span class="st">"d is "</span> &lt;&lt; d &lt;&lt; std::endl;
-    std::cout &lt;&lt; <span class="st">"a is "</span> &lt;&lt; a.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
-    std::cout &lt;&lt; <span class="st">"b is "</span> &lt;&lt; b.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
-    std::cout &lt;&lt; <span class="st">"c is "</span> &lt;&lt; c.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
-    std::cout &lt;&lt; <span class="st">"d is "</span> &lt;&lt; d.toInt() &lt;&lt; <span class="st">" as integer"</span> &lt;&lt; std::endl;
-    <span class="kw">return</span> 0;
-}</pre>
-      <p>This is the subject's own example, essentially unchanged. <code>a = Fixed(1234.4321f);</code> is the one line worth pausing on during evaluation: it builds an unnamed temporary via the float constructor, assigns its value into <code>a</code> via copy assignment, then immediately destroys that temporary &mdash; three canonical members firing on a single line.</p>
 
       <h4>Questions to expect</h4>
-      <div class="qa"><div class="q">Why does the int constructor shift, but the float constructor multiply?</div><div class="a">Shifting only makes sense for a type whose bits directly encode value times a power of 2 — that's exactly what an int is. A float encodes numbers completely differently (mantissa and exponent), so there's no shift that could scale it. Multiplying by (1 &lt;&lt; fractionalBits) achieves the same scaling through arithmetic instead of bit manipulation.</div></div>
-      <div class="qa"><div class="q">Why is roundf needed for the float constructor but not the int one?</div><div class="a">An int has no fractional part to begin with, so shifting it is always exact — nothing to round. A float almost never lands on a whole number after multiplying by 256, so something has to decide how to turn that into the integer _fixedPoint actually stores. roundf picks the nearest whole number instead of silently truncating and always rounding down.</div></div>
-      <div class="qa"><div class="q">Why can't operator&lt;&lt; be a member function of Fixed?</div><div class="a">A member function's implicit first parameter is always the object it's called on — the left-hand side. If operator&lt;&lt; were a member, the only working syntax would be a &lt;&lt; std::cout, with Fixed on the left. Since the actual goal is std::cout &lt;&lt; a, with the stream on the left, it has to be a free function that takes the stream as its first explicit parameter.</div></div>
-      <div class="qa"><div class="q">Why does static_cast&lt;float&gt; have to come before the division in toFloat()?</div><div class="a">Without it, _fixedPoint / (1 &lt;&lt; fractionalBits) is int divided by int — plain integer division, which truncates before a float ever enters the picture. Casting the numerator to float first means the division that follows is real floating-point division, so the fractional part survives.</div></div>
-      <div class="qa"><div class="q">What actually happens on the line a = Fixed(1234.4321f);?</div><div class="a">Fixed(1234.4321f) builds a temporary, unnamed Fixed using the float constructor. a already exists, so a = ... is copy assignment, not construction — the temporary's value gets copied into a. Then, since the temporary has no name and its job is done, it's destroyed immediately, right there on that line.</div></div>
+      <div class="qa"><div class="q">Why does the int constructor shift, but the float constructor multiply?</div><div class="a">Shifting only makes sense for a type whose bits directly encode value times a power of 2 — that's exactly what an int is. A float encodes numbers completely differently (mantissa and exponent), so there's no shift that could scale it. Multiplying achieves the same scaling through arithmetic instead of bit manipulation.</div></div>
+      <div class="qa"><div class="q">Why can't operator&lt;&lt; be a member function of Fixed?</div><div class="a">A member function's implicit first parameter is always the object it's called on — the left side. If operator&lt;&lt; were a member, the only working syntax would be a &lt;&lt; std::cout, Fixed on the left. Since the goal is std::cout &lt;&lt; a, it has to be a free function taking the stream as its first explicit parameter.</div></div>
+      <div class="qa"><div class="q">Why does static_cast&lt;float&gt; have to come before the division in toFloat()?</div><div class="a">Without it, _fixedPoint / (1 &lt;&lt; fractionalBits) is int divided by int — plain integer division, which truncates before a float ever enters the picture. Casting the numerator first forces real floating-point division so the fractional part survives.</div></div>
 
-      <div class="checklist-note">from the evaluation sheet</div>
-      <div class="qa checklist"><div class="q">Do the int and float constructors produce the correct raw value, verifiable through getRawBits()?</div><div class="a">Yes — Fixed(10)'s raw value is 2560 (10 &lt;&lt; 8), and Fixed(3.14f)'s raw value is 804 (roundf(3.14 &times; 256)), both checkable directly with getRawBits().</div></div>
-      <div class="qa checklist"><div class="q">Is operator&lt;&lt; a free function, not a member, and does it correctly print a float representation?</div><div class="a">Yes — declared outside the class in Fixed.hpp, defined outside the class in Fixed.cpp, takes std::ostream&amp; as the first parameter, and prints via toFloat().</div></div>
-      <div class="qa checklist"><div class="q">Does the test in main cover both constructors, both conversion functions, and printing, matching the subject's own example?</div><div class="a">Yes — b and c cover the int and float constructors, d covers the copy constructor, a covers reassignment through a temporary, and every object is printed both via operator&lt;&lt; and via toInt().</div></div>
+      <div class="checklist-note">Important</div>
+      <div class="qa checklist"><div class="q">Do the int and float constructors produce the correct raw value?</div><div class="a">Yes — Fixed(10) raw = 2560 (10 &lt;&lt; 8), Fixed(3.14f) raw = 804 (roundf(3.14 &times; 256)), both verifiable with getRawBits().</div></div>
+      <div class="qa checklist"><div class="q">Is operator&lt;&lt; a free function, not a member, printing via toFloat()?</div><div class="a">Yes — declared outside the class in Fixed.hpp, defined outside in Fixed.cpp, first parameter is std::ostream&amp;.</div></div>
+    </section>
+
+    <!-- ============ EX02 ============ -->
+    <section class="sheet" id="ex02">
+      <div class="exnum">ex02</div>
+      <h2>Now we're talking</h2>
+      <p class="tagline">Six comparison operators, four arithmetic operators, four increment/decrement operators, and static min/max — the Fixed class becomes fully usable.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>operator overloading</dt>
+          <dd>Writing member functions named operator+, operator&gt;, etc. — the compiler calls them automatically when it sees the symbol with a Fixed operand.</dd>
+          <dt>why + works on raw bits but * does not</dt>
+          <dd>Adding two scaled values produces a correctly scaled result. Multiplying doubles the scale factor — so * and / convert to float first.</dd>
+          <dt>pre vs post increment</dt>
+          <dd>Pre returns a reference to self after modifying. Post saves a copy first, modifies self, then returns the old copy by value — must be by value since the copy is a local variable.</dd>
+          <dt>static member function</dt>
+          <dd>No implicit this — belongs to the class, not any instance. Called as Fixed::min(a, b), not a.min(b). Two overloads: one for mutable refs, one for const refs.</dd>
+          <dt>const overload</dt>
+          <dd>const Fixed &amp; in, const Fixed &amp; out. The compiler picks the right overload based on whether the arguments are const or not.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"ex02 finishes the class — I add all the operators so Fixed behaves like a real numeric type. The interesting design decisions are why raw bits work for + and - but not for * and /, and why post-increment has to return by value instead of by reference."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Fixed.hpp <span class="filebadge">complete header</span></h3>
+      <pre><span class="kw">class</span> Fixed {
+<span class="kw">private</span>:
+    <span class="tp">int</span> _fixedPoint;                     <span class="cm">// raw scaled value: real value &times; 256</span>
+    <span class="kw">static</span> <span class="kw">const</span> <span class="tp">int</span> fractionalBits = 8; <span class="cm">// scale factor = 2^8 = 256</span>
+<span class="kw">public</span>:
+    Fixed(<span class="kw">void</span>);
+    Fixed(<span class="kw">const</span> <span class="tp">int</span> num);
+    Fixed(<span class="kw">const</span> <span class="tp">float</span> num);
+    Fixed(<span class="kw">const</span> Fixed &amp;other);
+    Fixed &amp;operator=(<span class="kw">const</span> Fixed &amp;other);
+    ~Fixed();
+
+    <span class="tp">float</span> toFloat(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="tp">int</span>   toInt(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="tp">int</span>   getRawBits(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="kw">void</span>  setRawBits(<span class="tp">int</span> <span class="kw">const</span> raw);
+
+    <span class="cm">// comparison — raw bits share same scale so order is preserved</span>
+    <span class="tp">bool</span> operator&gt;(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    <span class="tp">bool</span> operator&lt;(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    <span class="tp">bool</span> operator&gt;=(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    <span class="tp">bool</span> operator&lt;=(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    <span class="tp">bool</span> operator==(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    <span class="tp">bool</span> operator!=(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+
+    <span class="cm">// + and - work on raw bits; * and / convert to float first (raw*raw double-scales)</span>
+    Fixed operator+(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    Fixed operator-(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    Fixed operator*(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+    Fixed operator/(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span>;
+
+    Fixed &amp;operator++();   <span class="cm">// pre-increment  ++a — modify then return *this</span>
+    Fixed  operator++(<span class="tp">int</span>); <span class="cm">// post-increment a++ — save copy, modify, return old by value</span>
+    Fixed &amp;operator--();   <span class="cm">// pre-decrement  --a — modify then return *this</span>
+    Fixed  operator--(<span class="tp">int</span>); <span class="cm">// post-decrement a-- — save copy, modify, return old by value</span>
+
+    <span class="cm">// static — no implicit this, called as Fixed::min(a, b)</span>
+    <span class="kw">static</span> Fixed &amp;min(Fixed &amp;a, Fixed &amp;b);
+    <span class="kw">static</span> <span class="kw">const</span> Fixed &amp;min(<span class="kw">const</span> Fixed &amp;a, <span class="kw">const</span> Fixed &amp;b);
+    <span class="kw">static</span> Fixed &amp;max(Fixed &amp;a, Fixed &amp;b);
+    <span class="kw">static</span> <span class="kw">const</span> Fixed &amp;max(<span class="kw">const</span> Fixed &amp;a, <span class="kw">const</span> Fixed &amp;b);
+};
+<span class="cm">// free function — Fixed must be on the right of &lt;&lt;, cannot be a member</span>
+std::ostream &amp;operator&lt;&lt;(std::ostream &amp;stream, <span class="kw">const</span> Fixed &amp;fix);</pre>
+
+      <h3>Fixed.cpp <span class="filebadge">comparison operators</span></h3>
+      <pre><span class="cm">// all six compare _fixedPoint directly — same scale factor, order preserved</span>
+<span class="tp">bool</span> Fixed::operator&gt;(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint &gt;  other._fixedPoint; }
+<span class="tp">bool</span> Fixed::operator&lt;(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint &lt;  other._fixedPoint; }
+<span class="tp">bool</span> Fixed::operator&gt;=(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint &gt;= other._fixedPoint; }
+<span class="tp">bool</span> Fixed::operator&lt;=(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint &lt;= other._fixedPoint; }
+<span class="tp">bool</span> Fixed::operator==(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint == other._fixedPoint; }
+<span class="tp">bool</span> Fixed::operator!=(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> { <span class="kw">return</span> _fixedPoint != other._fixedPoint; }</pre>
+
+      <p>No conversion to float needed. Both sides were scaled by the same factor (256). Multiplying two numbers by the same constant preserves their order — <code>5 &gt; 3</code> is still true after both become <code>1280 &gt; 768</code>.</p>
+
+      <div class="diagram">
+        <svg width="660" viewBox="0 0 660 120" xmlns="http://www.w3.org/2000/svg">
+          <text x="20" y="22" font-family="Roboto Mono,monospace" font-size="12" fill="#8b93b8">Fixed(5)</text>
+          <rect x="20" y="32" width="180" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="110" y="51" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="12" fill="#4fbfb2">_fixedPoint = 1280</text>
+          <text x="20" y="84" font-family="Roboto Mono,monospace" font-size="12" fill="#8b93b8">Fixed(3)</text>
+          <rect x="20" y="94" width="180" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="110" y="113" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="12" fill="#4fbfb2">_fixedPoint = 768</text>
+
+          <text x="230" y="65" font-family="Roboto Mono,monospace" font-size="18" fill="#5c6390">&gt;</text>
+
+          <rect x="260" y="44" width="180" height="32" rx="4" fill="#181926" stroke="rgba(96,192,186,0.2)" stroke-width="0.5"/>
+          <text x="350" y="64" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="12" fill="#c9d2f0">1280 &gt; 768</text>
+
+          <text x="460" y="58" font-family="Roboto Mono,monospace" font-size="12" fill="#5c6390">→</text>
+
+          <rect x="480" y="44" width="80" height="32" rx="4" fill="#1e3a1e" stroke="rgba(157,181,74,0.4)" stroke-width="0.5"/>
+          <text x="520" y="64" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="13" fill="#9db54a">true</text>
+
+          <text x="20" y="110" font-family="Roboto Mono,monospace" font-size="10" fill="#5c6390">same scale factor cancels — no division needed</text>
+        </svg>
+        <span class="fig">Fig 1 — comparison works on raw bits because both sides share the same scale factor (256)</span>
+      </div>
+
+      <h3>Fixed.cpp <span class="filebadge">arithmetic operators</span></h3>
+      <pre><span class="cm">// + and - : raw bits, same scale survives</span>
+Fixed Fixed::operator+(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> {
+    Fixed result;
+    result.setRawBits(_fixedPoint + other._fixedPoint);
+    <span class="kw">return</span> result;
+}
+Fixed Fixed::operator-(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> {
+    Fixed result;
+    result.setRawBits(_fixedPoint - other._fixedPoint);
+    <span class="kw">return</span> result;
+}
+<span class="cm">// * and / : convert to float — raw * raw double-scales</span>
+Fixed Fixed::operator*(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> {
+    <span class="kw">return</span> Fixed(<span class="kw">this</span>-&gt;toFloat() * other.toFloat());
+}
+Fixed Fixed::operator/(<span class="kw">const</span> Fixed &amp;other) <span class="kw">const</span> {
+    <span class="kw">return</span> Fixed(<span class="kw">this</span>-&gt;toFloat() / other.toFloat());
+}</pre>
+
+      <p>The split is intentional. Adding two scaled values keeps the scale intact. Multiplying does not — the scale factor gets applied twice, producing a result 256× too large. Division cancels the scale entirely. Both must go through float first.</p>
+
+      <div class="diagram">
+        <svg width="660" viewBox="0 0 660 210" xmlns="http://www.w3.org/2000/svg">
+          <!-- addition row -->
+          <text x="20" y="18" font-family="Roboto Mono,monospace" font-size="11" fill="#cf9247">ADDITION — raw bits work</text>
+          <rect x="20" y="26" width="120" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="80" y="44" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">5×256 = 1280</text>
+          <text x="150" y="44" font-family="Roboto Mono,monospace" font-size="14" fill="#5c6390">+</text>
+          <rect x="166" y="26" width="120" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="226" y="44" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">3×256 = 768</text>
+          <text x="296" y="44" font-family="Roboto Mono,monospace" font-size="14" fill="#5c6390">=</text>
+          <rect x="316" y="26" width="120" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="376" y="44" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">2048 = 8×256 ✓</text>
+          <text x="446" y="44" font-family="Roboto Mono,monospace" font-size="12" fill="#5c6390">→ Fixed(8.0)</text>
+
+          <!-- multiplication row -->
+          <text x="20" y="88" font-family="Roboto Mono,monospace" font-size="11" fill="#e0645f">MULTIPLICATION — raw bits WRONG</text>
+          <rect x="20" y="96" width="120" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="80" y="114" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">2×256 = 512</text>
+          <text x="150" y="114" font-family="Roboto Mono,monospace" font-size="14" fill="#5c6390">×</text>
+          <rect x="166" y="96" width="120" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="226" y="114" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">3×256 = 768</text>
+          <text x="296" y="114" font-family="Roboto Mono,monospace" font-size="14" fill="#5c6390">=</text>
+          <rect x="316" y="96" width="140" height="28" rx="4" fill="#2a1414" stroke="rgba(224,100,95,0.4)" stroke-width="0.5"/>
+          <text x="386" y="114" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#e0645f">393216 ≠ 6×256 ✗</text>
+          <text x="466" y="114" font-family="Roboto Mono,monospace" font-size="11" fill="#5c6390">double-scaled!</text>
+
+          <!-- fix row -->
+          <text x="20" y="158" font-family="Roboto Mono,monospace" font-size="11" fill="#9db54a">MULTIPLICATION — via float (correct)</text>
+          <rect x="20" y="166" width="100" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="70" y="184" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">toFloat()=2.0</text>
+          <text x="130" y="184" font-family="Roboto Mono,monospace" font-size="14" fill="#5c6390">×</text>
+          <rect x="146" y="166" width="100" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="196" y="184" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">toFloat()=3.0</text>
+          <text x="256" y="184" font-family="Roboto Mono,monospace" font-size="14" fill="#5c6390">=</text>
+          <rect x="276" y="166" width="60" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="306" y="184" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">6.0</text>
+          <text x="346" y="184" font-family="Roboto Mono,monospace" font-size="12" fill="#5c6390">→ Fixed(6.0) → raw 1536 = 6×256 ✓</text>
+        </svg>
+        <span class="fig">Fig 2 — addition keeps the scale factor once; multiplication would apply it twice, so * and / go through float</span>
+      </div>
+
+      <h3>Fixed.cpp <span class="filebadge">increment / decrement</span></h3>
+      <pre><span class="cm">// pre: modify self, return reference to self — no copy</span>
+Fixed &amp;Fixed::operator++() { _fixedPoint += 1; <span class="kw">return</span> *<span class="kw">this</span>; }
+Fixed &amp;Fixed::operator--() { _fixedPoint -= 1; <span class="kw">return</span> *<span class="kw">this</span>; }
+
+<span class="cm">// post: save old state, modify self, return old BY VALUE</span>
+<span class="cm">// must return by value — old is a local variable, returning a ref to it = dangling ref</span>
+Fixed Fixed::operator++(<span class="tp">int</span>) { Fixed old = *<span class="kw">this</span>; _fixedPoint += 1; <span class="kw">return</span> old; }
+Fixed Fixed::operator--(<span class="tp">int</span>) { Fixed old = *<span class="kw">this</span>; _fixedPoint -= 1; <span class="kw">return</span> old; }</pre>
+
+      <p>Step size is 1 raw bit = 1/256 &asymp; 0.00390625 &mdash; the smallest representable &epsilon; with 8 fractional bits. The <code>int</code> dummy parameter in the post-increment signature is how the compiler tells pre from post apart &mdash; it's never actually used inside the function.</p>
+
+      <div class="diagram">
+        <svg width="660" viewBox="0 0 660 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- pre-increment -->
+          <text x="20" y="18" font-family="Roboto Mono,monospace" font-size="11" fill="#cf9247">PRE-INCREMENT  ++a</text>
+
+          <rect x="20" y="28" width="110" height="32" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="30" y="42" font-family="Roboto Mono,monospace" font-size="10" fill="#8b93b8">a (before)</text>
+          <text x="30" y="56" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">raw = 0</text>
+
+          <text x="140" y="48" font-family="Roboto Mono,monospace" font-size="11" fill="#5c6390">_fixedPoint += 1</text>
+
+          <rect x="300" y="28" width="110" height="32" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="310" y="42" font-family="Roboto Mono,monospace" font-size="10" fill="#8b93b8">a (after)</text>
+          <text x="310" y="56" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">raw = 1</text>
+
+          <text x="420" y="48" font-family="Roboto Mono,monospace" font-size="11" fill="#5c6390">return *this →</text>
+          <rect x="550" y="28" width="90" height="32" rx="4" fill="#1e3a1e" stroke="rgba(157,181,74,0.4)" stroke-width="0.5"/>
+          <text x="595" y="48" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#9db54a">ref to a</text>
+          <text x="595" y="60" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10" fill="#9db54a">raw=1</text>
+
+          <!-- post-increment -->
+          <text x="20" y="108" font-family="Roboto Mono,monospace" font-size="11" fill="#cf9247">POST-INCREMENT  a++</text>
+
+          <rect x="20" y="118" width="110" height="32" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="30" y="132" font-family="Roboto Mono,monospace" font-size="10" fill="#8b93b8">a (before)</text>
+          <text x="30" y="146" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">raw = 0</text>
+
+          <text x="140" y="128" font-family="Roboto Mono,monospace" font-size="10" fill="#5c6390">Fixed old = *this</text>
+          <rect x="140" y="136" width="90" height="28" rx="4" fill="#13141f" stroke="rgba(207,146,71,0.3)" stroke-width="0.5"/>
+          <text x="185" y="154" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#cf9247">old  raw=0</text>
+
+          <text x="240" y="148" font-family="Roboto Mono,monospace" font-size="10" fill="#5c6390">+= 1</text>
+
+          <rect x="300" y="118" width="110" height="32" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="310" y="132" font-family="Roboto Mono,monospace" font-size="10" fill="#8b93b8">a (after)</text>
+          <text x="310" y="146" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">raw = 1</text>
+
+          <text x="420" y="138" font-family="Roboto Mono,monospace" font-size="11" fill="#5c6390">return old →</text>
+          <rect x="530" y="118" width="110" height="32" rx="4" fill="#2a2214" stroke="rgba(207,146,71,0.4)" stroke-width="0.5"/>
+          <text x="585" y="132" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10" fill="#cf9247">copy by value</text>
+          <text x="585" y="146" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#cf9247">raw=0</text>
+
+          <text x="20" y="196" font-family="Roboto Mono,monospace" font-size="10" fill="#5c6390">caller gets old value (0); a is already 1. old cannot be returned by ref — it's a local variable.</text>
+        </svg>
+        <span class="fig">Fig 3 — pre-increment returns a reference to self (modified); post-increment returns the old state by value</span>
+      </div>
+
+      <h3>Fixed.cpp <span class="filebadge">static min / max</span></h3>
+      <pre><span class="cm">// non-const overload — mutable objects, mutable ref returned</span>
+Fixed &amp;Fixed::min(Fixed &amp;a, Fixed &amp;b) {
+    <span class="kw">if</span> (a &lt; b) <span class="kw">return</span> a; <span class="kw">return</span> b;
+}
+<span class="cm">// const overload — const objects, const ref returned (compiler picks based on argument type)</span>
+<span class="kw">const</span> Fixed &amp;Fixed::min(<span class="kw">const</span> Fixed &amp;a, <span class="kw">const</span> Fixed &amp;b) {
+    <span class="kw">if</span> (a &lt; b) <span class="kw">return</span> a; <span class="kw">return</span> b;
+}
+Fixed &amp;Fixed::max(Fixed &amp;a, Fixed &amp;b) {
+    <span class="kw">if</span> (a &gt; b) <span class="kw">return</span> a; <span class="kw">return</span> b;
+}
+<span class="kw">const</span> Fixed &amp;Fixed::max(<span class="kw">const</span> Fixed &amp;a, <span class="kw">const</span> Fixed &amp;b) {
+    <span class="kw">if</span> (a &gt; b) <span class="kw">return</span> a; <span class="kw">return</span> b;
+}</pre>
+
+      <p><code>static</code> removes the implicit <code>this</code> — there is no "owner" object that makes sense for a function comparing two independent inputs. Returns a reference directly to whichever argument wins, so no copy is made and the caller can even modify the result.</p>
+
+      <div class="diagram">
+        <svg width="660" viewBox="0 0 660 160" xmlns="http://www.w3.org/2000/svg">
+          <!-- non-const path -->
+          <text x="20" y="18" font-family="Roboto Mono,monospace" font-size="11" fill="#cf9247">Fixed::min(a, b)  — non-const path</text>
+          <rect x="20" y="28" width="90" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="65" y="46" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">Fixed a(5)</text>
+          <rect x="120" y="28" width="90" height="28" rx="4" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="165" y="46" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#4fbfb2">Fixed b(3)</text>
+          <text x="220" y="46" font-family="Roboto Mono,monospace" font-size="11" fill="#5c6390">→ picks non-const overload →</text>
+          <rect x="430" y="28" width="140" height="28" rx="4" fill="#1e3a1e" stroke="rgba(157,181,74,0.4)" stroke-width="0.5"/>
+          <text x="500" y="46" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#9db54a">Fixed&amp; ref to b(3)</text>
+
+          <!-- const path -->
+          <text x="20" y="98" font-family="Roboto Mono,monospace" font-size="11" fill="#cf9247">Fixed::min(x, y)  — const path</text>
+          <rect x="20" y="108" width="110" height="28" rx="4" fill="#13141f" stroke="rgba(181,138,217,0.3)" stroke-width="0.5"/>
+          <text x="75" y="126" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#b58ad9">const Fixed x(5)</text>
+          <rect x="140" y="108" width="110" height="28" rx="4" fill="#13141f" stroke="rgba(181,138,217,0.3)" stroke-width="0.5"/>
+          <text x="195" y="126" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#b58ad9">const Fixed y(3)</text>
+          <text x="260" y="126" font-family="Roboto Mono,monospace" font-size="11" fill="#5c6390">→ picks const overload →</text>
+          <rect x="430" y="108" width="160" height="28" rx="4" fill="#1a1a2e" stroke="rgba(181,138,217,0.4)" stroke-width="0.5"/>
+          <text x="510" y="126" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#b58ad9">const Fixed&amp; ref to y(3)</text>
+
+          <text x="20" y="156" font-family="Roboto Mono,monospace" font-size="10" fill="#5c6390">compiler picks overload based on whether arguments are const — returns a ref, no copy made</text>
+        </svg>
+        <span class="fig">Fig 4 — two overloads: compiler picks const or non-const based on the arguments passed in</span>
+      </div>
+
+      <h3>main.cpp <span class="filebadge">subject test</span></h3>
+      <pre><span class="tp">int</span> main(<span class="kw">void</span>) {
+    Fixed a;
+    Fixed <span class="kw">const</span> b(Fixed(5.05f) * Fixed(2)); <span class="cm">// float ctor, int ctor, *, copy ctor — all in one line</span>
+
+    std::cout &lt;&lt; a &lt;&lt; std::endl;   <span class="cm">// 0</span>
+    std::cout &lt;&lt; ++a &lt;&lt; std::endl; <span class="cm">// 0.00390625  (pre: a is now 1 raw bit)</span>
+    std::cout &lt;&lt; a &lt;&lt; std::endl;   <span class="cm">// 0.00390625  (a still 1 raw bit)</span>
+    std::cout &lt;&lt; a++ &lt;&lt; std::endl; <span class="cm">// 0.00390625  (post: returns OLD value, a goes to 2)</span>
+    std::cout &lt;&lt; a &lt;&lt; std::endl;   <span class="cm">// 0.0078125   (a is now 2 raw bits)</span>
+    std::cout &lt;&lt; b &lt;&lt; std::endl;   <span class="cm">// 10.1016     (5.05 * 2 = 10.1)</span>
+    std::cout &lt;&lt; Fixed::max(a, b) &lt;&lt; std::endl; <span class="cm">// 10.1016  (b wins)</span>
+    <span class="kw">return</span> 0;
+}</pre>
+      <p>The line <code>Fixed const b(Fixed(5.05f) * Fixed(2))</code> is worth tracing for the evaluator: <code>Fixed(5.05f)</code> calls the float constructor, <code>Fixed(2)</code> calls the int constructor, <code>*</code> calls your operator* (via float conversion), and the result initializes <code>b</code> via the copy constructor. Four different members on one line.</p>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why do + and - work on raw bits but * and / do not?</div><div class="a">Adding two scaled values: (5×256) + (3×256) = (8×256) — the scale factor stays once. Multiplying: (2×256) × (3×256) = 6×256×256 — the factor is applied twice, result is 256× too large. So * and / convert both sides to float, do the operation in real numbers, then construct a new Fixed from the result.</div></div>
+      <div class="qa"><div class="q">Why does post-increment return by value but pre-increment returns by reference?</div><div class="a">Pre-increment modifies self and returns *this — a reference to the actual object, no copy. Post-increment saves a copy of the old state into a local variable called old, then modifies self, then returns old. But old lives on the stack inside the function — returning a reference to it would be a dangling reference to destroyed memory. The only safe option is to return a full copy by value.</div></div>
+      <div class="qa"><div class="q">What does the int dummy parameter in operator++(int) actually do?</div><div class="a">Nothing — it's never used inside the function. It's just the compiler's convention for distinguishing post-increment from pre-increment. Pre has no parameter, post has a dummy int. Same for decrement.</div></div>
+      <div class="qa"><div class="q">Why are min and max static?</div><div class="a">A normal member function has an implicit this — it belongs to one specific object. But min and max take two independent objects and compare them — there is no logical owner. static removes the implicit this so the call is Fixed::min(a, b) instead of the awkward a.min(a, b) where a appears twice.</div></div>
+      <div class="qa"><div class="q">Why are there two overloads of min and max instead of one?</div><div class="a">The return type must match what goes in. If you pass const objects, you must get a const reference back — the compiler won't let you return a non-const reference to something declared const. So there are two overloads: one for regular mutable objects returning Fixed&amp;, one for const objects returning const Fixed&amp;. The compiler picks automatically based on what you pass.</div></div>
+      <div class="qa"><div class="q">What is epsilon here and why is the step size 1/256?</div><div class="a">Epsilon is the smallest step the class can represent — one raw bit. Since the scale factor is 256, one raw bit corresponds to 1/256 ≈ 0.00390625 in real value. That's why ++a on a zero-initialized Fixed prints 0.00390625, not 1.</div></div>
+
+      <div class="checklist-note">Important — evaluation checklist</div>
+      <div class="qa checklist"><div class="q">Are all 6 comparison operators present and do they compare raw bits directly?</div><div class="a">Yes — all six (>, &lt;, >=, &lt;=, ==, !=) compare _fixedPoint directly with the matching C++ operator. No toFloat() conversion needed.</div></div>
+      <div class="qa checklist"><div class="q">Are + and - implemented on raw bits, and * and / implemented via float conversion?</div><div class="a">Yes — + and - use setRawBits(_fixedPoint ± other._fixedPoint). * and / call toFloat() on both sides, operate, and pass the float result to Fixed's float constructor.</div></div>
+      <div class="qa checklist"><div class="q">Are all four increment/decrement operators present? Do pre return Fixed&amp; and post return Fixed (by value)?</div><div class="a">Yes — operator++() and operator--() return Fixed&amp; (reference to self). operator++(int) and operator--(int) return Fixed (by value, copy of old state).</div></div>
+      <div class="qa checklist"><div class="q">Are both min and max present with two overloads each (mutable and const)?</div><div class="a">Yes — four static functions total: Fixed&amp; min(Fixed&amp;, Fixed&amp;), const Fixed&amp; min(const Fixed&amp;, const Fixed&amp;), and the same pair for max.</div></div>
+      <div class="qa checklist"><div class="q">Does the subject's own main produce the correct 7-line output?</div><div class="a">Yes — 0 / 0.00390625 / 0.00390625 / 0.00390625 / 0.0078125 / 10.1016 / 10.1016, in that exact order.</div></div>
     </section>
 
   </main>
