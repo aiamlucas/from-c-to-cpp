@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/01 16:29:59 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/01 18:44:46 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/01 19:01:05 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,9 @@
 #include <string>
 
 ClapTrap::ClapTrap(void)
-    : _hitPoints(10), _energyPoints(10), _attackDamage(0) {}
+    : _name(""), _hitPoints(10), _energyPoints(10), _attackDamage(0) {
+    std::cout << "ClapTrap default constructor called" << std::endl;
+}
 
 ClapTrap::ClapTrap(std::string name)
     : _name(name), _hitPoints(10), _energyPoints(10), _attackDamage(0) {
@@ -29,6 +31,7 @@ ClapTrap::ClapTrap(const ClapTrap &other)
 }
 
 ClapTrap &ClapTrap::operator=(const ClapTrap &other) {
+    std::cout << "ClapTrap copy assignment operator called" << std::endl;
     if (this == &other)
         return *this;
     _name = other._name;
@@ -38,7 +41,9 @@ ClapTrap &ClapTrap::operator=(const ClapTrap &other) {
     return *this;
 }
 
-ClapTrap::~ClapTrap() {}
+ClapTrap::~ClapTrap() {
+    std::cout << "ClapTrap " << _name << " destructor called" << std::endl;
+}
 
 void ClapTrap::attack(const std::string &target) {
     if (_energyPoints && _hitPoints) {
