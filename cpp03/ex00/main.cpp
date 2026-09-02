@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/01 16:30:03 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/02 18:57:38 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/02 23:43:31 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,10 @@
 
 int main(void) {
     std::cout << "\n--- construction ---" << std::endl;
-    ClapTrap noName;
     ClapTrap insect("Mosquito");
-    ClapTrap copy(insect);
+    ClapTrap copyBicho(insect); // copy constructor
     ClapTrap spider;
-    spider = insect;
+    spider = insect; // copy assignment
 
     std::cout << "\n--- normal attack - repair - damage ---" << std::endl;
     insect.attack("Cat");
