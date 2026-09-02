@@ -6,20 +6,20 @@
 #    By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/09/01 16:30:52 by lbueno-m          #+#    #+#              #
-#    Updated: 2026/09/01 16:30:54 by lbueno-m         ###   ########.fr        #
+#    Updated: 2026/09/02 15:49:11 by lbueno-m         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC      = c++
 CFLAGS  = -Wall -Wextra -Werror -std=c++98
-NAME    = fixed
+NAME    = claptrap
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g -O0
 endif
 
 SRC     =  main.cpp
-SRC     += Fixed.cpp
+SRC     += ClapTrap.cpp
 
 OBJ     =  $(SRC:.cpp=.o)
 
