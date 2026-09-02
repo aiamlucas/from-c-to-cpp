@@ -20,6 +20,10 @@ harlFilter
 tests
 # cpp02
 fixed
+# cpp03
+claptrap
+scavtrap
+fragtrap
 
 # build artifacts
 *.dSYM/
