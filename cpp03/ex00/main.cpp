@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/01 16:30:03 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/03 16:49:59 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/03 16:53:17 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,10 @@ int main(void) {
 
     std::cout << "\n--- energy drain ---" << std::endl;
     ClapTrap drained("Drained");
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 12; i++) {
+        std::cout << "attempt " << i << ": ";
         drained.attack("Target"); // only the first 10 should print
+    }
     std::cout << "\n--- destruction ---" << std::endl;
     return 0;
 }
