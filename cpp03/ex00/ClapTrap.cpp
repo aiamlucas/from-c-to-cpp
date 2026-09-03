@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/01 16:29:59 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/01 19:01:05 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/03 15:30:05 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ void ClapTrap::beRepaired(unsigned int amount) {
 
 void ClapTrap::takeDamage(unsigned int amount) {
     if (_energyPoints && _hitPoints) {
-        if (amount >= _hitPoints)
+        if (amount >= _hitPoints) // underflow guard
             _hitPoints = 0;
         else
             _hitPoints -= amount;
