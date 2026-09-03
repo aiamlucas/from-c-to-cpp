@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/01 16:30:03 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/02 23:43:31 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/03 15:48:44 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ int main(void) {
     insect.attack("Cat");
     insect.beRepaired(3);
     insect.takeDamage(2);
+    insect.attack("Cat");
 
     std::cout << "\n--- takeDamage underflow ---" << std::endl;
     ClapTrap animal("Dog");
