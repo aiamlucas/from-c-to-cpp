@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/03 00:42:10 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/03 00:42:12 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/03 15:46:10 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,11 @@ public:
     ClapTrap &operator=(const ClapTrap &other);
     ~ClapTrap();
 
-    void attack(const std::string &target);
-    void takeDamage(unsigned int amount);
-    void beRepaired(unsigned int amount);
+    void attack(const std::string &target); // needs: energy (-1)
+    void takeDamage(unsigned int amount);   // needs: nothing
+                                            // decrease: hitPoints -= amount
+    void beRepaired(unsigned int amount);   // needs: energy -1
+                                            // increase: hitPoints += amount
 };
 
 #endif
