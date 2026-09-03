@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/03 00:52:16 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/03 00:55:55 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/03 17:01:27 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ int main(void) {
 
     std::cout << "\n--- FragTrap own attack and highFivesGuys ---" << std::endl;
     FragTrap apple("Apple");
-    apple.attack("Strawberry");
+    apple.attack("Lemon");
     apple.highFivesGuys();
 
     std::cout << "\n--- inherited functions ---" << std::endl;
