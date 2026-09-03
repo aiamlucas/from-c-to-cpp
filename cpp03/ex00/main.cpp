@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/01 16:30:03 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/03 15:48:44 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/03 16:49:59 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,9 @@ int main(void) {
     std::cout << "\n--- takeDamage underflow ---" << std::endl;
     ClapTrap animal("Dog");
     animal.takeDamage(9999); // hitpoints must clamp to 0
-    animal.attack("Human");  // should now do nothing.
+    animal.attack("Human");  // should not do nothing.
 
-    std::cout << "\n--- energy drain guard ---" << std::endl;
+    std::cout << "\n--- energy drain ---" << std::endl;
     ClapTrap drained("Drained");
     for (int i = 0; i < 12; i++)
         drained.attack("Target"); // only the first 10 should print
