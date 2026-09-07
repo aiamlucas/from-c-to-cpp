@@ -6,24 +6,56 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/07 18:31:11 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/07 19:57:54 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Animal.hpp"
 #include "Cat.hpp"
 #include "Dog.hpp"
+#include "WrongAnimal.hpp"
+#include "WrongCat.hpp"
 #include <iostream>
 
 int main(void) {
-    std::cout << " \n--- copy constructor and copy assignment ---" << std::endl;
+
+    std::cout << " \n--- subject main ---" << std::endl;
     {
-        Dog dog;
-        Dog copyDog(dog); // copy constructor
-        Cat cat;
-        Cat copyCat;
-        copyCat = cat; // copy assignment
-    } // all four destructors should fire here
+        // declared as Animal*, but each points at different (derived) types
+        const Animal *meta = new Animal();
+        const Animal *j = new Dog();
+        const Animal *i = new Cat();
+        std::cout << j->getType() << " " << std::endl;
+        std::cout << i->getType() << " " << std::endl;
+        i->makeSound();    // Cat's sound
+        j->makeSound();    // Dog's sound
+        meta->makeSound(); // Animal sound
+        delete meta;
+        delete j; // ~Dog() then ~Animal()
+        delete i; // ~Cat() then ~Animal()
+    }
+
+    std::cout << " \n--- subject main Wrong Class ---" << std::endl;
+    {
+        // no virtual, ~WrongAnimal is never called
+        // no virtual, ~WrongCat is never called
+        const WrongAnimal *meta = new WrongAnimal();
+        const Animal *j = new Dog();
+        const WrongAnimal *i = new WrongCat();
+        std::cout << j->getType() << " " << std::endl;
+        std::cout << i->getType() << " " << std::endl;
+        i->makeSound(); // Wrong -> print WrongAnimal's sound (and not WrongCat
+                        // sound) - makeSound() is not virtual!
+        j->makeSound();
+        meta->makeSound();
+        delete meta;
+        delete j; // ~Dog() then ~Animal()
+        delete i; // only ~WrongAnimal() runs -- ~WrongCat() never fires (not
+                  // virtual)
+    }
+
+    std::cout << " \n--- extra tests ---" << std::endl;
+
     std::cout
         << "\n --- construction Animal=capivara, Dog=laica, Cat=oblomov ---"
         << std::endl;
@@ -53,7 +85,7 @@ int main(void) {
 
     std::cout << "\n--- deleting Animals* ---" << std::endl;
     for (int i = 0; i < 3; i++)
-        delete animals[i];
+        delete animals[i]; // virtual destructor!
 
     std::cout << "\n--- destructor (from what is remain in the stack) ---"
               << std::endl;
