@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 15:30:35 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/07 18:03:03 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/07 18:40:33 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@ Animal &Animal::operator=(const Animal &other) {
 }
 
 Animal::~Animal() { std::cout << "Animal destructor called" << std::endl; }
+
+std::string Animal::getType(void) const { return _type; }
 
 void Animal::makeSound() const {
     std::cout << "brrr rrrrrr rururuurrr" << std::endl;
