@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/07 19:57:54 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/07 20:00:42 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,6 @@ int main(void) {
 
     std::cout << " \n--- subject main Wrong Class ---" << std::endl;
     {
-        // no virtual, ~WrongAnimal is never called
-        // no virtual, ~WrongCat is never called
         const WrongAnimal *meta = new WrongAnimal();
         const Animal *j = new Dog();
         const WrongAnimal *i = new WrongCat();
