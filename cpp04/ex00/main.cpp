@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/07 18:27:00 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/07 18:31:11 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,8 @@ int main(void) {
     Cat oblomov;
 
     std::cout << "\n --- makesound() test ---" << std::endl;
-    capivara.makeSound(); // direct call -> type is know at the compile time
+    capivara.makeSound(); //  type is know at compile time, virtual is not
+                          //  needed here
     laica.makeSound();
     oblomov.makeSound();
 
@@ -45,7 +46,9 @@ int main(void) {
     animals[1] = new Dog();
     animals[2] = new Cat();
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3;
+         i++) // the declared type is Animal* for all 3, but
+              // the real type differs (virtual is here necessary)
         animals[i]->makeSound(); // should have different sound
 
     std::cout << "\n--- deleting Animals* ---" << std::endl;
