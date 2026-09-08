@@ -6,7 +6,7 @@
 #    By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/09/08 08:36:07 by lbueno-m          #+#    #+#              #
-#    Updated: 2026/09/08 10:08:55 by lbueno-m         ###   ########.fr        #
+#    Updated: 2026/09/08 19:54:14 by lbueno-m         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,8 +22,6 @@ SRC     =  main.cpp
 SRC     += Animal.cpp
 SRC     += Cat.cpp
 SRC     += Dog.cpp
-SRC     += WrongAnimal.cpp
-SRC     += WrongCat.cpp
 SRC     += Brain.cpp
 
 OBJ     =  $(SRC:.cpp=.o)

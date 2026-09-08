@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 17:48:58 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/07 18:02:21 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/08 19:54:25 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,19 +16,27 @@
 
 Dog::Dog(void) {
     _type = "Dog";
+    brain = new Brain();
     std::cout << "Dog default constructor called" << std::endl;
 }
 
 Dog::Dog(const Dog &other) : Animal(other) {
+    brain = new Brain(*other.brain); // allocating a new brain for a deep-copy
     std::cout << "Dog copy constructor called" << std::endl;
 }
 
 Dog &Dog::operator=(const Dog &other) {
     std::cout << "Dog copy assignment operator called" << std::endl;
     Animal::operator=(other);
+    *brain = *other.brain;
     return *this;
 }
 
-Dog::~Dog() { std::cout << "Dog destructor called" << std::endl; }
+Dog::~Dog() {
+    delete brain;
+    std::cout << "Dog destructor called" << std::endl;
+}
 
 void Dog::makeSound() const { std::cout << "au au auu" << std::endl; }
+
+Brain *Dog::getBrain(void) const { return brain; }

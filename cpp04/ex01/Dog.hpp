@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/03 19:45:06 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/08 15:09:18 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/08 19:33:30 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ public:
     virtual ~Dog();
 
     virtual void makeSound(void) const;
+    Brain *getBrain(void) const;
 };
 
 #endif

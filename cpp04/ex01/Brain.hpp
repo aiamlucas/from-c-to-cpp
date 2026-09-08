@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/08 08:39:36 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/08 15:01:59 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/08 19:30:43 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,9 @@ public:
     Brain(const Brain &other);
     Brain &operator=(const Brain &other);
     ~Brain();
+
+    void setIdea(int index, const std::string &idea);
+    const std::string &getIdea(int index) const;
 };
 
 #endif
