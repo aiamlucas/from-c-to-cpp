@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/09/07 15:48:36 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/09 11:29:39 by lbueno-m         ###   ########.fr       */
+/*   Created: 2026/09/09 18:47:25 by lbueno-m          #+#    #+#             */
+/*   Updated: 2026/09/09 18:48:08 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,14 @@ Cat::Cat(void) {
     std::cout << "Cat default constructor called" << std::endl;
 }
 
-Cat::Cat(const Cat &other) : Animal(other) {
+Cat::Cat(const Cat &other) : AAnimal(other) {
     brain = new Brain(*other.brain);
     std::cout << "Cat copy constructor called" << std::endl;
 }
 
 Cat &Cat::operator=(const Cat &other) {
     std::cout << "Cat copy assignment operator called" << std::endl;
-    Animal::operator=(other);
+    AAnimal::operator=(other);
     *brain = *other.brain;
     return *this;
 }

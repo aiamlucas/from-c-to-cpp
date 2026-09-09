@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/09/07 17:48:58 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/08 19:54:25 by lbueno-m         ###   ########.fr       */
+/*   Created: 2026/09/09 18:40:52 by lbueno-m          #+#    #+#             */
+/*   Updated: 2026/09/09 18:48:48 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,14 @@ Dog::Dog(void) {
     std::cout << "Dog default constructor called" << std::endl;
 }
 
-Dog::Dog(const Dog &other) : Animal(other) {
+Dog::Dog(const Dog &other) : AAnimal(other) {
     brain = new Brain(*other.brain); // allocating a new brain for a deep-copy
     std::cout << "Dog copy constructor called" << std::endl;
 }
 
 Dog &Dog::operator=(const Dog &other) {
     std::cout << "Dog copy assignment operator called" << std::endl;
-    Animal::operator=(other);
+    AAnimal::operator=(other);
     *brain = *other.brain;
     return *this;
 }

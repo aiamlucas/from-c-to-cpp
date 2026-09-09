@@ -5,21 +5,21 @@
 #                                                     +:+ +:+         +:+      #
 #    By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/09/08 08:36:07 by lbueno-m          #+#    #+#              #
-#    Updated: 2026/09/08 19:54:14 by lbueno-m         ###   ########.fr        #
+#    Created: 2026/09/09 18:41:15 by lbueno-m          #+#    #+#              #
+#    Updated: 2026/09/09 18:49:09 by lbueno-m         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC      = c++
 CPPFLAGS  = -Wall -Wextra -Werror -std=c++98
-NAME    = animal
+NAME    = aanimal
 
 ifeq ($(DEBUG),1)
 CPPFLAGS += -g -O0
 endif
 
 SRC     =  main.cpp
-SRC     += Animal.cpp
+SRC     += AAnimal.cpp
 SRC     += Cat.cpp
 SRC     += Dog.cpp
 SRC     += Brain.cpp
