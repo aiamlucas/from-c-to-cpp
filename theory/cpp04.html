@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C++ Module 04 — Polymorphism, Abstract Classes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1729;
+    --bg-2:#0D2036;
+    --card:#0F2540;
+    --card-2:#122B4B;
+    --grid:rgba(120,180,220,0.07);
+    --cyan:#5FC7EC;
+    --cyan-dim:rgba(95,199,236,0.32);
+    --amber:#F2A65A;
+    --green:#7FD9A8;
+    --pink:#E88FB0;
+    --text:#E7F1F9;
+    --text-dim:#8CA6BC;
+    --text-faint:#5C7690;
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 40px),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  .titleblock{border-bottom:1px solid var(--cyan-dim); padding:56px 0 32px; position:relative;}
+  .titleblock .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.18em; color:var(--cyan); text-transform:uppercase; margin-bottom:14px;}
+  .titleblock h1{font-family:var(--mono); font-weight:700; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(28px,4.2vw,46px); line-height:1.15; max-width:900px;}
+  .titleblock .sub{font-size:17px; color:var(--text-dim); max-width:640px; margin-top:14px;}
+  .stamp{margin-top:32px; display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--cyan-dim);}
+  .stamp div{padding:12px 16px; border-right:1px solid var(--cyan-dim);}
+  .stamp div:last-child{border-right:none;}
+  .stamp .k{font-family:var(--mono); font-size:10px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase;}
+  .stamp .v{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-top:4px;}
+
+  .layout{display:grid; grid-template-columns:230px 1fr; gap:48px; padding:40px 0 100px;}
+  nav.sidebar{position:sticky; top:24px; align-self:start; height:fit-content;}
+  nav.sidebar .navlabel{font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--text-faint); text-transform:uppercase; margin-bottom:14px;}
+  nav.sidebar ol{list-style:none; border-left:1px solid var(--cyan-dim);}
+  nav.sidebar li{margin:0;}
+  nav.sidebar a{display:block; padding:9px 0 9px 16px; font-family:var(--mono); font-size:13px; color:var(--text-dim); text-decoration:none; border-left:2px solid transparent; margin-left:-1px; transition:color .15s, border-color .15s;}
+  nav.sidebar a .num{color:var(--text-faint); margin-right:8px;}
+  nav.sidebar a:hover{color:var(--text);}
+  nav.sidebar a.active{color:var(--cyan); border-left-color:var(--cyan);}
+
+  main{min-width:0;}
+  section.sheet{padding-top:8px; margin-bottom:96px; scroll-margin-top:24px;}
+  section.sheet .sheetnum{font-family:var(--mono); font-size:12px; color:var(--text-faint); letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px;}
+  section.sheet h2{font-family:var(--mono); font-size:clamp(22px,2.6vw,30px); font-weight:600; letter-spacing:.01em; margin-bottom:6px;}
+  section.sheet .tagline{color:var(--text-dim); font-size:15px; margin-bottom:28px; max-width:680px;}
+  section.sheet h3{font-family:var(--mono); font-size:15px; font-weight:600; color:var(--cyan); text-transform:uppercase; letter-spacing:.06em; margin:36px 0 12px;}
+  section.sheet p{max-width:700px; margin-bottom:14px; color:var(--text);}
+  section.sheet p.dim{color:var(--text-dim);}
+  code, .inline-code{font-family:var(--mono); font-size:.92em; background:var(--card); padding:2px 6px; border-radius:3px; color:var(--green);}
+  pre{font-family:var(--mono); font-size:13.5px; line-height:1.6; background:var(--card); border:1px solid var(--cyan-dim); border-radius:6px; padding:18px 20px; overflow-x:auto; margin:16px 0 22px; color:var(--text);}
+  pre .kw{color:var(--pink);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;}
+
+  .diagram{border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:18px; margin:18px 0 26px; position:relative;}
+  .diagram .fig{position:absolute; top:-11px; left:16px; background:var(--bg-2); font-family:var(--mono); font-size:11px; color:var(--text-faint); padding:0 8px; letter-spacing:.08em;}
+  .diagram svg{display:block; width:100%; height:auto;}
+
+  .note{border-left:3px solid var(--cyan); background:var(--card); border-radius:0 6px 6px 0; padding:14px 18px; margin:18px 0; max-width:700px;}
+  .note.warn{border-left-color:var(--amber);}
+  .note.think{border-left-color:var(--pink);}
+  .note .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); margin-bottom:6px; display:block;}
+  .note.warn .tag{color:var(--amber);}
+  .note.think .tag{color:var(--pink);}
+  .note p{margin-bottom:0; font-size:14.5px; color:var(--text-dim);}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:18px 0 26px;}
+  .cardmini{border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:16px 18px;}
+  .cardmini h4{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-bottom:8px; letter-spacing:.03em;}
+  .cardmini p{font-size:13.5px; color:var(--text-dim); margin-bottom:0;}
+
+  .annot{border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:20px 22px; margin:16px 0 26px;}
+  .annot pre{border:none; background:none; padding:0; margin-bottom:14px;}
+  .annot ul{list-style:none;}
+  .annot li{font-size:13.5px; color:var(--text-dim); padding:7px 0 7px 16px; border-left:2px solid var(--cyan-dim); margin-bottom:2px;}
+  .annot li b{color:var(--text); font-family:var(--mono); font-weight:500;}
+
+  .cmp-wrap{overflow-x:auto; margin:18px 0 26px;}
+  .cmp{width:100%; border-collapse:collapse; font-size:13.5px; min-width:480px;}
+  .cmp th, .cmp td{padding:10px 16px; border:1px solid var(--cyan-dim); text-align:left; vertical-align:top;}
+  .cmp thead th{background:var(--card-2); color:var(--cyan); font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;}
+  .cmp tbody th{background:var(--card); color:var(--text); font-family:var(--mono); font-weight:500; font-size:13px; white-space:nowrap;}
+  .cmp tbody td{background:var(--card); color:var(--text-dim);}
+  .cmp tbody tr:nth-child(odd) th, .cmp tbody tr:nth-child(odd) td{background:var(--card-2);}
+  .cmp td.yes{color:var(--green);} .cmp td.no{color:var(--pink);}
+
+  .keyterm{display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--amber); border:1px solid rgba(242,166,90,0.35); border-radius:4px; padding:1px 7px; margin:2px 4px 2px 0; background:rgba(242,166,90,0.06);}
+
+  footer{border-top:1px solid var(--cyan-dim); padding:28px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.sidebar{position:relative; top:0; margin-bottom:8px;}
+    nav.sidebar ol{display:flex; flex-wrap:wrap; border-left:none;}
+    nav.sidebar li{margin-right:4px;}
+    nav.sidebar a{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+    .cols{grid-template-columns:1fr;}
+    .stamp{grid-template-columns:1fr 1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <div class="wrap">
+    <div class="eyebrow">42 Berlin — C++ Common Core</div>
+    <h1>Module 04 — Subtype Polymorphism, Abstract Classes</h1>
+    <p class="sub">A theory reference, not a solution set. Each sheet covers the underlying concepts one exercise is built to test — why a function call resolves differently depending on how it's called, what happens the moment a class owns a heap resource instead of just a value, and what it actually means for a class to refuse to be built. Scoped to what's been covered so far: ex00 &ndash; ex02.</p>
+    <div class="stamp">
+      <div><div class="k">autor</div><div class="v">aiamlucas</div></div>
+      <div><div class="k">Standard</div><div class="v">c++98</div></div>
+      <div><div class="k">Scope</div><div class="v">ex00 &ndash; ex02</div></div>
+      <div><div class="k">Sheet</div><div class="v">1 of 1 &middot; theory pass</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="sidebar">
+    <div class="navlabel">Index</div>
+    <ol id="navlist">
+      <li><a href="#overview"><span class="num">00</span>Big picture</a></li>
+      <li><a href="#ex00"><span class="num">01</span>Polymorphism</a></li>
+      <li><a href="#ex01"><span class="num">02</span>Brain &amp; deep copy</a></li>
+      <li><a href="#ex02"><span class="num">03</span>Abstract class</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="sheet" id="overview">
+      <div class="sheetnum">Sheet 00</div>
+      <h2>The big picture</h2>
+      <p class="tagline">Module 03 taught a derived class to physically contain its base. Module 04 asks the harder question: once you're holding an object only through its base type, which function actually runs when you call one?</p>
+
+      <p>You already met one flavor of polymorphism back in Module 02, overloading <code>operator+</code>, <code>operator&lt;&lt;</code> on <code>Fixed</code>. That's <span class="keyterm">ad-hoc polymorphism</span> — the compiler decides which version to call purely from the types involved, entirely at compile time. This module is about the other kind: <span class="keyterm">subtype polymorphism</span>, where the exact same call, written once, runs different code depending on what the object <em>actually is</em>, decided while the program is running.</p>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th></th><th>Ad-hoc polymorphism (Module 02)</th><th>Subtype polymorphism (this module)</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Decided when</th><td>compile time</td><td>runtime</td></tr>
+            <tr><th scope="row">Decided by</th><td>the types of the operands</td><td>the actual object's type, however it's referenced</td></tr>
+            <tr><th scope="row">Mechanism</th><td>function overloading</td><td><code>virtual</code>, resolved through a hidden lookup table</td></tr>
+            <tr><th scope="row">Already seen</th><td><code>Fixed::operator+</code></td><td><code>ClapTrap::attack()</code> hidden, not overridden, in Module 03</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The three exercises build on each other in a specific order: ex00 proves <code>virtual</code> actually changes which function runs, ex01 gives a class something real to lose if that mechanism fails (a heap-owned resource), and ex02 removes the fallback entirely — the base class stops being buildable on its own at all.</p>
+
+      <div class="note think">
+        <span class="tag">The running example</span>
+        <p><code>Animal</code>, specialized into <code>Dog</code> and <code>Cat</code>. Both need a genuinely different <code>makeSound()</code> — there's no shared, sensible default — which is exactly the shape that makes runtime polymorphism the right tool rather than a syntax preference.</p>
+      </div>
+    </section>
+
+    <!-- ============ EX00 ============ -->
+    <section class="sheet" id="ex00">
+      <div class="sheetnum">Sheet 01 &middot; Exercise 00 &mdash; Polymorphism</div>
+      <h2>Animal, Dog, Cat &mdash; making virtual actually matter</h2>
+      <p class="tagline">Cats don't bark. The whole exercise is built around one line of output telling you whether your class hierarchy actually knows that.</p>
+
+      <p><code>Animal</code> holds one <code>protected</code> attribute, <code>_type</code>, set by each derived class's own constructor. Nothing about that part is new after Module 03. What's new is <code>makeSound()</code>, and specifically what happens to it once you call it through a pointer whose declared type doesn't match the real object underneath.</p>
+
+      <pre><span class="kw">class</span> Animal {
+<span class="kw">protected</span>:
+    <span class="tp">std::string</span> _type;
+<span class="kw">public</span>:
+    <span class="tp">std::string</span> getType(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="kw">virtual</span> <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span>; <span class="cm">// the entire exercise hinges on this keyword</span>
+};</pre>
+
+      <div class="diagram">
+        <span class="fig">Fig. 01 &mdash; the subject's own test, and why it needs virtual specifically</span>
+        <svg viewBox="0 0 640 220" role="img" aria-label="Diagram showing an Animal pointer declared as Animal* actually pointing at a Dog. Without virtual, calling makeSound resolves to Animal's own sound regardless of the real object. With virtual, the same call correctly resolves to Dog's own sound because dispatch follows the real object rather than the pointer's declared type.">
+          <text x="170" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E88FB0">WITHOUT virtual</text>
+          <rect x="40" y="36" width="260" height="50" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="170" y="66" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">const Animal *j = new Dog();</text>
+          <path d="M170 86 L170 110" stroke="#E88FB0" stroke-width="1.4" fill="none" marker-end="url(#a04a)"/>
+          <rect x="40" y="110" width="260" height="50" rx="6" fill="#122B4B" stroke="#E88FB0" stroke-width="1.4"/>
+          <text x="170" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">j-&gt;makeSound() &rarr; Animal's sound</text>
+
+          <text x="490" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#7FD9A8">WITH virtual</text>
+          <rect x="360" y="36" width="260" height="50" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="490" y="66" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">const Animal *j = new Dog();</text>
+          <path d="M490 86 L490 110" stroke="#7FD9A8" stroke-width="1.4" fill="none" marker-end="url(#a04a)"/>
+          <rect x="360" y="110" width="260" height="50" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.4"/>
+          <text x="490" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">j-&gt;makeSound() &rarr; Dog's sound</text>
+
+          <text x="320" y="190" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">same declared type, same call &mdash; only Animal's own keyword decides the outcome</text>
+          <defs>
+            <marker id="a04a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <p>Calling <code>makeSound()</code> directly on a named <code>Dog</code> or <code>Cat</code> variable proves nothing — the compiler already knows the exact type at compile time in that case, so the call resolves correctly whether or not the function is <code>virtual</code>. The real test only exists the moment the <em>declared</em> type and the <em>real</em> type genuinely diverge — an <code>Animal*</code> that actually points at a <code>Dog</code>.</p>
+
+      <h3>WrongAnimal / WrongCat: proving it by building the failure on purpose</h3>
+      <p>The subject asks for a second, structurally identical pair, differing in exactly one place: <code>WrongAnimal::makeSound()</code> is deliberately not <code>virtual</code>. Same shape, same inheritance, same test — but the outcome is now the broken one, on purpose.</p>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th></th><th>Animal / Dog / Cat</th><th>WrongAnimal / WrongCat</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">makeSound() virtual?</th><td class="yes">Yes</td><td class="no">No</td></tr>
+            <tr><th scope="row">Call through the base pointer</th><td>correctly finds the derived sound</td><td>always the base's own sound, regardless of the real object</td></tr>
+            <tr><th scope="row">Destructor through base pointer</th><td>~Dog()/~Cat() fire correctly</td><td>only ~WrongAnimal() fires &mdash; the derived one never runs</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note warn">
+        <span class="tag">Why the destructor line matters more than the sound line</span>
+        <p>A wrong sound is cosmetically wrong but harmless. A skipped destructor is the dangerous half of this exercise: if <code>WrongCat</code> owned anything on the heap, deleting it through a <code>WrongAnimal*</code> would leak that memory silently, with zero indication anything went wrong. Ex00's classes own nothing yet, so nothing actually leaks here — the missing destructor print statement is the only visible symptom. Ex01 changes that.</p>
+      </div>
+    </section>
+
+    <!-- ============ EX01 ============ -->
+    <section class="sheet" id="ex01">
+      <div class="sheetnum">Sheet 02 &middot; Exercise 01 &mdash; I don't want to set the world on fire</div>
+      <h2>Brain, and the difference between copying a value and copying an owner</h2>
+      <p class="tagline">Dog and Cat now own something on the heap. Every shortcut that was merely stylistic in ex00 becomes load-bearing here.</p>
+
+      <p><code>Brain</code> has no relationship to <code>Animal</code> at all &mdash; it doesn't inherit from anything, and nothing inherits from it. <code>Dog</code> and <code>Cat</code> each hold a <code>Brain*</code> as a private member. This is <span class="keyterm">composition</span> (has-a), the exact relationship from Module 03's overview sheet, sitting right alongside the is-a relationship <code>Dog : public Animal</code> already gives them.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 02 &mdash; two relationships, one class: is-a Animal, has-a Brain</span>
+        <svg viewBox="0 0 640 170" role="img" aria-label="Diagram showing Dog with two arrows: one pointing up to Animal labeled is-a, representing inheritance, and one pointing sideways to Brain labeled has-a, representing composition through a private Brain pointer member.">
+          <rect x="230" y="16" width="180" height="46" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="320" y="42" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Animal</text>
+
+          <path d="M320 62 L320 96" stroke="#7FD9A8" stroke-width="1.4" fill="none" marker-end="url(#a04b)"/>
+          <text x="336" y="82" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">is-a</text>
+
+          <rect x="230" y="96" width="180" height="46" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.4"/>
+          <text x="320" y="122" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Dog</text>
+
+          <line x1="410" y1="119" x2="450" y2="119" stroke="#F2A65A" stroke-width="1.4" stroke-dasharray="4 3"/>
+          <text x="430" y="108" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#F2A65A">has-a</text>
+          <rect x="450" y="96" width="150" height="46" rx="6" fill="#0F2540" stroke="#F2A65A" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="525" y="122" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Brain*</text>
+
+          <defs>
+            <marker id="a04b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <h3>Shallow copy is the exact bug Orthodox Canonical Form exists to prevent</h3>
+      <p>This connects directly back to Module 02: for a class holding only plain values, the compiler's automatic copy constructor is harmless. The moment a class owns a heap pointer, that automatic version just copies the <em>address</em>, not the data — two objects end up sharing one <code>Brain</code>, and the first destructor to run frees memory the second one still believes it owns.</p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 03 &mdash; shallow copy leaves two Dogs sharing one Brain; deep copy gives each its own</span>
+        <svg viewBox="0 0 640 240" role="img" aria-label="Diagram contrasting a shallow copy, where two Dog objects both point at the same Brain and the second destructor causes a double free, against a deep copy, where the copy constructor allocates an independent Brain so each Dog owns its own memory.">
+          <text x="170" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E88FB0">SHALLOW &mdash; pointer copied as-is</text>
+          <rect x="40" y="36" width="110" height="46" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="95" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">original</text>
+          <rect x="190" y="36" width="110" height="46" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="245" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">copy</text>
+          <path d="M95 82 L170 120" stroke="#E88FB0" stroke-width="1.2" fill="none"/>
+          <path d="M245 82 L170 120" stroke="#E88FB0" stroke-width="1.2" fill="none"/>
+          <rect x="110" y="120" width="120" height="46" rx="6" fill="#2a1414" stroke="rgba(224,100,95,0.5)" stroke-width="1.4"/>
+          <text x="170" y="146" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E88FB0">ONE Brain</text>
+          <text x="170" y="188" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#E88FB0">2nd delete = double free</text>
+
+          <text x="490" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#7FD9A8">DEEP &mdash; new Brain(*other.brain)</text>
+          <rect x="360" y="36" width="110" height="46" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="415" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">original</text>
+          <rect x="510" y="36" width="110" height="46" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="565" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">copy</text>
+          <path d="M415 82 L415 120" stroke="#7FD9A8" stroke-width="1.2" fill="none"/>
+          <path d="M565 82 L565 120" stroke="#7FD9A8" stroke-width="1.2" fill="none"/>
+          <rect x="360" y="120" width="110" height="46" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.4"/>
+          <text x="415" y="146" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">own Brain</text>
+          <rect x="510" y="120" width="110" height="46" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.4"/>
+          <text x="565" y="146" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">own Brain</text>
+          <text x="490" y="188" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">independent — safe to modify or destroy either one</text>
+        </svg>
+      </div>
+
+      <pre>Dog::Dog(<span class="kw">const</span> Dog &amp;other) : Animal(other) {
+    brain = <span class="kw">new</span> Brain(*other.brain); <span class="cm">// own allocation, contents copied — never share the pointer</span>
+}
+Dog &amp;Dog::operator=(<span class="kw">const</span> Dog &amp;other) {
+    Animal::operator=(other);
+    *brain = *other.brain; <span class="cm">// copy INTO the existing Brain — Brain's own operator= does the real work</span>
+    <span class="kw">return</span> *<span class="kw">this</span>;
+}</pre>
+
+      <h3>"Array of Animal objects" doesn't mean what it sounds like</h3>
+      <p>Taken literally, an array of plain <code>Animal</code> objects holding <code>Dog</code>s and <code>Cat</code>s would <span class="keyterm">slice</span> every element down to just the <code>Animal</code> part on the way in — the exact danger flagged in the inheritance reference. What the subject actually means is an array of <em>pointers</em>: <code>Animal *animals[N]</code>, each one built with <code>new Dog()</code> or <code>new Cat()</code>, and pointing at a full, unsliced object living on the heap.</p>
+
+      <div class="note">
+        <span class="tag">"Delete directly as Animals" — the other half of this instruction</span>
+        <p>The subject isn't just asking you to delete the array — it's asking you to delete <em>through the base pointer type</em>, not by casting back to <code>Dog*</code>/<code>Cat*</code> first. Casting back would make the whole exercise trivial: of course the right destructor runs if you explicitly tell the compiler the real type. Deleting through the ambiguous <code>Animal*</code> is what actually proves <code>virtual ~Animal()</code> is doing the work, not you.</p>
+      </div>
+
+      <p class="dim">Once <code>brain</code> exists, the entire chain from Module 03 — construction base-first, destruction reverse, virtual destructor required to reach the derived class's cleanup — stops being an abstract rule and becomes the specific line of code standing between a clean valgrind run and a leaked <code>Brain</code> for every single element in the array.</p>
+    </section>
+
+    <!-- ============ EX02 ============ -->
+    <section class="sheet" id="ex02">
+      <div class="sheetnum">Sheet 03 &middot; Exercise 02 &mdash; Abstract class</div>
+      <h2>AAnimal &mdash; removing the fallback entirely</h2>
+      <p class="tagline">A plain Animal was always a slightly awkward object — no real sound, no real identity. This exercise makes that awkwardness a compile error instead of a design smell.</p>
+
+      <p>The fix is one piece of syntax: change <code>makeSound()</code> from ordinary <code>virtual</code> to <span class="keyterm">pure virtual</span>, marked <code>= 0</code> instead of given a body.</p>
+
+      <pre><span class="kw">virtual</span> <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span>;      <span class="cm">// ex00/ex01 — has a body, class stays concrete</span>
+<span class="kw">virtual</span> <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span> = 0; <span class="cm">// ex02 — no body anywhere, class becomes abstract</span></pre>
+
+      <p>Two things change at once. The class-wide implementation in the <code>.cpp</code> file has to be deleted entirely — a pure virtual function has no definition, anywhere, in the class that declares it. And <code>Animal a;</code> / <code>new Animal()</code> now fail to compile, with an error along the lines of <em>"cannot declare variable to be of abstract type."</em></p>
+
+      <div class="diagram">
+        <span class="fig">Fig. 04 &mdash; the same class hierarchy, before and after one keyword change</span>
+        <svg viewBox="0 0 640 200" role="img" aria-label="Diagram contrasting the state before the change, where Animal has an ordinary virtual makeSound and can be instantiated directly, against the state after adding equals zero, where Animal becomes abstract and can no longer be built on its own, while Dog and Cat remain fully buildable since they already implement makeSound completely.">
+          <text x="170" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">ex00 / ex01</text>
+          <rect x="40" y="36" width="260" height="50" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="170" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Animal a;</text>
+          <text x="170" y="76" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">compiles fine</text>
+
+          <text x="490" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">ex02</text>
+          <rect x="360" y="36" width="260" height="50" rx="6" fill="#122B4B" stroke="#E88FB0" stroke-width="1.4" stroke-dasharray="5 3"/>
+          <text x="490" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">AAnimal a;</text>
+          <text x="490" y="76" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#E88FB0">compile error &mdash; abstract type</text>
+
+          <line x1="320" y1="110" x2="320" y2="110" stroke="none"/>
+          <rect x="130" y="120" width="180" height="50" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.4"/>
+          <text x="220" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Dog / Cat &mdash; unaffected</text>
+
+          <text x="320" y="192" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">already fully implement makeSound() &mdash; stay concrete either way</text>
+        </svg>
+      </div>
+
+      <h3>Why nothing about Dog or Cat needs to change</h3>
+      <p>This is the propagation rule made concrete: a class stays abstract only if a pure virtual function is left unimplemented somewhere in its chain. <code>Dog::makeSound()</code> and <code>Cat::makeSound()</code> already have real bodies, written back in ex00 — they satisfy the new requirement automatically, without a single line of their own code changing.</p>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Class</th><th>Implements makeSound()?</th><th>Can it be instantiated?</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">AAnimal</th><td class="no">No &mdash; pure virtual, no body</td><td class="no">No</td></tr>
+            <tr><th scope="row">Dog</th><td class="yes">Yes, already, since ex00</td><td class="yes">Yes</td></tr>
+            <tr><th scope="row">Cat</th><td class="yes">Yes, already, since ex00</td><td class="yes">Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="tag">The optional A prefix</span>
+        <p>The subject allows renaming <code>Animal</code> to <code>AAnimal</code>. This is purely a naming convention, common at 42 specifically, signaling at a glance "this class exists to be inherited from, never built directly" &mdash; the compiler enforces the actual restriction regardless of what the class is called. If you rename it, the change has to be total and consistent: file names, the include guard, every constructor, and every reference to it in <code>Dog</code>, <code>Cat</code>, and <code>main.cpp</code> &mdash; a half-renamed class is worse than not renaming at all.</p>
+      </div>
+
+      <p class="dim">Everything from ex01 &mdash; the deep copy, the array of base pointers, the delete-through-base-type requirement &mdash; carries over completely unchanged. The abstract restriction only affects whether <code>AAnimal</code> itself can be built standing alone; it has no effect on ownership, destruction order, or the virtual dispatch mechanism those earlier exercises depend on.</p>
+    </section>
+
+  </main>
+</div>
+
+<footer>C++ Module 04 theory reference &middot; concepts only, exercises are yours to write</footer>
+
+<script>
+  var links = document.querySelectorAll('nav.sidebar a');
+  var sections = Array.prototype.map.call(links, function(l){ return document.querySelector(l.getAttribute('href')); });
+  function setActive(){
+    var y = window.scrollY + 120;
+    var current = sections[0];
+    sections.forEach(function(s){ if(s && s.offsetTop <= y) current = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    var idx = sections.indexOf(current);
+    if(idx >= 0) links[idx].classList.add('active');
+  }
+  document.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>
