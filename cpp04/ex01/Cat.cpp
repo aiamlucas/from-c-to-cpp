@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 15:48:36 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/08 16:56:54 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/09 11:29:39 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,3 +38,5 @@ Cat::~Cat() {
 }
 
 void Cat::makeSound() const { std::cout << "miauuu" << std::endl; }
+
+Brain *Cat::getBrain(void) const { return brain; }

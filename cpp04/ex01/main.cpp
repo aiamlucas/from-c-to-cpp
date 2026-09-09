@@ -6,21 +6,24 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/08 19:53:36 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/09 11:34:26 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Animal.hpp"
+#include "Brain.hpp"
 #include "Cat.hpp"
 #include "Dog.hpp"
 #include <iostream>
 
 int main(void) {
 
+    // subject example -> no leak on simple new/delete
     {
         const Animal *j = new Dog();
         const Animal *i = new Cat();
 
+        // deleting through Animal* (virtual destructor)
         delete j; // should not create a leak
         delete i;
     }
@@ -28,19 +31,19 @@ int main(void) {
     std::cout << "\n--- array: Cat/Dog half half ---" << std::endl;
     Animal *animals[8];
     for (int i = 0; i < 8; i++) {
-        if (i < 8)
+        if (i < 4) // half of Dogs
             animals[i] = new Dog();
-        else
+        else // half of Cats
             animals[i] = new Cat();
     }
     for (int i = 0; i < 8; i++)
-        delete animals[i];
+        delete animals[i]; // delete thorugh Animal* (virtual destructor)
     // deep copy
     std::cout << "\n--- deep copy ---" << std::endl;
     {
         Cat juanCarlos;
         juanCarlos.getBrain()->setIdea(0, "I am hungry!");
-        Cat cloneCat(juanCarlos);
+        Cat cloneCat(juanCarlos); // copy constructor --> allocates a new Brain
         juanCarlos.getBrain()->setIdea(0, "I wanna sleep!");
         std::cout << "juanCarlos: " << juanCarlos.getBrain()->getIdea(0)
                   << std::endl; // "I wanna sleep!"
