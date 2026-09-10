@@ -128,12 +128,13 @@
     <div class="navlabel">Index</div>
     <ol id="navlist">
       <li><a href="#s00"><span class="num">00</span>When this is worth it</a></li>
-      <li><a href="#s01"><span class="num">01</span>Registers &amp; convention</a></li>
-      <li><a href="#s02"><span class="num">02</span>Core instructions</a></li>
-      <li><a href="#s03"><span class="num">03</span>Virtual dispatch, traced</a></li>
-      <li><a href="#s04"><span class="num">04</span>Memory cost, measured</a></li>
-      <li><a href="#s05"><span class="num">05</span>gdb, live on ex00</a></li>
-      <li><a href="#s06"><span class="num">06</span>nvim-dap</a></li>
+      <li><a href="#s01"><span class="num">01</span>CPU, RAM &amp; the stack</a></li>
+      <li><a href="#s02"><span class="num">02</span>Registers &amp; convention</a></li>
+      <li><a href="#s03"><span class="num">03</span>Core instructions</a></li>
+      <li><a href="#s04"><span class="num">04</span>Virtual dispatch, traced</a></li>
+      <li><a href="#s05"><span class="num">05</span>Memory cost, measured</a></li>
+      <li><a href="#s06"><span class="num">06</span>gdb, live on ex00</a></li>
+      <li><a href="#s07"><span class="num">07</span>nvim-dap</a></li>
     </ol>
   </nav>
 
@@ -164,6 +165,105 @@
     <!-- ============ S01 ============ -->
     <section class="sheet" id="s01">
       <div class="sheetnum">Sheet 01</div>
+      <h2>The big picture &mdash; CPU, RAM, the stack, and VRAM</h2>
+      <p class="tagline">Registers are the only thing physically inside the CPU chip. Everything else — the stack included — is a room down the hall, reached over a wire.</p>
+
+      <p>The CPU chip itself is tiny and holds almost nothing on its own: a handful of registers, and the circuitry to do arithmetic and follow instructions. Everything a running program actually needs &mdash; its variables, its call history, its compiled code &mdash; lives somewhere else, physically separate from the chip, and has to be fetched across a connection every time it's needed.</p>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Component</th><th>Physically located</th><th>Typical size</th><th>Speed, relative to registers</th><th>Who manages it</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Registers</th><td>inside the CPU chip itself</td><td>a few dozen slots, 8 bytes each</td><td>fastest possible &mdash; no travel at all</td><td>the compiler, directly</td></tr>
+            <tr><th scope="row">Stack</th><td>inside RAM &mdash; a reserved region of it</td><td>a few MB, typically</td><td>slower &mdash; every access crosses the bus</td><td>automatic &mdash; grows/shrinks on every function call and return</td></tr>
+            <tr><th scope="row">Heap</th><td>also inside RAM, a different region</td><td>as much as the OS grants</td><td>same as the stack &mdash; it's still RAM</td><td>manual &mdash; your own <code>new</code>/<code>delete</code></td></tr>
+            <tr><th scope="row">RAM (overall)</th><td>separate chip(s), next to the CPU</td><td>gigabytes</td><td>much slower than registers, much bigger</td><td>the OS, plus your program</td></tr>
+            <tr><th scope="row">VRAM</th><td>on the graphics card, physically separate again</td><td>gigabytes</td><td>very fast for the GPU's own use; slow to reach <em>from</em> the CPU</td><td>the GPU driver</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="diagram">
+        <svg viewBox="0 0 680 340" role="img" aria-label="Diagram showing the CPU chip containing only its registers, connected across a bus to RAM, which contains the stack, the heap, global and static data, and the loaded program code. A separate GPU chip with its own VRAM connects to the whole system through a slower PCIe bus.">
+          <rect x="30" y="30" width="280" height="150" rx="8" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.6"/>
+          <text x="170" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">CPU chip</text>
+          <rect x="50" y="66" width="110" height="36" rx="5" fill="#0F2540" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="105" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">rax, rdi, rdx...</text>
+          <rect x="170" y="66" width="110" height="36" rx="5" fill="#0F2540" stroke="#F2A65A" stroke-width="1"/>
+          <text x="225" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#F2A65A">rsp, rbp, rip</text>
+          <text x="170" y="118" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">general-purpose + special-purpose</text>
+          <text x="170" y="136" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">registers — the ONLY thing that's</text>
+          <text x="170" y="154" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">physically inside the chip</text>
+
+          <path d="M310 105 L390 105" stroke="#8CA6BC" stroke-width="1.4" fill="none" marker-end="url(#a01arch)"/>
+          <path d="M390 115 L310 115" stroke="#8CA6BC" stroke-width="1.4" fill="none" marker-end="url(#a01arch)"/>
+          <text x="350" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">BUS</text>
+
+          <rect x="390" y="30" width="260" height="180" rx="8" fill="#122B4B" stroke="#E88FB0" stroke-width="1.6"/>
+          <text x="520" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">RAM</text>
+          <rect x="406" y="66" width="110" height="34" rx="5" fill="#0F2540" stroke="#E88FB0" stroke-width="1"/>
+          <text x="461" y="87" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#E88FB0">stack</text>
+          <rect x="526" y="66" width="110" height="34" rx="5" fill="#0F2540" stroke="#E88FB0" stroke-width="1"/>
+          <text x="581" y="87" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#E88FB0">heap</text>
+          <rect x="406" y="108" width="110" height="34" rx="5" fill="#0F2540" stroke="#8CA6BC" stroke-width="1"/>
+          <text x="461" y="129" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="#8CA6BC">global/static</text>
+          <rect x="526" y="108" width="110" height="34" rx="5" fill="#0F2540" stroke="#8CA6BC" stroke-width="1"/>
+          <text x="581" y="129" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">code</text>
+          <text x="520" y="164" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">gigabytes, but every access</text>
+          <text x="520" y="182" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8CA6BC">means a trip across the bus</text>
+
+          <rect x="30" y="240" width="280" height="80" rx="8" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.6"/>
+          <text x="170" y="262" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">GPU chip</text>
+          <rect x="50" y="276" width="220" height="30" rx="5" fill="#0F2540" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="160" y="296" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">VRAM — the GPU's own memory</text>
+
+          <path d="M310 260 L390 220" stroke="#5C7690" stroke-width="1.2" fill="none" stroke-dasharray="4 3" marker-end="url(#a01arch)"/>
+          <text x="345" y="225" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="#5C7690">PCIe (slower)</text>
+
+          <defs>
+            <marker id="a01arch" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+        <span class="fig">Fig. 01 &mdash; only registers sit inside the CPU chip; everything else is a separate trip across a bus</span>
+      </div>
+
+      <h3>The stack, precisely</h3>
+      <p>The subject line: <strong style="color:var(--text)">the stack is not a hardware feature of the CPU.</strong> It is an ordinary region of RAM &mdash; the same memory that holds the heap, global variables, and your compiled code. What makes it "the stack" is pure convention: it grows downward, one specific register (<code>rsp</code>, the <span class="keyterm">stack pointer</span>) always holds the address of its current top, and the instructions <code>call</code>/<code>ret</code>/<code>push</code>/<code>pop</code> automatically adjust <code>rsp</code> as functions are entered and left.</p>
+
+      <div class="note think">
+        <span class="tag">A callback you've already seen without knowing it</span>
+        <p>Back in the gdb section, the very first disassembled instruction was <code>mov rax, [rbp-0x8]</code>. That's <code>rbp</code> &mdash; the <span class="keyterm">base pointer</span>, a second special register that holds a stable reference point for the <em>current function's</em> region of the stack. <code>[rbp-0x8]</code> means "the local variable stored 8 bytes below this function's base" &mdash; which is exactly how a local variable like <code>a</code> gets read off the stack, in RAM, into a register, so the CPU can actually work with it.</p>
+      </div>
+
+      <h3>Kinds of registers</h3>
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Register</th><th>Kind</th><th>Holds</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">rax, rbx, rcx, rdx, rsi, rdi, r8&ndash;r15</th><td>general-purpose</td><td>whatever the compiler needs, per the calling convention (Sheet 02)</td></tr>
+            <tr><th scope="row">rip</th><td>special &mdash; instruction pointer</td><td>the address of the instruction currently executing. This is what <code>[rip+16]</code> addressing, from Sheet 04, is relative <em>to</em>.</td></tr>
+            <tr><th scope="row">rsp</th><td>special &mdash; stack pointer</td><td>the address of the current top of the stack, in RAM</td></tr>
+            <tr><th scope="row">rbp</th><td>special &mdash; base/frame pointer</td><td>a stable anchor for the current function's own slice of the stack &mdash; local variables are read as offsets from it, like <code>[rbp-0x8]</code></td></tr>
+            <tr><th scope="row">rflags</th><td>special &mdash; status flags</td><td>bits set automatically by arithmetic/comparison instructions (zero, carry, sign, overflow), read by conditional jumps</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The bus</h3>
+      <p>The <span class="keyterm">bus</span> is the physical set of connections &mdash; wires, on the actual circuit board &mdash; carrying addresses, data, and control signals between the CPU and everything outside it. When <code>mov rax, [address]</code> runs, the address travels out over the bus to RAM; RAM sends the requested bytes back over the bus into <code>rax</code>. That round trip is the entire reason register access is fast and RAM access is comparatively slow: a register never leaves the chip at all, while RAM always costs a trip across the bus, there and back.</p>
+
+      <h3>RAM</h3>
+      <p><span class="keyterm">RAM</span> (Random Access Memory) is the computer's main working memory &mdash; separate chips, sitting next to the CPU on the motherboard. Everything a running program uses beyond its literal registers lives here: the stack, the heap, global and static variables, and even the compiled machine code itself, loaded into RAM before the CPU can execute a single instruction of it. Vastly bigger than the register file (gigabytes versus a handful of 8-byte slots), at the cost of every single access needing that bus round trip.</p>
+
+      <h3>VRAM</h3>
+      <p><span class="keyterm">VRAM</span> is memory that lives physically on the graphics card itself &mdash; a separate chip again, this time sitting right next to the GPU rather than the CPU. The GPU does enormous amounts of highly parallel work (rendering, shading) that needs to read and write huge quantities of data extremely fast, so it gets its own dedicated, very-high-bandwidth memory rather than sharing the CPU's RAM. Getting data from the CPU's RAM <em>into</em> VRAM requires an explicit transfer across a separate, slower connection (commonly <span class="keyterm">PCIe</span>) &mdash; which is exactly why "uploading a texture to the GPU" is a distinct, deliberate, relatively costly step in graphics programming, never something that happens for free.</p>
+    </section>
+
+    <!-- ============ S02 ============ -->
+    <section class="sheet" id="s02">
+      <div class="sheetnum">Sheet 02</div>
       <h2>Registers &amp; the calling convention</h2>
       <p class="tagline">Physically identical hardware. The only difference between them is which job the calling convention habitually assigns.</p>
 
@@ -222,13 +322,13 @@
             </marker>
           </defs>
         </svg>
-        <span class="fig">Fig. 01 &mdash; same hardware, three different habitual jobs, below the calling convention</span>
+        <span class="fig">Fig. 02 &mdash; same hardware, three different habitual jobs, below the calling convention</span>
       </div>
     </section>
 
-    <!-- ============ S02 ============ -->
-    <section class="sheet" id="s02">
-      <div class="sheetnum">Sheet 02</div>
+    <!-- ============ S03 ============ -->
+    <section class="sheet" id="s03">
+      <div class="sheetnum">Sheet 03</div>
       <h2>The core instructions</h2>
       <p class="tagline">Four instructions cover almost everything in the traces below.</p>
 
@@ -245,9 +345,9 @@
       </div>
     </section>
 
-    <!-- ============ S03 ============ -->
-    <section class="sheet" id="s03">
-      <div class="sheetnum">Sheet 03</div>
+    <!-- ============ S04 ============ -->
+    <section class="sheet" id="s04">
+      <div class="sheetnum">Sheet 04</div>
       <h2>Virtual dispatch, fully traced</h2>
       <p class="tagline">Non-virtual: go straight there. Virtual: ask, then go.</p>
 
@@ -292,7 +392,7 @@ call _ZNK6Animal14nonVirtualFuncEv   <span class="cm">; jump straight to Animal:
             </marker>
           </defs>
         </svg>
-        <span class="fig">Fig. 02 &mdash; the non-virtual path, for direct comparison against Fig. 03 below</span>
+        <span class="fig">Fig. 03 &mdash; the non-virtual path, for direct comparison against Fig. 04 below</span>
       </div>
 
       <h3>Virtual &mdash; a-&gt;makeSound(), where a really points at a Dog</h3>
@@ -356,7 +456,7 @@ call rdx                <span class="cm">; jump to whatever's in rdx — a value
             </marker>
           </defs>
         </svg>
-        <span class="fig">Fig. 03 &mdash; the exact chain "call rdx" is following, traced one instruction at a time</span>
+        <span class="fig">Fig. 04 &mdash; the exact chain "call rdx" is following, traced one instruction at a time</span>
       </div>
 
       <h3>Where the vptr gets set &mdash; once, at construction</h3>
@@ -375,9 +475,9 @@ mov  [d], rax                <span class="cm">; write that address into d's firs
       </div>
     </section>
 
-    <!-- ============ S04 ============ -->
-    <section class="sheet" id="s04">
-      <div class="sheetnum">Sheet 04</div>
+    <!-- ============ S05 ============ -->
+    <section class="sheet" id="s05">
+      <div class="sheetnum">Sheet 05</div>
       <h2>Memory cost, measured</h2>
       <p class="tagline">Not guessed — printed, from real addresses.</p>
 
@@ -399,7 +499,7 @@ mov  [d], rax                <span class="cm">; write that address into d's firs
           <text x="404" y="94" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">12</text>
           <text x="518" y="94" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">16 — next object starts here, aligned</text>
         </svg>
-        <span class="fig">Fig. 04 &mdash; 12 real bytes, 4 padding bytes, so every array element lands on an 8-byte boundary</span>
+        <span class="fig">Fig. 05 &mdash; 12 real bytes, 4 padding bytes, so every array element lands on an 8-byte boundary</span>
       </div>
 
       <p class="dim"><strong style="color:var(--text)">vptr</strong> stands for <span class="keyterm">virtual table pointer</span> (sometimes shortened to "virtual pointer") &mdash; a pointer, stored in the object itself, aimed at that object's own class's vtable.</p>
@@ -422,13 +522,13 @@ mov  [d], rax                <span class="cm">; write that address into d's firs
 
           <text x="320" y="188" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">12 is not a multiple of 8 — every object after the first drifts further out of alignment</text>
         </svg>
-        <span class="fig">Fig. 05 &mdash; why the padding exists: not wasted space, the price of every array element starting aligned</span>
+        <span class="fig">Fig. 06 &mdash; why the padding exists: not wasted space, the price of every array element starting aligned</span>
       </div>
     </section>
 
-    <!-- ============ S05 ============ -->
-    <section class="sheet" id="s05">
-      <div class="sheetnum">Sheet 05</div>
+    <!-- ============ S06 ============ -->
+    <section class="sheet" id="s06">
+      <div class="sheetnum">Sheet 06</div>
       <h2>Verifying it live &mdash; gdb on ex00</h2>
       <p class="tagline">Everything above, checked against the real, compiled Animal/Dog/Cat binary — not a toy example.</p>
 
@@ -468,7 +568,7 @@ mov  [d], rax                <span class="cm">; write that address into d's firs
           <text x="34" y="304" font-family="IBM Plex Mono" font-size="11" fill="#7FD9A8">(gdb) stepi</text>
           <text x="580" y="304" font-family="IBM Plex Mono" font-size="10" fill="#5C7690" text-anchor="end">CMD</text>
         </svg>
-        <span class="fig">Fig. 06 &mdash; one C++ line (highlighted top) maps to six assembly instructions (highlighted middle); the arrows move together as you step</span>
+        <span class="fig">Fig. 07 &mdash; one C++ line (highlighted top) maps to six assembly instructions (highlighted middle); the arrows move together as you step</span>
       </div>
 
       <div class="note warn">
@@ -535,9 +635,9 @@ mov  [d], rax                <span class="cm">; write that address into d's firs
       </div>
     </section>
 
-    <!-- ============ S06 ============ -->
-    <section class="sheet" id="s06">
-      <div class="sheetnum">Sheet 06</div>
+    <!-- ============ S07 ============ -->
+    <section class="sheet" id="s07">
+      <div class="sheetnum">Sheet 07</div>
       <h2>nvim-dap &mdash; the same workflow, with a UI</h2>
       <p class="tagline">Everything in Sheet 05 works exactly the same underneath — nvim-dap just wraps gdb's output in breakpoint gutters, a variables panel, and a call-stack view, instead of typing print statements by hand.</p>
 
