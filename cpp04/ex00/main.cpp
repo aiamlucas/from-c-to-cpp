@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/07 20:00:42 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/10 18:05:20 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,14 +25,30 @@ int main(void) {
         const Animal *meta = new Animal();
         const Animal *j = new Dog();
         const Animal *i = new Cat();
-        std::cout << j->getType() << " " << std::endl;
-        std::cout << i->getType() << " " << std::endl;
-        i->makeSound();    // Cat's sound
-        j->makeSound();    // Dog's sound
-        meta->makeSound(); // Animal sound
-        delete meta;
-        delete j; // ~Dog() then ~Animal()
-        delete i; // ~Cat() then ~Animal()
+        std::cout << j->getType() << " " << std::endl; // "Dog"
+        std::cout << i->getType() << " " << std::endl; // "Cat"
+        i->makeSound();    // "miauuu" -> virtual -> runtime lookup
+        j->makeSound();    // "au au" -> virtual -> runtime lookup
+        meta->makeSound(); // "brrrr br" -> virtual -> runtime lookup
+        delete meta;       // ~Animal()
+        delete j;          // ~Dog() then ~Animal()
+        delete i;          // ~Cat() then ~Animal()
+    }
+
+    // WrongAnimal -> no virtual:
+    std::cout << " \n--- Wrong Class ---" << std::endl;
+    {
+        // direct call: declared type -> WrongCat (static binding, compile time)
+        // compiler sees WrongCat -> WrongCat::makeSound() -> correct sound
+        WrongCat mafalda;
+        mafalda.makeSound(); // "WrongCat -> miauuu "
+
+        // through a base pointer:  declared type -> WrongAnimal
+        // no virtual -> no vtable, no runtime lookup (just static binding)
+        // compiler locks in WrongAnimal::makeSound() at compile time
+        WrongCat oblomov;
+        const WrongAnimal *ptr = &oblomov;
+        ptr->makeSound(); // "WrongAnimal -> brrrr..."
     }
 
     std::cout << " \n--- subject main Wrong Class ---" << std::endl;
@@ -40,33 +56,21 @@ int main(void) {
         const WrongAnimal *meta = new WrongAnimal();
         const Animal *j = new Dog();
         const WrongAnimal *i = new WrongCat();
-        std::cout << j->getType() << " " << std::endl;
-        std::cout << i->getType() << " " << std::endl;
-        i->makeSound(); // Wrong -> print WrongAnimal's sound (and not WrongCat
-                        // sound) - makeSound() is not virtual!
-        j->makeSound();
-        meta->makeSound();
-        delete meta;
-        delete j; // ~Dog() then ~Animal()
-        delete i; // only ~WrongAnimal() runs -- ~WrongCat() never fires (not
-                  // virtual)
+        std::cout << j->getType() << " " << std::endl; // "Dog"
+        std::cout << i->getType() << " " << std::endl; //  "WrongCat"
+        i->makeSound(); // "WrongAnimal: brrr" -> no virtual, declared type wins
+                        // (was Cat sound before)
+
+        j->makeSound();    // "au au au" -> Animal -> virtual -> runtime lookup
+                           // (same as before)
+        meta->makeSound(); // "WrongAnimal: brrr" -> no virtual, direct call
+                           // (same as before)
+        delete meta;       // ~WrongAnimal()
+        delete j;          // ~Dog() then ~Animal()
+        delete i; // only ~WrongAnimal()  -> no virtual ~WrongCat never fires
     }
 
-    std::cout << " \n--- extra tests ---" << std::endl;
-
-    std::cout
-        << "\n --- construction Animal=capivara, Dog=laica, Cat=oblomov ---"
-        << std::endl;
-    Animal capivara;
-    Dog laica;
-    Cat oblomov;
-
-    std::cout << "\n --- makesound() test ---" << std::endl;
-    capivara.makeSound(); //  type is know at compile time, virtual is not
-                          //  needed here
-    laica.makeSound();
-    oblomov.makeSound();
-
+    // array of Animal* with mixed types
     std::cout << "\n--- iterating in an array of different animals "
                  "animals[capivara, laica, oblomov] ---"
               << std::endl;
@@ -76,14 +80,14 @@ int main(void) {
     animals[1] = new Dog();
     animals[2] = new Cat();
 
-    for (int i = 0; i < 3;
-         i++) // the declared type is Animal* for all 3, but
-              // the real type differs (virtual is here necessary)
-        animals[i]->makeSound(); // should have different sound
+    // declared type -> Animal* - virtual select the correct sound
+    for (int i = 0; i < 3; i++)
+        animals[i]
+            ->makeSound(); // virtual -> runtime lookup -> Animal, Dog, Cat
 
     std::cout << "\n--- deleting Animals* ---" << std::endl;
     for (int i = 0; i < 3; i++)
-        delete animals[i]; // virtual destructor!
+        delete animals[i]; // virtual destructor -> runtime lookup
 
     std::cout << "\n--- destructor (from what is remain in the stack) ---"
               << std::endl;
