@@ -69,7 +69,7 @@
   section.sheet h3{font-family:var(--mono); font-size:15px; font-weight:600; color:var(--cyan); text-transform:uppercase; letter-spacing:.06em; margin:36px 0 12px;}
   section.sheet p{max-width:700px; margin-bottom:14px; color:var(--text);}
   section.sheet p.dim{color:var(--text-dim);}
-  code, .inline-code{font-family:var(--mono); font-size:.92em; background:var(--card); padding:2px 6px; border-radius:3px; color:var(--green);}
+  code, .inline-code{font-family:var(--mono); font-size:.92em; background:var(--card); padding:2px 6px; border-radius:3px; color:var(--green); white-space:nowrap;}
   pre{font-family:var(--mono); font-size:13.5px; line-height:1.6; background:var(--card); border:1px solid var(--cyan-dim); border-radius:6px; padding:18px 20px; overflow-x:auto; margin:16px 0 22px; color:var(--text);}
   pre .kw{color:var(--pink);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;}
 
@@ -240,8 +240,12 @@
         <span class="tag">Why the destructor line matters more than the sound line</span>
         <p>A wrong sound is cosmetically wrong but harmless. A skipped destructor is the dangerous half of this exercise: if <code>WrongCat</code> owned anything on the heap, deleting it through a <code>WrongAnimal*</code> would leak that memory silently, with zero indication anything went wrong. Ex00's classes own nothing yet, so nothing actually leaks here — the missing destructor print statement is the only visible symptom. Ex01 changes that.</p>
       </div>
-    </section>
 
+      <div class="note">
+        <span class="tag">Want to see this at the assembly and memory level?</span>
+        <p>The full mechanism &mdash; real <code>g++ -S</code> output, register-by-register traces of the virtual and non-virtual call paths, where the vptr gets written at construction, and the measured byte-for-byte memory layout &mdash; lives in a dedicated companion reference: <strong style="color:var(--text)">asm-and-debugging-basics.html</strong>. It also covers verifying all of this live against the real <code>ex00</code> binary with <code>gdb</code>'s split-screen source+assembly view. Kept separate so it can keep growing independently as new topics come up, without this exercise-tied doc growing with it.</p>
+      </div>
+    </section>
     <!-- ============ EX01 ============ -->
     <section class="sheet" id="ex01">
       <div class="sheetnum">Sheet 02 &middot; Exercise 01 &mdash; I don't want to set the world on fire</div>

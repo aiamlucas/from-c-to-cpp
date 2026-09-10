@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cpp04 — Evaluation Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f18; --bg-2:#13141f; --card:#181926; --card-2:#1e2030;
+    --border:rgba(96,192,186,0.20);
+    --cyan:#4fbfb2; --amber:#cf9247; --green:#9db54a; --red:#e0645f; --violet:#b58ad9;
+    --text:#c9d2f0; --text-dim:#8b93b8; --text-faint:#5c6390;
+    --sans:'Roboto', sans-serif; --mono:'Roboto Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: radial-gradient(ellipse 900px 500px at 50% -10%, rgba(79,191,178,0.05), transparent), var(--bg);
+    color:var(--text); font-family:var(--sans); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  .titleblock{border-bottom:1px solid var(--border); padding:44px 0 26px;}
+  .titleblock .tag{font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--cyan); text-transform:uppercase; margin-bottom:10px;}
+  .titleblock h1{font-family:var(--sans); font-weight:700; font-size:clamp(28px,4vw,42px); color:#fff;}
+  .titleblock .sub{font-size:16px; color:var(--text-dim); max-width:640px; margin-top:10px;}
+  .titleblock .genrow{margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;}
+  .titleblock .genchip{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); background:var(--card); border:1px solid var(--border); border-radius:20px; padding:6px 14px;}
+  .titleblock .genchip b{color:var(--cyan); font-weight:500;}
+
+  .layout{display:grid; grid-template-columns:220px 1fr; gap:44px; padding:36px 0 100px;}
+  nav.sidebar{position:sticky; top:24px; align-self:start; height:fit-content;}
+  nav.sidebar .navlabel{font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--text-faint); text-transform:uppercase; margin-bottom:14px;}
+  nav.sidebar ol{list-style:none; border-left:1px solid var(--border);}
+  nav.sidebar a{display:block; padding:9px 0 9px 16px; font-family:var(--mono); font-size:13px; color:var(--text-dim); text-decoration:none; border-left:2px solid transparent; margin-left:-1px; transition:color .15s, border-color .15s;}
+  nav.sidebar a:hover{color:var(--text);}
+  nav.sidebar a.active{color:var(--cyan); border-left-color:var(--cyan);}
+
+  main{min-width:0;}
+  section.sheet{padding-top:8px; margin-bottom:88px; scroll-margin-top:24px;}
+  section.sheet .exnum{font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--text-faint); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:10px;}
+  section.sheet h2{font-family:var(--sans); font-weight:700; font-size:clamp(22px,2.6vw,30px); color:#fff; margin-bottom:6px;}
+  section.sheet .tagline{color:var(--text-dim); font-size:15px; margin-bottom:20px; max-width:680px;}
+  section.sheet h3{font-family:var(--mono); font-size:13px; font-weight:600; color:var(--text); letter-spacing:.03em; margin:34px 0 12px; display:flex; align-items:center; gap:9px;}
+  section.sheet h3 .filebadge{font-size:10px; color:var(--cyan); background:var(--card-2); border:1px solid var(--border); border-radius:4px; padding:2px 8px; text-transform:uppercase; letter-spacing:.06em;}
+  section.sheet h4{font-family:var(--sans); font-weight:700; font-size:15px; color:var(--cyan); margin:30px 0 10px;}
+  section.sheet p{max-width:700px; margin:0 0 20px; color:var(--text); font-size:15px;}
+  code{font-family:var(--mono); font-size:.9em; background:var(--card); padding:2px 6px; border-radius:3px; color:var(--green);}
+  pre{font-family:var(--mono); font-size:13px; line-height:1.65; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; overflow-x:auto; margin:0 0 10px; color:var(--text);}
+  pre .kw{color:var(--violet);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;} pre .st{color:var(--green);}
+
+  .concepts{border:1px solid var(--border); border-radius:8px; background:var(--card-2); padding:16px 20px; margin:0 0 26px; max-width:700px;}
+  .concepts .clabel{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); margin-bottom:12px; display:block;}
+  .concepts dl{display:grid; grid-template-columns:auto 1fr; gap:8px 16px; margin:0;}
+  .concepts dt{font-family:var(--mono); font-size:13px; color:var(--cyan); white-space:nowrap; font-weight:500; align-self:baseline;}
+  .concepts dd{font-size:13.5px; color:var(--text-dim); margin:0; align-self:baseline;}
+
+  .qa{border:1px solid var(--border); border-radius:8px; margin:0 0 14px; overflow:hidden; max-width:700px;}
+  .qa .q{background:var(--card-2); padding:12px 18px; font-family:var(--sans); font-weight:500; font-size:14.5px; color:#fff; display:flex; gap:10px;}
+  .qa .q::before{content:"Q"; font-family:var(--mono); color:var(--amber); font-weight:700;}
+  .qa .a{background:var(--card); padding:14px 18px; font-size:14.5px; color:var(--text-dim); display:flex; gap:10px;}
+  .qa .a::before{content:"A"; font-family:var(--mono); color:var(--cyan); font-weight:700; flex-shrink:0;}
+  .qa.checklist{border-color:rgba(157,181,74,0.35);}
+  .qa.checklist .q{border-left:3px solid var(--green);}
+  .qa.checklist .q::before{content:"✓"; color:var(--green);}
+
+  .checklist-note{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--green); margin:34px 0 12px; display:flex; align-items:center; gap:8px;}
+  .checklist-note::before{content:""; width:16px; height:1px; background:var(--green); display:inline-block;}
+
+  .pitch{font-size:17px; color:#fff; max-width:680px; margin:0 0 22px; padding:16px 20px; border:1px dashed var(--border); border-radius:8px; font-style:italic;}
+
+  .diagram{background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; margin:0 0 24px; max-width:700px; overflow-x:auto;}
+  .diagram svg{display:block; max-width:100%;}
+  .diagram .fig{font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-top:10px; display:block;}
+
+  .rubric{border:1px solid rgba(157,181,74,0.35); border-radius:8px; background:rgba(157,181,74,0.05); padding:14px 18px; margin:0 0 20px; max-width:700px;}
+  .rubric .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--green); margin-bottom:6px; display:block;}
+  .rubric p{margin:0; font-size:14px; color:var(--text-dim); font-style:italic;}
+
+  footer{border-top:1px solid var(--border); padding:26px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.sidebar{position:relative; top:0; margin-bottom:8px;}
+    nav.sidebar ol{display:flex; flex-wrap:wrap; border-left:none;}
+    nav.sidebar a{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+    .concepts dl{grid-template-columns:1fr;}
+    .concepts dd{margin-bottom:4px;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <div class="wrap">
+    <p class="tag">cpp04</p>
+    <h1>Evaluation Walkthrough</h1>
+    <p class="sub">Peer-evaluation prep, exercise by exercise — built from your actual code, checked directly against the official EvalHub rubric. Every checklist item below quotes the real grading criteria, not a guess at what an evaluator might ask.</p>
+    <div class="genrow">
+      <span class="genchip">Every exercise: <b>Makefile</b> compiles clean with <b>-Wall -Wextra -Werror -std=c++98</b></span>
+      <span class="genchip">Every exercise: Orthodox Canonical Form, split into <b>.hpp</b> / <b>.cpp</b></span>
+      <span class="genchip">Rubric: <b>"If any non-interface class is not in OCF, do not grade this exercise"</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="sidebar">
+    <div class="navlabel">Index</div>
+    <ol id="navlist">
+      <li><a href="#ex00">ex00 &mdash; Polymorphism</a></li>
+      <li><a href="#ex01">ex01 &mdash; Brain &amp; deep copy</a></li>
+      <li><a href="#ex02">ex02 &mdash; Abstract class</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ EX00 ============ -->
+    <section class="sheet" id="ex00">
+      <div class="exnum">ex00</div>
+      <h2>Polymorphism</h2>
+      <p class="tagline">Animal, Dog, Cat — and the deliberately broken WrongAnimal/WrongCat pair, built specifically to prove you understand why the first three needed virtual.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>subtype polymorphism</dt>
+          <dd>Contrasted with Module 02's ad-hoc polymorphism (operator overloading) — this kind is resolved at runtime, by the object's real type, not at compile time.</dd>
+          <dt>virtual as the fix to static binding</dt>
+          <dd>Without it, calling through a base pointer resolves by the pointer's declared type. virtual flips resolution to the object's actual type.</dd>
+          <dt>direct call vs base-pointer call</dt>
+          <dd>Calling makeSound() on a named Dog variable proves nothing — the type is already known at compile time. Only a base-pointer call actually tests virtual.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"Animal has a virtual makeSound() so Dog and Cat can each override it correctly. The WrongAnimal/WrongCat pair is the same shape with virtual deliberately removed, so I can show the exact failure mode side by side with the working version — a wrong sound, and a skipped destructor."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Animal.hpp <span class="filebadge">header</span></h3>
+      <pre><span class="kw">class</span> Animal {
+<span class="kw">protected</span>:
+    <span class="tp">std::string</span> _type;
+<span class="kw">public</span>:
+    Animal(<span class="kw">void</span>);
+    Animal(<span class="kw">const</span> Animal &amp;other);
+    Animal &amp;operator=(<span class="kw">const</span> Animal &amp;other);
+    <span class="kw">virtual</span> ~Animal();
+
+    <span class="tp">std::string</span> getType(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="kw">virtual</span> <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span>;
+};</pre>
+      <p><code>getType()</code> is required because the subject's own <code>main()</code> calls <code>j-&gt;getType()</code> directly &mdash; easy to miss on a first pass since it's mentioned only in the example code, not the prose. <code>makeSound()</code> and the destructor are both <code>virtual</code>; this exercise is entirely about the first one, but the destructor matters just as much once ex01 gives <code>Dog</code>/<code>Cat</code> something to actually leak.</p>
+
+      <h3>WrongAnimal.hpp <span class="filebadge">the deliberate contrast</span></h3>
+      <pre><span class="kw">class</span> WrongAnimal {
+<span class="kw">protected</span>:
+    <span class="tp">std::string</span> _type;
+<span class="kw">public</span>:
+    WrongAnimal(<span class="kw">void</span>);
+    WrongAnimal(<span class="kw">const</span> WrongAnimal &amp;other);
+    WrongAnimal &amp;operator=(<span class="kw">const</span> WrongAnimal &amp;other);
+    ~WrongAnimal();                        <span class="cm">// deliberately NOT virtual</span>
+    <span class="tp">std::string</span> getType(<span class="kw">void</span>) <span class="kw">const</span>;
+    <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span>;         <span class="cm">// deliberately NOT virtual</span>
+};</pre>
+      <p>Same shape as <code>Animal</code>, one keyword removed on purpose. <code>WrongCat</code> mirrors <code>Cat</code> identically &mdash; the only difference anywhere in these two class hierarchies is the missing <code>virtual</code>.</p>
+
+      <div class="diagram">
+        <svg width="660" viewBox="0 0 660 220" xmlns="http://www.w3.org/2000/svg">
+          <text x="170" y="20" font-family="Roboto Mono,monospace" font-size="11" fill="#e0645f">WrongAnimal — no virtual</text>
+          <rect x="20" y="30" width="280" height="48" rx="6" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="160" y="58" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#c9d2f0">const WrongAnimal *i = new WrongCat();</text>
+          <path d="M160 78 L160 100" stroke="#e0645f" stroke-width="1.2"/>
+          <rect x="20" y="100" width="280" height="46" rx="6" fill="#2a1414" stroke="rgba(224,100,95,0.4)" stroke-width="0.5"/>
+          <text x="160" y="128" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#e0645f">i-&gt;makeSound() → WrongAnimal's sound</text>
+
+          <text x="490" y="20" font-family="Roboto Mono,monospace" font-size="11" fill="#9db54a">Animal — virtual</text>
+          <rect x="360" y="30" width="280" height="48" rx="6" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="500" y="58" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#c9d2f0">const Animal *j = new Dog();</text>
+          <path d="M500 78 L500 100" stroke="#9db54a" stroke-width="1.2"/>
+          <rect x="360" y="100" width="280" height="46" rx="6" fill="#1e3a1e" stroke="rgba(157,181,74,0.4)" stroke-width="0.5"/>
+          <text x="500" y="128" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#9db54a">j-&gt;makeSound() → Dog's sound</text>
+
+          <text x="330" y="180" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#8b93b8">both objects are genuinely the derived class underneath — only the keyword decides the outcome</text>
+          <text x="330" y="200" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10.5" fill="#5c6390">at delete time: only ~WrongAnimal() fires on the left; ~Dog() then ~Animal() fire on the right</text>
+        </svg>
+        <span class="fig">Fig 1 — same shape, one keyword removed — the entire visible difference between the two hierarchies</span>
+      </div>
+
+      <h3>main.cpp <span class="filebadge">the subject's own test, extended</span></h3>
+      <pre><span class="tp">int</span> main(<span class="kw">void</span>) {
+    {
+        <span class="kw">const</span> Animal *meta = <span class="kw">new</span> Animal();
+        <span class="kw">const</span> Animal *j = <span class="kw">new</span> Dog();
+        <span class="kw">const</span> Animal *i = <span class="kw">new</span> Cat();
+        std::cout &lt;&lt; j-&gt;getType() &lt;&lt; std::endl; <span class="cm">// "Dog"</span>
+        std::cout &lt;&lt; i-&gt;getType() &lt;&lt; std::endl; <span class="cm">// "Cat"</span>
+        i-&gt;makeSound(); <span class="cm">// Cat's sound — virtual resolves by the REAL object</span>
+        j-&gt;makeSound(); <span class="cm">// Dog's sound</span>
+        meta-&gt;makeSound();
+        <span class="kw">delete</span> meta;
+        <span class="kw">delete</span> j; <span class="cm">// ~Dog() then ~Animal()</span>
+        <span class="kw">delete</span> i; <span class="cm">// ~Cat() then ~Animal()</span>
+    }
+    {
+        <span class="kw">const</span> WrongAnimal *meta = <span class="kw">new</span> WrongAnimal();
+        <span class="kw">const</span> WrongAnimal *i = <span class="kw">new</span> WrongCat();
+        i-&gt;makeSound(); <span class="cm">// WRONG on purpose — prints WrongAnimal's sound, not WrongCat's</span>
+        meta-&gt;makeSound();
+        <span class="kw">delete</span> meta;
+        <span class="kw">delete</span> i; <span class="cm">// only ~WrongAnimal() runs — ~WrongCat() never fires</span>
+    }
+    <span class="kw">return</span> 0;
+}</pre>
+
+      <div class="rubric">
+        <span class="tag">Rubric wording, quoted directly</span>
+        <p>"The WrongCat must output the WrongCat makeSound() only when used as a wrongCat." — i.e. calling <code>wrongCat.makeSound()</code> directly on a named <code>WrongCat</code> variable correctly prints WrongCat's own sound (the compiler already knows the exact type). Only when accessed <em>through a WrongAnimal*</em> does it incorrectly fall back to WrongAnimal's sound. Both behaviors need to be demonstrable in your test.</p>
+      </div>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why does calling makeSound() directly on a Dog variable not prove virtual is working?</div><div class="a">The compiler already knows dog's exact type at compile time in that case — there's no ambiguity to resolve. Virtual only matters the moment the declared pointer type and the real object type genuinely diverge, which only happens when calling through a base pointer.</div></div>
+      <div class="qa"><div class="q">What would happen to WrongCat's destructor without virtual on WrongAnimal's?</div><div class="a">delete on a WrongAnimal* pointing at a real WrongCat would only ever call ~WrongAnimal() — resolved by the pointer's declared type, same static binding rule as any other non-virtual member function. ~WrongCat() would never run at all.</div></div>
+      <div class="qa"><div class="q">Why is getType() needed on Animal?</div><div class="a">The subject's own example code calls j->getType() directly — it's easy to miss since it's only shown in the code sample, not stated in the prose.</div></div>
+
+      <div class="checklist-note">EvalHub rubric — quoted verbatim</div>
+      <div class="qa checklist"><div class="q">"You must be able to instantiate and use this class." (Animal, ex00 specifically)</div><div class="a">Yes — Animal is an ordinary concrete class in ex00/ex01; only ex02 makes it abstract.</div></div>
+      <div class="qa checklist"><div class="q">"They are at least two classes that inherit from Animal: Cat and Dog. The constructor and destructor outputs must be clear."</div><div class="a">Yes — every constructor/destructor across Animal, Dog, Cat prints a distinct, identifiable message.</div></div>
+      <div class="qa checklist"><div class="q">"The attribute type is set to the appropriate value at creation for every animal."</div><div class="a">Yes — Dog's constructor sets _type = "Dog", Cat's sets _type = "Cat", both verifiable via getType().</div></div>
+      <div class="qa checklist"><div class="q">"makeSound() should be virtual! ... virtual keyword is mandatory."</div><div class="a">Yes — virtual void makeSound(void) const; in Animal.hpp, confirmed working via the Animal* array test.</div></div>
+      <div class="qa checklist"><div class="q">"There should be an example with a WrongAnimal and WrongCat that don't use the virtual keyword."</div><div class="a">Yes — WrongAnimal.hpp/.cpp and WrongCat.hpp/.cpp, structurally identical to the working pair, virtual removed from both makeSound() and the destructor.</div></div>
+    </section>
+
+    <!-- ============ EX01 ============ -->
+    <section class="sheet" id="ex01">
+      <div class="exnum">ex01</div>
+      <h2>I don't want to set the world on fire</h2>
+      <p class="tagline">Brain turns the virtual destructor from an abstract rule into something with real, checkable stakes — a heap allocation that either gets freed correctly or doesn't.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>composition alongside inheritance</dt>
+          <dd>Dog is-a Animal (inheritance) and has-a Brain (composition) simultaneously — two different relationships, same class.</dd>
+          <dt>shallow vs deep copy</dt>
+          <dd>The exact Module 02 OCF lesson made concrete: copying a raw pointer shares one resource between two objects; copying the pointed-to contents gives each object its own.</dd>
+          <dt>array of Animal* vs array of Animal</dt>
+          <dd>A literal array of Animal objects would slice every Dog/Cat down to just its Animal part. The subject means an array of pointers to full, unsliced heap objects.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"Dog and Cat now each own a Brain on the heap. The copy constructor and assignment operator both allocate or copy into an independent Brain rather than sharing the pointer, and the whole array test deletes everything through Animal* specifically, so the virtual destructor from ex00 is what's actually freeing every Brain, not me casting back to the real type."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Brain.hpp <span class="filebadge">composition target — not part of the Animal hierarchy</span></h3>
+      <pre><span class="kw">class</span> Brain {
+<span class="kw">private</span>:
+    <span class="tp">std::string</span> _ideas[100];
+<span class="kw">public</span>:
+    Brain(<span class="kw">void</span>);
+    Brain(<span class="kw">const</span> Brain &amp;other);
+    Brain &amp;operator=(<span class="kw">const</span> Brain &amp;other);
+    ~Brain();
+    <span class="kw">void</span> setIdea(<span class="tp">int</span> index, <span class="kw">const</span> <span class="tp">std::string</span> &amp;idea);
+    <span class="kw">const</span> <span class="tp">std::string</span> &amp;getIdea(<span class="tp">int</span> index) <span class="kw">const</span>;
+};</pre>
+      <p><code>Brain</code> has zero relationship to <code>Animal</code> &mdash; no inheritance either direction. This matters for the rubric specifically: <em>"the Brain attribute should not be inside the Animal class."</em> Raw C-style arrays can't be copy-constructed or assigned as a whole in C++98, so both the copy constructor and <code>operator=</code> loop over all 100 elements individually.</p>
+
+      <h3>Dog.hpp <span class="filebadge">composition through a private pointer</span></h3>
+      <pre><span class="kw">class</span> Dog : <span class="kw">public</span> Animal {
+<span class="kw">private</span>:
+    Brain *brain;
+<span class="kw">public</span>:
+    Dog(<span class="kw">void</span>);
+    Dog(<span class="kw">const</span> Dog &amp;other);
+    Dog &amp;operator=(<span class="kw">const</span> Dog &amp;other);
+    <span class="kw">virtual</span> ~Dog();
+    <span class="kw">virtual</span> <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span>;
+    Brain *getBrain(<span class="kw">void</span>) <span class="kw">const</span>;
+};</pre>
+
+      <h3>Dog.cpp <span class="filebadge">deep copy, both directions</span></h3>
+      <pre>Dog::Dog(<span class="kw">void</span>) {
+    _type = <span class="st">"Dog"</span>;
+    brain = <span class="kw">new</span> Brain();
+    std::cout &lt;&lt; <span class="st">"Dog default constructor called"</span> &lt;&lt; std::endl;
+}
+Dog::Dog(<span class="kw">const</span> Dog &amp;other) : Animal(other) {
+    brain = <span class="kw">new</span> Brain(*other.brain); <span class="cm">// OWN allocation, contents copied — never share the pointer</span>
+    std::cout &lt;&lt; <span class="st">"Dog copy constructor called"</span> &lt;&lt; std::endl;
+}
+Dog &amp;Dog::operator=(<span class="kw">const</span> Dog &amp;other) {
+    std::cout &lt;&lt; <span class="st">"Dog copy assignment operator called"</span> &lt;&lt; std::endl;
+    Animal::operator=(other);
+    *brain = *other.brain; <span class="cm">// copy INTO existing Brain — Brain's own operator= does the real work</span>
+    <span class="kw">return</span> *<span class="kw">this</span>;
+}
+Dog::~Dog() {
+    <span class="kw">delete</span> brain;
+    std::cout &lt;&lt; <span class="st">"Dog destructor called"</span> &lt;&lt; std::endl;
+}</pre>
+
+      <div class="diagram">
+        <svg width="660" viewBox="0 0 660 200" xmlns="http://www.w3.org/2000/svg">
+          <text x="170" y="18" font-family="Roboto Mono,monospace" font-size="11" fill="#e0645f">SHALLOW — pointer copied as-is</text>
+          <rect x="40" y="28" width="100" height="40" rx="6" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="90" y="52" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10.5" fill="#c9d2f0">original</text>
+          <rect x="200" y="28" width="100" height="40" rx="6" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="250" y="52" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10.5" fill="#c9d2f0">copy</text>
+          <path d="M90 68 L165 100" stroke="#e0645f" stroke-width="1"/>
+          <path d="M250 68 L165 100" stroke="#e0645f" stroke-width="1"/>
+          <rect x="100" y="100" width="130" height="40" rx="6" fill="#2a1414" stroke="rgba(224,100,95,0.5)" stroke-width="0.5"/>
+          <text x="165" y="124" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10.5" fill="#e0645f">ONE Brain</text>
+          <text x="165" y="164" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10" fill="#e0645f">2nd delete = double free</text>
+
+          <text x="490" y="18" font-family="Roboto Mono,monospace" font-size="11" fill="#9db54a">DEEP — new Brain(*other.brain)</text>
+          <rect x="360" y="28" width="100" height="40" rx="6" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="410" y="52" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10.5" fill="#c9d2f0">original</text>
+          <rect x="520" y="28" width="100" height="40" rx="6" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="570" y="52" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10.5" fill="#c9d2f0">copy</text>
+          <path d="M410 68 L410 100" stroke="#9db54a" stroke-width="1"/>
+          <path d="M570 68 L570 100" stroke="#9db54a" stroke-width="1"/>
+          <rect x="360" y="100" width="100" height="40" rx="6" fill="#1e3a1e" stroke="rgba(157,181,74,0.4)" stroke-width="0.5"/>
+          <text x="410" y="124" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10" fill="#9db54a">own Brain</text>
+          <rect x="520" y="100" width="100" height="40" rx="6" fill="#1e3a1e" stroke="rgba(157,181,74,0.4)" stroke-width="0.5"/>
+          <text x="570" y="124" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10" fill="#9db54a">own Brain</text>
+          <text x="490" y="164" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10" fill="#9db54a">independent — safe to destroy either one alone</text>
+        </svg>
+        <span class="fig">Fig 2 — exactly the rubric's own test: Dog tmp = basic; in a scope, checking for a double free at scope exit</span>
+      </div>
+
+      <div class="rubric">
+        <span class="tag">Rubric's exact test, quoted</span>
+        <p>"Dog basic; { Dog tmp = basic; } — If the copy is shallow, tmp and basic will use the same Brain and the Brain will get deleted with tmp at the end of the scope." Worth running this specific pattern once, live, even though your own <code>main.cpp</code> proves the same thing a different way (comparing <code>getBrain()</code> addresses and independently modifying ideas).</p>
+      </div>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">What would break if the copy constructor just did brain = other.brain?</div><div class="a">Both objects would point at the same Brain. The first destructor to run would free it; the second destructor would then call delete on already-freed memory — a double free, undefined behavior.</div></div>
+      <div class="qa"><div class="q">Why does operator= use *brain = *other.brain instead of delete brain; brain = new Brain(*other.brain)?</div><div class="a">Both are valid — the version used here reuses the existing allocation and copies into it via Brain's own operator=, avoiding an unnecessary delete/new pair. Either approach achieves a correct deep copy.</div></div>
+      <div class="qa"><div class="q">What happens without virtual on Animal's destructor, now that Dog owns a Brain?</div><div class="a">delete on an Animal* pointing at a Dog would only call ~Animal(). ~Dog() — and its delete brain; line — would never run. The Brain becomes unreachable, a genuine memory leak, not just a missing print statement.</div></div>
+
+      <div class="checklist-note">EvalHub rubric — quoted verbatim</div>
+      <div class="qa checklist"><div class="q">"Cat and Dog have the required private Brain attribute. The Brain attribute should not be inside the Animal class."</div><div class="a">Yes — Brain* brain is a private member of Dog and Cat individually; Animal has no knowledge of Brain at all.</div></div>
+      <div class="qa checklist"><div class="q">"The copy [of] a Cat or a Dog should be a deep copy... The copy constructor should do a deep copy too."</div><div class="a">Yes — both the copy constructor (new Brain(*other.brain)) and operator= (*brain = *other.brain) produce independent Brain contents, verified by comparing getBrain() addresses and modifying one without affecting the other.</div></div>
+      <div class="qa checklist"><div class="q">"The destructors in Animal must be virtual."</div><div class="a">Yes — virtual ~Animal(); confirmed necessary by the array-of-Animal* delete loop actually freeing every Brain (checked with valgrind, zero leaks).</div></div>
+      <div class="qa checklist"><div class="q">"Check that the canonical form is really implemented (i.e. no empty copy assignment operators...). Nothing should be public for no reason."</div><div class="a">Yes — brain is private on both Dog and Cat, only reachable via the public getBrain() accessor; all four OCF members present and functionally complete on every class involved.</div></div>
+    </section>
+
+    <!-- ============ EX02 ============ -->
+    <section class="sheet" id="ex02">
+      <div class="exnum">ex02</div>
+      <h2>Abstract class</h2>
+      <p class="tagline">One piece of syntax — = 0 — removes the one remaining awkward case: a plain Animal with no real sound of its own.</p>
+
+      <div class="concepts">
+        <span class="clabel">New concepts this exercise introduces</span>
+        <dl>
+          <dt>pure virtual function</dt>
+          <dd>virtual void makeSound(void) const = 0; — no implementation anywhere in the class, and the class becomes uninstantiable as a direct result.</dd>
+          <dt>propagation rule</dt>
+          <dd>Dog and Cat stay concrete without any changes, since they already fully implemented makeSound() back in ex00.</dd>
+        </dl>
+      </div>
+
+      <h4>The pitch</h4>
+      <p class="pitch">"Everything from ex01 stays exactly the same — Brain, the deep copy, the array of base pointers. The only change is Animal::makeSound() becoming pure virtual, which makes Animal itself uninstantiable while Dog and Cat are completely unaffected, since they already implement it fully."</p>
+
+      <h4>Walk the code</h4>
+
+      <h3>Animal.hpp <span class="filebadge">the one-line change</span></h3>
+      <pre><span class="cm">// ex00/ex01 — has a body, class stays concrete</span>
+<span class="kw">virtual</span> <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span>;
+
+<span class="cm">// ex02 — no body anywhere, class becomes abstract</span>
+<span class="kw">virtual</span> <span class="kw">void</span> makeSound(<span class="kw">void</span>) <span class="kw">const</span> = 0;</pre>
+      <p>The corresponding implementation in <code>Animal.cpp</code> is deleted entirely &mdash; a pure virtual function has no body anywhere in the class that declares it. <code>Dog.cpp</code> and <code>Cat.cpp</code> need zero changes; both already provide their own complete <code>makeSound()</code>.</p>
+
+      <h3>main.cpp <span class="filebadge">the required negative test</span></h3>
+      <pre><span class="tp">int</span> main(<span class="kw">void</span>) {
+    <span class="cm">// Animal a; // uncomment to prove: compile error, cannot instantiate abstract class</span>
+    <span class="cm">// "cannot declare variable 'a' to be of abstract type 'Animal'"</span>
+    ...
+}</pre>
+      <p>Left commented out on purpose &mdash; a concrete, one-line demonstration ready for evaluation. Uncomment, run <code>make</code>, show the real compiler error, recomment.</p>
+
+      <div class="diagram">
+        <svg width="660" viewBox="0 0 660 170" xmlns="http://www.w3.org/2000/svg">
+          <text x="170" y="18" font-family="Roboto Mono,monospace" font-size="11" fill="#8b93b8">ex00 / ex01</text>
+          <rect x="40" y="28" width="260" height="48" rx="6" fill="#13141f" stroke="rgba(96,192,186,0.3)" stroke-width="0.5"/>
+          <text x="170" y="52" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#c9d2f0">Animal a;</text>
+          <text x="170" y="68" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="9.5" fill="#9db54a">compiles fine</text>
+
+          <text x="490" y="18" font-family="Roboto Mono,monospace" font-size="11" fill="#8b93b8">ex02</text>
+          <rect x="360" y="28" width="260" height="48" rx="6" fill="#2a1414" stroke="rgba(224,100,95,0.4)" stroke-width="0.5"/>
+          <text x="490" y="52" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#c9d2f0">Animal a;</text>
+          <text x="490" y="68" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="9.5" fill="#e0645f">compile error — abstract type</text>
+
+          <rect x="130" y="100" width="400" height="46" rx="6" fill="#1e3a1e" stroke="rgba(157,181,74,0.4)" stroke-width="0.5"/>
+          <text x="330" y="128" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" fill="#9db54a">Dog / Cat — unaffected, same code as ex01</text>
+        </svg>
+        <span class="fig">Fig 3 — one keyword change; Dog and Cat never notice the difference</span>
+      </div>
+
+      <h4>Questions to expect</h4>
+      <div class="qa"><div class="q">Why don't Dog and Cat need any changes for this exercise?</div><div class="a">A class stays abstract only if a pure virtual function is left unimplemented somewhere in its chain. Dog::makeSound() and Cat::makeSound() already have real bodies from ex00, so they automatically remain concrete, instantiable classes.</div></div>
+      <div class="qa"><div class="q">What's the actual compile error, and what does it tell you?</div><div class="a">Something like "cannot declare variable 'a' to be of abstract type 'Animal'" — it confirms the restriction is enforced at compile time, not something you have to remember to avoid by convention.</div></div>
+
+      <div class="checklist-note">EvalHub rubric — quoted verbatim</div>
+      <div class="qa checklist"><div class="q">"The Animal::makeSound is a pure virtual function. It should look like: virtual void makeSound() const = 0; The '= 0' part is mandatory."</div><div class="a">Yes — present exactly as required in Animal.hpp, with no body anywhere in Animal.cpp.</div></div>
+      <div class="qa checklist"><div class="q">"You should not be able to instantiate an Animal. Animal test; // should give you a compile error about the class being abstract"</div><div class="a">Yes — verified live: uncommenting the test line and running make produces exactly this compile error.</div></div>
+      <div class="qa checklist"><div class="q">"Class Cat and Dog are still present and work exactly like in ex01."</div><div class="a">Yes — no changes to Dog.cpp or Cat.cpp; deep copy, virtual destructor chaining, and makeSound() all behave identically to ex01.</div></div>
+    </section>
+
+  </main>
+</div>
+
+<footer>cpp04 &middot; rehearsed before it's defended</footer>
+
+<script>
+  var links = document.querySelectorAll('nav.sidebar a');
+  var sections = Array.prototype.map.call(links, function(l){ return document.querySelector(l.getAttribute('href')); });
+  function setActive(){
+    var y = window.scrollY + 120;
+    var current = sections[0];
+    sections.forEach(function(s){ if(s && s.offsetTop <= y) current = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    var idx = sections.indexOf(current);
+    if(idx >= 0) links[idx].classList.add('active');
+  }
+  document.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>

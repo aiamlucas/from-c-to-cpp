@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>x86-64 Assembly &amp; Debugging Basics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1729; --bg-2:#0D2036; --card:#0F2540; --card-2:#122B4B;
+    --grid:rgba(120,180,220,0.07);
+    --cyan:#5FC7EC; --cyan-dim:rgba(95,199,236,0.32);
+    --amber:#F2A65A; --green:#7FD9A8; --pink:#E88FB0;
+    --text:#E7F1F9; --text-dim:#8CA6BC; --text-faint:#5C7690;
+    --mono:'IBM Plex Mono', monospace; --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 40px),
+      var(--bg);
+    color:var(--text); font-family:var(--sans); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  .titleblock{border-bottom:1px solid var(--cyan-dim); padding:56px 0 32px; position:relative;}
+  .titleblock .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.18em; color:var(--cyan); text-transform:uppercase; margin-bottom:14px;}
+  .titleblock h1{font-family:var(--mono); font-weight:700; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(26px,4vw,42px); line-height:1.15; max-width:900px;}
+  .titleblock .sub{font-size:17px; color:var(--text-dim); max-width:680px; margin-top:14px;}
+  .stamp{margin-top:32px; display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--cyan-dim);}
+  .stamp div{padding:12px 16px; border-right:1px solid var(--cyan-dim);}
+  .stamp div:last-child{border-right:none;}
+  .stamp .k{font-family:var(--mono); font-size:10px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase;}
+  .stamp .v{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-top:4px;}
+
+  .layout{display:grid; grid-template-columns:230px 1fr; gap:48px; padding:40px 0 100px;}
+  nav.sidebar{position:sticky; top:24px; align-self:start; height:fit-content;}
+  nav.sidebar .navlabel{font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--text-faint); text-transform:uppercase; margin-bottom:14px;}
+  nav.sidebar ol{list-style:none; border-left:1px solid var(--cyan-dim);}
+  nav.sidebar li{margin:0;}
+  nav.sidebar a{display:block; padding:9px 0 9px 16px; font-family:var(--mono); font-size:13px; color:var(--text-dim); text-decoration:none; border-left:2px solid transparent; margin-left:-1px; transition:color .15s, border-color .15s;}
+  nav.sidebar a .num{color:var(--text-faint); margin-right:8px;}
+  nav.sidebar a:hover{color:var(--text);}
+  nav.sidebar a.active{color:var(--cyan); border-left-color:var(--cyan);}
+
+  main{min-width:0;}
+  section.sheet{padding-top:8px; margin-bottom:96px; scroll-margin-top:24px;}
+  section.sheet .sheetnum{font-family:var(--mono); font-size:12px; color:var(--text-faint); letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px;}
+  section.sheet h2{font-family:var(--mono); font-size:clamp(22px,2.6vw,30px); font-weight:600; letter-spacing:.01em; margin-bottom:6px;}
+  section.sheet .tagline{color:var(--text-dim); font-size:15px; margin-bottom:28px; max-width:680px;}
+  section.sheet h3{font-family:var(--mono); font-size:15px; font-weight:600; color:var(--cyan); text-transform:uppercase; letter-spacing:.06em; margin:36px 0 12px;}
+  section.sheet p{max-width:700px; margin-bottom:14px; color:var(--text);}
+  section.sheet p.dim{color:var(--text-dim);}
+  code, .inline-code{font-family:var(--mono); font-size:.92em; background:var(--card); padding:2px 6px; border-radius:3px; color:var(--green); white-space:nowrap;}
+  pre{font-family:var(--mono); font-size:13.5px; line-height:1.6; background:var(--card); border:1px solid var(--cyan-dim); border-radius:6px; padding:18px 20px; overflow-x:auto; margin:16px 0 22px; color:var(--text);}
+  pre .kw{color:var(--pink);} pre .tp{color:var(--cyan);} pre .cm{color:var(--text-faint); font-style:italic;} pre .gd{color:var(--amber);} pre .gp{color:var(--text-faint);}
+
+  .diagram{border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:18px; margin:18px 0 26px; position:relative;}
+  .diagram .fig{position:absolute; top:-11px; left:16px; background:var(--bg-2); font-family:var(--mono); font-size:11px; color:var(--text-faint); padding:0 8px; letter-spacing:.08em;}
+  .diagram svg{display:block; width:100%; height:auto;}
+
+  .note{border-left:3px solid var(--cyan); background:var(--card); border-radius:0 6px 6px 0; padding:14px 18px; margin:18px 0; max-width:700px;}
+  .note.warn{border-left-color:var(--amber);}
+  .note.think{border-left-color:var(--pink);}
+  .note .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); margin-bottom:6px; display:block;}
+  .note.warn .tag{color:var(--amber);}
+  .note.think .tag{color:var(--pink);}
+  .note p{margin-bottom:0; font-size:14.5px; color:var(--text-dim);}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:18px 0 26px;}
+  .cardmini{border:1px solid var(--cyan-dim); border-radius:8px; background:var(--card); padding:16px 18px;}
+  .cardmini h4{font-family:var(--mono); font-size:13px; color:var(--cyan); margin-bottom:8px; letter-spacing:.03em;}
+  .cardmini p{font-size:13.5px; color:var(--text-dim); margin-bottom:0;}
+
+  .cmp-wrap{overflow-x:auto; margin:18px 0 26px;}
+  .cmp{width:100%; border-collapse:collapse; font-size:13.5px; min-width:480px;}
+  .cmp th, .cmp td{padding:10px 16px; border:1px solid var(--cyan-dim); text-align:left; vertical-align:top;}
+  .cmp thead th{background:var(--card-2); color:var(--cyan); font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;}
+  .cmp tbody th{background:var(--card); color:var(--text); font-family:var(--mono); font-weight:500; font-size:13px; white-space:nowrap;}
+  .cmp tbody td{background:var(--card); color:var(--text-dim);}
+  .cmp tbody tr:nth-child(odd) th, .cmp tbody tr:nth-child(odd) td{background:var(--card-2);}
+
+  .keyterm{display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--amber); border:1px solid rgba(242,166,90,0.35); border-radius:4px; padding:1px 7px; margin:2px 4px 2px 0; background:rgba(242,166,90,0.06);}
+
+  .terminal{background:#0a1220; border:1px solid var(--cyan-dim); border-radius:8px; padding:18px 20px; margin:16px 0 26px; font-family:var(--mono); font-size:13px; line-height:1.7; overflow-x:auto;}
+  .terminal .prompt{color:var(--green);}
+  .terminal .gdbprompt{color:var(--amber);}
+  .terminal .out{color:var(--text-dim);}
+  .terminal .hl{color:var(--pink); font-weight:600;}
+
+  footer{border-top:1px solid var(--cyan-dim); padding:28px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.sidebar{position:relative; top:0; margin-bottom:8px;}
+    nav.sidebar ol{display:flex; flex-wrap:wrap; border-left:none;}
+    nav.sidebar li{margin-right:4px;}
+    nav.sidebar a{border-left:none; border-bottom:2px solid transparent; padding:8px 10px;}
+    .cols{grid-template-columns:1fr;}
+    .stamp{grid-template-columns:1fr 1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <div class="wrap">
+    <div class="eyebrow">Standalone reference &middot; grows as new topics come up</div>
+    <h1>x86-64 Assembly &amp; Debugging Basics</h1>
+    <p class="sub">Add a new section here whenever a C++ rule feels abstract and it's worth compiling a tiny example to see what actually happens underneath. Seeded from the cpp04 virtual dispatch deep dive, then verified live against the real <code>ex00</code> binary with <code>gdb</code>.</p>
+    <div class="stamp">
+      <div><div class="k">autor</div><div class="v">aiamlucas</div></div>
+      <div><div class="k">Toolchain</div><div class="v">g++, gdb, nvim-dap</div></div>
+      <div><div class="k">Scope</div><div class="v">grows over time</div></div>
+      <div><div class="k">Verified against</div><div class="v">cpp04/ex00</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="sidebar">
+    <div class="navlabel">Index</div>
+    <ol id="navlist">
+      <li><a href="#s00"><span class="num">00</span>When this is worth it</a></li>
+      <li><a href="#s01"><span class="num">01</span>Registers &amp; convention</a></li>
+      <li><a href="#s02"><span class="num">02</span>Core instructions</a></li>
+      <li><a href="#s03"><span class="num">03</span>Virtual dispatch, traced</a></li>
+      <li><a href="#s04"><span class="num">04</span>Memory cost, measured</a></li>
+      <li><a href="#s05"><span class="num">05</span>gdb, live on ex00</a></li>
+      <li><a href="#s06"><span class="num">06</span>nvim-dap</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ S00 ============ -->
+    <section class="sheet" id="s00">
+      <div class="sheetnum">Sheet 00</div>
+      <h2>When this is actually worth doing</h2>
+      <p class="tagline">Not every C++ concept pays off at this level. A quick filter before reaching for assembly or gdb.</p>
+
+      <div class="cols">
+        <div class="cardmini">
+          <h4>Worth it</h4>
+          <p>Pointers, references, virtual dispatch, memory layout, copy semantics, alignment. Anywhere a C++ rule feels arbitrary and "why does this cost something" isn't obvious from the language alone.</p>
+        </div>
+        <div class="cardmini">
+          <h4>Usually not</h4>
+          <p>Templates (one call generates many near-identical blocks), STL container internals, exception handling. The abstraction is doing its job here &mdash; digging in adds noise, not insight, this early.</p>
+        </div>
+      </div>
+
+      <h3>Generating real assembly, not guessed assembly</h3>
+      <pre>g++ -S -O0 -fno-asynchronous-unwind-tables -masm=intel file.cpp -o file.s</pre>
+      <p class="dim"><code>-O0</code> matters &mdash; without it, the optimizer inlines and rewrites things, and the output stops matching your source line-for-line. <code>-masm=intel</code> gives the more readable <code>dest, src</code> ordering instead of the default AT&amp;T syntax.</p>
+    </section>
+
+    <!-- ============ S01 ============ -->
+    <section class="sheet" id="s01">
+      <div class="sheetnum">Sheet 01</div>
+      <h2>Registers &amp; the calling convention</h2>
+      <p class="tagline">Physically identical hardware. The only difference between them is which job the calling convention habitually assigns.</p>
+
+      <p>A <strong style="color:var(--text)">register</strong> is a tiny storage slot built directly into the CPU chip &mdash; not RAM, not the stack. On x86-64, every general-purpose register holds exactly <strong style="color:var(--text)">64 bits (8 bytes)</strong>, matching the width of a pointer on this platform &mdash; not a coincidence. Every register is physically identical; the names carry no built-in meaning.</p>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Register</th><th>Conventional job</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">rdi</th><td>1st integer/pointer argument to a function</td></tr>
+            <tr><th scope="row">rsi</th><td>2nd argument</td></tr>
+            <tr><th scope="row">rdx</th><td>3rd argument &mdash; or, if unused, free scratch space</td></tr>
+            <tr><th scope="row">rcx</th><td>4th argument</td></tr>
+            <tr><th scope="row">rax</th><td>return value; general-purpose scratch</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dim">The whole convention exists for one reason: so code compiled in one file can call a function compiled in a completely different file, and both sides agree on where to find the arguments, without ever seeing each other's source.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 680 260" role="img" aria-label="Four identical boxes representing CPU registers, all the same size and shape, showing they are physically identical hardware. Three are labeled below with their conventional role: rax for return values and scratch work, rdi for the first argument to a function, rdx for free scratch space with no fixed role.">
+          <text x="340" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">identical hardware slots &mdash; each one exactly 8 bytes</text>
+
+          <rect x="50" y="40" width="100" height="50" rx="8" fill="#122B4B" stroke="#5C7690" stroke-width="1"/>
+          <text x="100" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">rbx</text>
+
+          <rect x="210" y="40" width="100" height="50" rx="8" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.4"/>
+          <text x="260" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">rax</text>
+
+          <rect x="370" y="40" width="100" height="50" rx="8" fill="#122B4B" stroke="#F2A65A" stroke-width="1.4"/>
+          <text x="420" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">rdi</text>
+
+          <rect x="530" y="40" width="100" height="50" rx="8" fill="#122B4B" stroke="#E88FB0" stroke-width="1.4"/>
+          <text x="580" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">rdx</text>
+
+          <path d="M260 90 L260 116" stroke="#7FD9A8" stroke-width="1.2" fill="none" marker-end="url(#a01reg)"/>
+          <rect x="185" y="116" width="150" height="50" rx="8" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="260" y="134" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">return values,</text>
+          <text x="260" y="151" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">scratch work</text>
+
+          <path d="M420 90 L420 116" stroke="#F2A65A" stroke-width="1.2" fill="none" marker-end="url(#a01reg)"/>
+          <rect x="345" y="116" width="150" height="50" rx="8" fill="#122B4B" stroke="#F2A65A" stroke-width="1"/>
+          <text x="420" y="134" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#F2A65A">1st argument</text>
+          <text x="420" y="151" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#F2A65A">to a function</text>
+
+          <path d="M580 90 L580 116" stroke="#E88FB0" stroke-width="1.2" fill="none" marker-end="url(#a01reg)"/>
+          <rect x="505" y="116" width="150" height="50" rx="8" fill="#122B4B" stroke="#E88FB0" stroke-width="1"/>
+          <text x="580" y="134" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#E88FB0">free scratch &mdash;</text>
+          <text x="580" y="151" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#E88FB0">no fixed role</text>
+
+          <text x="340" y="206" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">not a hardware rule &mdash; a convention every compiler agrees to follow,</text>
+          <text x="340" y="224" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">so separately-compiled functions can call each other correctly</text>
+          <defs>
+            <marker id="a01reg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+        <span class="fig">Fig. 01 &mdash; same hardware, three different habitual jobs, below the calling convention</span>
+      </div>
+    </section>
+
+    <!-- ============ S02 ============ -->
+    <section class="sheet" id="s02">
+      <div class="sheetnum">Sheet 02</div>
+      <h2>The core instructions</h2>
+      <p class="tagline">Four instructions cover almost everything in the traces below.</p>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Instruction</th><th>Plain English</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">mov X, Y</th><td>Copy the value in Y into X. Think <code>X = Y</code>.</td></tr>
+            <tr><th scope="row">mov X, [Y]</th><td><code>[Y]</code> means "go to the address in Y, read what's stored there" &mdash; a dereference, the assembly equivalent of C++'s <code>*ptr</code>.</td></tr>
+            <tr><th scope="row">lea X, Y</th><td>"Load Effective Address" &mdash; compute what address Y <em>is</em>, store that address itself in X. Never touches memory at Y &mdash; pure address arithmetic.</td></tr>
+            <tr><th scope="row">call X</th><td>Jump to X, run it, come back when done. If X is a name, the target was fixed at compile time. If X is a register, the target was read from memory and could differ every time this line runs.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ S03 ============ -->
+    <section class="sheet" id="s03">
+      <div class="sheetnum">Sheet 03</div>
+      <h2>Virtual dispatch, fully traced</h2>
+      <p class="tagline">Non-virtual: go straight there. Virtual: ask, then go.</p>
+
+      <pre><span class="kw">class</span> Animal {
+<span class="kw">public</span>:
+    <span class="kw">virtual</span> <span class="kw">void</span> makeSound() <span class="kw">const</span> {}
+    <span class="kw">void</span> nonVirtualFunc() <span class="kw">const</span> {}
+};
+<span class="kw">class</span> Dog : <span class="kw">public</span> Animal {
+<span class="kw">public</span>:
+    <span class="kw">void</span> makeSound() <span class="kw">const</span> {}
+};</pre>
+
+      <div class="note think">
+        <span class="tag">One fact worth having before the assembly</span>
+        <p>Every member function secretly receives the object it's called on as an invisible first argument &mdash; that's what the keyword <code>this</code> refers to. Below, whenever a comment says "<code>this</code> pointer," it means: the address of the object the function is running on.</p>
+      </div>
+
+      <h3>Non-virtual &mdash; a-&gt;nonVirtualFunc()</h3>
+      <pre>mov  rax, [a]                        <span class="cm">; rax = a</span>
+mov  rdi, rax                        <span class="cm">; rdi = a — this becomes nonVirtualFunc()'s hidden "this"</span>
+call _ZNK6Animal14nonVirtualFuncEv   <span class="cm">; jump straight to Animal::nonVirtualFunc — see note below</span></pre>
+      <p class="dim">Three instructions. The compiler knew the target while compiling &mdash; nothing left to figure out at runtime.</p>
+      <p class="dim"><code>_ZNK6Animal14nonVirtualFuncEv</code> isn't gibberish &mdash; it's <span class="keyterm">name mangling</span>, the compiler's way of encoding <code>Animal::nonVirtualFunc() const</code> into one unique string, since C++ allows overloading and the binary needs a distinct name per function. You never read these by hand; this whole ugly string simply <em>is the function</em>.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 640 130" role="img" aria-label="Diagram of the non-virtual call path: the pointer a leads in one direct step straight to Animal's nonVirtualFunc code, with no object inspection needed, since the compiler already knows the target while compiling.">
+          <text x="320" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">compare against the virtual path below</text>
+          <rect x="20" y="30" width="140" height="46" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="90" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">a (Animal*)</text>
+
+          <path d="M160 53 L460 53" stroke="#7FD9A8" stroke-width="1.4" fill="none" marker-end="url(#a03nv)"/>
+          <text x="310" y="42" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">ONE direct jump</text>
+
+          <rect x="460" y="30" width="160" height="46" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.6"/>
+          <text x="540" y="58" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">nonVirtualFunc's code</text>
+
+          <text x="320" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">no object inspection at all — the compiler already knew this address before the program ever ran</text>
+          <defs>
+            <marker id="a03nv" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+        <span class="fig">Fig. 02 &mdash; the non-virtual path, for direct comparison against Fig. 03 below</span>
+      </div>
+
+      <h3>Virtual &mdash; a-&gt;makeSound(), where a really points at a Dog</h3>
+      <p class="dim">Concretely: suppose <code>main</code> did <code>Dog d; Animal *a = &amp;d;</code>, so <code>a</code> genuinely points at a real <code>Dog</code>.</p>
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Step</th><th>Instruction</th><th>What it does, concretely</th><th>State after</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1</th><td><code>mov rax, [a]</code></td><td>Read the value of the variable <code>a</code> &mdash; which holds <code>d</code>'s address</td><td><code>rax</code> = address of <code>d</code></td></tr>
+            <tr><th scope="row">2</th><td><code>mov rax, [rax]</code></td><td>Follow that address, read the first 8 bytes stored there &mdash; every object's hidden vptr lives exactly there</td><td><code>rax</code> = address of <code>Dog</code>'s vtable</td></tr>
+            <tr><th scope="row">3</th><td><code>mov rdx, [rax]</code></td><td>Follow the vtable's address, read its very first slot</td><td><code>rdx</code> = the real address of <code>Dog::makeSound</code>'s code</td></tr>
+            <tr><th scope="row">4</th><td><code>mov rax, [a]</code></td><td>Re-read <code>a</code> &mdash; <code>d</code>'s address is needed again, this time to hand it over as <code>this</code></td><td><code>rax</code> = address of <code>d</code>, again</td></tr>
+            <tr><th scope="row">5</th><td><code>mov rdi, rax</code></td><td>Place <code>d</code>'s address into <code>rdi</code> &mdash; this becomes <code>Dog::makeSound</code>'s hidden <code>this</code></td><td><code>rdi</code> = <code>this</code> = address of <code>d</code></td></tr>
+            <tr><th scope="row">6</th><td><code>call rdx</code></td><td>Jump to whatever address is sitting in <code>rdx</code> &mdash; proven, two steps ago, to be <code>Dog::makeSound</code>'s real code</td><td>lands exactly on <code>Dog::makeSound</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <pre>mov  rax, [a]           <span class="cm">; rax = a's value = the Dog object's address</span>
+mov  rax, [rax]         <span class="cm">; rax = *a → the object's hidden vptr</span>
+mov  rdx, [rax]         <span class="cm">; rdx = the real address of Dog::makeSound, read from the vtable</span>
+mov  rax, [a]           <span class="cm">; rax = the Dog's address, again</span>
+mov  rdi, rax           <span class="cm">; rdi = this = the Dog's address</span>
+call rdx                <span class="cm">; jump to whatever's in rdx — a value, not a name</span></pre>
+      <p class="dim">Six instructions. Two extra reads (object&rarr;vptr, vptr&rarr;function address) before the jump. The compiler could not know this address while compiling &mdash; only the object knows, only once the program is running.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 640 300" role="img" aria-label="Diagram tracing a virtual call step by step: the pointer a leads to a Dog object, whose first 8 bytes are a hidden vptr pointing at Dog's own vtable, whose first slot holds the real address of Dog's makeSound function, which is where the call instruction finally lands.">
+          <rect x="20" y="20" width="140" height="46" rx="6" fill="#122B4B" stroke="#5FC7EC" stroke-width="1.4"/>
+          <text x="90" y="48" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">a (Animal*)</text>
+
+          <path d="M160 43 L220 43" stroke="#8CA6BC" stroke-width="1.2" fill="none" marker-end="url(#a03dd)"/>
+
+          <rect x="220" y="20" width="160" height="70" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.6"/>
+          <text x="300" y="42" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Dog object</text>
+          <rect x="236" y="52" width="128" height="26" rx="3" fill="#0F2540" stroke="#F2A65A" stroke-width="1"/>
+          <text x="300" y="69" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#F2A65A">vptr (first 8 bytes)</text>
+
+          <path d="M300 90 L300 118" stroke="#F2A65A" stroke-width="1.4" fill="none" marker-end="url(#a03dd)"/>
+          <text x="316" y="106" font-family="IBM Plex Mono" font-size="10.5" fill="#F2A65A">mov rax, [rax]</text>
+
+          <rect x="200" y="118" width="200" height="70" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1.4"/>
+          <text x="300" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">Dog's vtable</text>
+          <rect x="216" y="150" width="168" height="26" rx="3" fill="#0F2540" stroke="#E88FB0" stroke-width="1"/>
+          <text x="300" y="167" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#E88FB0">slot 0: &amp;Dog::makeSound</text>
+
+          <path d="M300 188 L300 216" stroke="#E88FB0" stroke-width="1.4" fill="none" marker-end="url(#a03dd)"/>
+          <text x="316" y="204" font-family="IBM Plex Mono" font-size="10.5" fill="#E88FB0">mov rdx, [rax]</text>
+
+          <rect x="180" y="216" width="240" height="56" rx="6" fill="#122B4B" stroke="#E88FB0" stroke-width="1.6"/>
+          <text x="300" y="240" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">call rdx</text>
+          <text x="300" y="258" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">lands exactly on Dog::makeSound's real code</text>
+
+          <text x="450" y="145" font-family="IBM Plex Mono" font-size="11" fill="#5C7690">two reads, then one indirect call</text>
+          <text x="450" y="163" font-family="IBM Plex Mono" font-size="11" fill="#5C7690">the compiler could not know this</text>
+          <text x="450" y="181" font-family="IBM Plex Mono" font-size="11" fill="#5C7690">address while compiling &mdash;</text>
+          <text x="450" y="199" font-family="IBM Plex Mono" font-size="11" fill="#5C7690">only the object knows, at runtime</text>
+
+          <defs>
+            <marker id="a03dd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+        </svg>
+        <span class="fig">Fig. 03 &mdash; the exact chain "call rdx" is following, traced one instruction at a time</span>
+      </div>
+
+      <h3>Where the vptr gets set &mdash; once, at construction</h3>
+      <pre>lea  rax, _ZTV3Dog[rip+16]   <span class="cm">; rax = address of Dog's vtable (compiled-in data, one copy per class)</span>
+mov  [d], rax                <span class="cm">; write that address into d's first 8 bytes — this IS the vptr being set</span></pre>
+
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>Piece</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">_ZTV3Dog</th><td>Mangled name for "vtable for Dog" &mdash; ready-made data baked into the binary. One copy total, shared by every Dog object ever created.</td></tr>
+            <tr><th scope="row">[rip+16]</th><td><code>rip</code> = address of the currently-running instruction. Addressing relative to it lets the binary load anywhere in memory. <code>+16</code> skips two 8-byte bookkeeping entries (type info, multiple-inheritance offset) that sit before the real function pointers in every vtable.</td></tr>
+            <tr><th scope="row">vptr</th><td>"virtual table pointer" &mdash; a pointer stored <em>in the object itself</em>, aimed at that object's own class's vtable. Set once, at construction, unchanged for the object's whole life.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ S04 ============ -->
+    <section class="sheet" id="s04">
+      <div class="sheetnum">Sheet 04</div>
+      <h2>Memory cost, measured</h2>
+      <p class="tagline">Not guessed — printed, from real addresses.</p>
+
+      <pre><span class="kw">class</span> NoVirtual  { <span class="tp">int</span> x; };                            <span class="cm">// sizeof = 4</span>
+<span class="kw">class</span> HasVirtual { <span class="tp">int</span> x; <span class="kw">public</span>: <span class="kw">virtual</span> <span class="kw">void</span> f(){}; }; <span class="cm">// sizeof = 16</span></pre>
+
+      <p>Measured directly: the vptr sits at byte 0, the <code>int</code> at byte 8. <code>8 + 4 = 12</code> bytes of real data &mdash; <code>sizeof</code> reports 16. The missing 4 bytes are <span class="keyterm">alignment padding</span>: a CPU reads an 8-byte value fastest at an 8-byte-aligned address, so the compiler pads the whole object's size up to a multiple of 8 &mdash; guaranteeing every element in an array of these objects starts cleanly aligned, not just the first one.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 640 120" role="img" aria-label="Byte layout of a HasVirtual object: bytes 0 to 7 hold the vptr, bytes 8 to 11 hold the int, bytes 12 to 15 are padding, bringing the total to 16 bytes so the next object in an array starts at a properly aligned offset of 16.">
+          <rect x="20" y="20" width="256" height="50" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.4"/>
+          <text x="148" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">vptr (bytes 0–7)</text>
+          <rect x="276" y="20" width="128" height="50" rx="6" fill="#122B4B" stroke="#F2A65A" stroke-width="1.4"/>
+          <text x="340" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#E7F1F9">int (8–11)</text>
+          <rect x="404" y="20" width="128" height="50" rx="6" fill="#122B4B" stroke="#5C7690" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="468" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8CA6BC">padding (12–15)</text>
+          <text x="20" y="94" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0</text>
+          <text x="276" y="94" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">8</text>
+          <text x="404" y="94" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">12</text>
+          <text x="518" y="94" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">16 — next object starts here, aligned</text>
+        </svg>
+        <span class="fig">Fig. 04 &mdash; 12 real bytes, 4 padding bytes, so every array element lands on an 8-byte boundary</span>
+      </div>
+
+      <p class="dim"><strong style="color:var(--text)">vptr</strong> stands for <span class="keyterm">virtual table pointer</span> (sometimes shortened to "virtual pointer") &mdash; a pointer, stored in the object itself, aimed at that object's own class's vtable.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 640 220" role="img" aria-label="Two arrays of HasVirtual objects compared: with padding, the second object's vptr starts at byte 16, a multiple of 8, correctly aligned. Without padding, hypothetically, the second object's vptr would start at byte 12, not a multiple of 8, misaligned.">
+          <text x="320" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7FD9A8">WITH padding — object[1] starts at byte 16</text>
+          <rect x="20" y="28" width="256" height="40" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="148" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">object[0]</text>
+          <rect x="276" y="28" width="128" height="40" rx="6" fill="#122B4B" stroke="#5C7690" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="340" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#8CA6BC">pad</text>
+          <rect x="404" y="28" width="118" height="40" rx="6" fill="#122B4B" stroke="#7FD9A8" stroke-width="1.6"/>
+          <text x="463" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#7FD9A8">object[1] @16 ✓</text>
+
+          <text x="320" y="108" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E88FB0">hypothetical, WITHOUT padding — object[1] would start at byte 12</text>
+          <rect x="20" y="118" width="256" height="40" rx="6" fill="#122B4B" stroke="#E88FB0" stroke-width="1"/>
+          <text x="148" y="142" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#E7F1F9">object[0]</text>
+          <rect x="276" y="118" width="118" height="40" rx="6" fill="#122B4B" stroke="#E88FB0" stroke-width="1.6"/>
+          <text x="335" y="142" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#E88FB0">object[1] @12 ✗</text>
+
+          <text x="320" y="188" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">12 is not a multiple of 8 — every object after the first drifts further out of alignment</text>
+        </svg>
+        <span class="fig">Fig. 05 &mdash; why the padding exists: not wasted space, the price of every array element starting aligned</span>
+      </div>
+    </section>
+
+    <!-- ============ S05 ============ -->
+    <section class="sheet" id="s05">
+      <div class="sheetnum">Sheet 05</div>
+      <h2>Verifying it live &mdash; gdb on ex00</h2>
+      <p class="tagline">Everything above, checked against the real, compiled Animal/Dog/Cat binary — not a toy example.</p>
+
+      <h3>Step 1 &mdash; compile with debug symbols</h3>
+      <p>Normal <code>-Wall -Wextra -Werror</code> builds strip out the information gdb needs to map instructions back to source lines and variable names. Add <code>-g</code> for a debug build:</p>
+      <pre>c++ -g -Wall -Wextra -Werror -std=c++98 Animal.cpp Cat.cpp Dog.cpp WrongAnimal.cpp WrongCat.cpp main.cpp -o animal_dbg</pre>
+      <p class="dim">If your Makefile already has a <code>DEBUG=1</code> pattern adding <code>-g -O0</code> to <code>CFLAGS</code> (worth having, going forward), just run <code>make DEBUG=1</code> instead.</p>
+
+      <h3>Step 2 &mdash; turn on TUI split mode: source and assembly, both visible, always</h3>
+      <div class="terminal">
+<span class="prompt">$</span> gdb ./animal_dbg
+<span class="gdbprompt">(gdb)</span> set disassembly-flavor intel
+<span class="gdbprompt">(gdb)</span> layout split
+      </div>
+      <p><code>layout split</code> divides the screen into three stacked panes: your C++ source on top, live disassembly in the middle, and the normal command prompt at the bottom &mdash; all visible at once, all updating together as you step.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 640 340" role="img" aria-label="Mockup of gdb's TUI split layout: a top pane showing C++ source code with an arrow marking the current line, a middle pane showing the corresponding disassembly with an arrow marking the current instruction, and a bottom command pane where gdb commands are typed, all visible simultaneously.">
+          <rect x="20" y="20" width="600" height="110" rx="6" fill="#0A1220" stroke="#5FC7EC" stroke-width="1"/>
+          <text x="34" y="42" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">12   Animal *meta = new Animal();</text>
+          <text x="34" y="60" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">13   Animal *j = new Dog();</text>
+          <text x="34" y="78" font-family="IBM Plex Mono" font-size="11" fill="#E88FB0">&gt;14   j-&gt;makeSound();</text>
+          <text x="34" y="96" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">15   i-&gt;makeSound();</text>
+          <text x="34" y="114" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">16   meta-&gt;makeSound();</text>
+          <text x="580" y="42" font-family="IBM Plex Mono" font-size="10" fill="#5C7690" text-anchor="end">SRC</text>
+
+          <rect x="20" y="140" width="600" height="130" rx="6" fill="#0A1220" stroke="#F2A65A" stroke-width="1"/>
+          <text x="34" y="160" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1234 &lt;+0&gt;:  mov  rax,[rbp-0x8]</text>
+          <text x="34" y="178" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1238 &lt;+4&gt;:  mov  rax,[rax]</text>
+          <text x="34" y="196" font-family="IBM Plex Mono" font-size="11" fill="#E88FB0">&gt;0x123c &lt;+7&gt;: mov  rdx,[rax]</text>
+          <text x="34" y="214" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1240 &lt;+11&gt;: mov  rax,[rbp-0x8]</text>
+          <text x="34" y="232" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1244 &lt;+15&gt;: mov  rdi,rax</text>
+          <text x="34" y="250" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1248 &lt;+19&gt;: call rdx</text>
+          <text x="580" y="160" font-family="IBM Plex Mono" font-size="10" fill="#5C7690" text-anchor="end">ASM</text>
+
+          <rect x="20" y="280" width="600" height="40" rx="6" fill="#0A1220" stroke="#7FD9A8" stroke-width="1"/>
+          <text x="34" y="304" font-family="IBM Plex Mono" font-size="11" fill="#7FD9A8">(gdb) stepi</text>
+          <text x="580" y="304" font-family="IBM Plex Mono" font-size="10" fill="#5C7690" text-anchor="end">CMD</text>
+        </svg>
+        <span class="fig">Fig. 06 &mdash; one C++ line (highlighted top) maps to six assembly instructions (highlighted middle); the arrows move together as you step</span>
+      </div>
+
+      <div class="note warn">
+        <span class="tag">The one navigation quirk</span>
+        <p>Typing normally goes to the bottom CMD pane. To scroll the ASM pane by hand (rather than stepping through it), press <code>Ctrl+X</code> then <code>O</code> to shift keyboard focus onto it first &mdash; otherwise arrow keys just scroll gdb's command history. <code>Ctrl+L</code> redraws the screen if it ever looks visually garbled after a terminal resize.</p>
+      </div>
+
+      <h3>Step 3 &mdash; break, run, and watch both panes move together</h3>
+      <div class="terminal">
+<span class="gdbprompt">(gdb)</span> break main
+<span class="gdbprompt">(gdb)</span> run
+<span class="out">... SRC pane jumps to main.cpp, arrow on the breakpoint line</span>
+<span class="gdbprompt">(gdb)</span> next
+<span class="out">... step until just past: Animal *j = new Dog();</span>
+      </div>
+
+      <h3>Step 4 &mdash; ask gdb what j actually is</h3>
+      <div class="terminal">
+<span class="gdbprompt">(gdb)</span> print j
+<span class="out">$1 = (const Animal *) 0x5555555592c0</span>
+<span class="gdbprompt">(gdb)</span> print *j
+<span class="out">$2 = (Dog) {&lt;Animal&gt; = {_type = "Dog"}}</span>
+<span class="hl">          ↑ gdb reports the REAL dynamic type — Dog — not the declared Animal*</span>
+      </div>
+      <p class="dim">gdb reads the object's own vptr to determine its true type for display purposes &mdash; the same mechanism from the assembly trace, used here by the debugger itself.</p>
+
+      <h3>Step 5 &mdash; read the vptr directly, as raw bytes</h3>
+      <div class="terminal">
+<span class="gdbprompt">(gdb)</span> print *(void**)j
+<span class="out">$3 = (void *) 0x555555557d38</span>
+<span class="gdbprompt">(gdb)</span> info symbol *(void**)j
+<span class="out">vtable for Dog + 16 in section .data.rel.ro</span>
+<span class="hl">          ↑ confirms: the object's first 8 bytes really do point at Dog's vtable, past the +16 offset</span>
+      </div>
+
+      <h3>Step 6 &mdash; break inside Dog::makeSound, prove it's reached through the base pointer</h3>
+      <div class="terminal">
+<span class="gdbprompt">(gdb)</span> break Dog::makeSound
+<span class="gdbprompt">(gdb)</span> continue
+<span class="out">... SRC pane jumps into Dog.cpp — stopped inside Dog::makeSound,
+    even though the call site only had an Animal*</span>
+<span class="gdbprompt">(gdb)</span> bt
+<span class="out">#0  Dog::makeSound (this=0x5555555592c0) const at Dog.cpp:41
+#1  0x... in main () at main.cpp:19</span>
+      </div>
+
+      <h3>Step 7 &mdash; now the payoff: stepi, watching both panes and the registers together</h3>
+      <div class="terminal">
+<span class="gdbprompt">(gdb)</span> stepi
+<span class="out">... ASM pane's arrow advances one line; SRC pane stays on the calling line</span>
+<span class="gdbprompt">(gdb)</span> print $rax
+<span class="out">$4 = (void *) 0x555555557d38     the vtable address</span>
+<span class="gdbprompt">(gdb)</span> stepi
+<span class="gdbprompt">(gdb)</span> print $rdx
+<span class="out">$5 = (void *) 0x555555555289     Dog::makeSound's real code address</span>
+<span class="gdbprompt">(gdb)</span> stepi
+<span class="gdbprompt">(gdb)</span> print $rdi
+<span class="out">$6 = (void *) 0x5555555592c0     the Dog object's address — this</span>
+      </div>
+      <p class="dim">This is the live version of Sheet 03's six-row instruction table &mdash; the exact same values, watched appear one <code>stepi</code> at a time, with the ASM pane's highlighted line and the register value changing in lockstep. <code>print $rax</code> reads a register directly; the <code>$</code> prefix is gdb's syntax for "this is a register, not a variable."</p>
+      <div class="note">
+        <span class="tag">Quick reference &mdash; the commands used above</span>
+        <p><code>layout split</code> show source + assembly together &middot; <code>Ctrl+X O</code> switch pane focus &middot; <code>break &lt;func&gt;</code> set a breakpoint &middot; <code>run</code> / <code>continue</code> start or resume &middot; <code>next</code> step one C++ line, skip over calls &middot; <code>step</code> step one C++ line, into calls &middot; <code>stepi</code> step one machine instruction &middot; <code>print &lt;expr&gt;</code> evaluate and show &middot; <code>print $rax</code> read a register directly &middot; <code>bt</code> backtrace, the call stack &middot; <code>info symbol &lt;addr&gt;</code> resolve an address back to a name.</p>
+      </div>
+    </section>
+
+    <!-- ============ S06 ============ -->
+    <section class="sheet" id="s06">
+      <div class="sheetnum">Sheet 06</div>
+      <h2>nvim-dap &mdash; the same workflow, with a UI</h2>
+      <p class="tagline">Everything in Sheet 05 works exactly the same underneath — nvim-dap just wraps gdb's output in breakpoint gutters, a variables panel, and a call-stack view, instead of typing print statements by hand.</p>
+
+      <h3>Minimal setup, if not already configured</h3>
+      <pre><span class="cm">-- requires: nvim-dap, nvim-dap-ui (optional but recommended), gdb installed</span>
+<span class="kw">local</span> dap = require(<span class="st">"dap"</span>)
+
+dap.adapters.gdb = {
+  type = <span class="st">"executable"</span>,
+  command = <span class="st">"gdb"</span>,
+  args = { <span class="st">"-i"</span>, <span class="st">"dap"</span> }
+}
+
+dap.configurations.cpp = {
+  {
+    name = <span class="st">"Launch (gdb, cpp04 ex00)"</span>,
+    type = <span class="st">"gdb"</span>,
+    request = <span class="st">"launch"</span>,
+    program = <span class="kw">function</span>()
+      <span class="kw">return</span> vim.fn.input(<span class="st">"Path to executable: "</span>, vim.fn.getcwd() .. <span class="st">"/"</span>, <span class="st">"file"</span>)
+    <span class="kw">end</span>,
+    cwd = <span class="st">"${workspaceFolder}"</span>,
+    stopAtBeginningOfMainSubprogram = <span class="kw">false</span>,
+  },
+}</pre>
+
+      <h3>Mapping the gdb commands from Sheet 05 to nvim-dap actions</h3>
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th>gdb command</th><th>nvim-dap equivalent</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">break Dog::makeSound</th><td>place cursor on the line, <code>:lua require('dap').toggle_breakpoint()</code> &mdash; shows a marker in the gutter</td></tr>
+            <tr><th scope="row">run</th><td><code>:lua require('dap').continue()</code> &mdash; also resumes after a breakpoint hits</td></tr>
+            <tr><th scope="row">next / step / stepi</th><td><code>dap.step_over()</code> / <code>dap.step_into()</code> / <code>dap.step_back()</code> or dap-ui's step buttons</td></tr>
+            <tr><th scope="row">print j / print *j</th><td>hover the variable (with nvim-dap-ui's hover widget), or the always-visible Variables panel</td></tr>
+            <tr><th scope="row">bt</th><td>nvim-dap-ui's Call Stack panel, updated live</td></tr>
+            <tr><th scope="row">info registers</th><td>not built into nvim-dap-ui by default &mdash; still worth dropping into the gdb console directly for register-level inspection (see below)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note warn">
+        <span class="tag">Where nvim-dap alone isn't quite enough</span>
+        <p>nvim-dap-ui is built around C++-level concepts &mdash; variables, the call stack, breakpoints on source lines. It doesn't expose raw register contents or <code>x/2gx</code>-style memory examination out of the box. For anything at the level of Sheet 05's Steps 4&ndash;7 &mdash; reading the vptr as raw bytes, watching <code>rax</code>/<code>rdx</code>/<code>rdi</code> fill in &mdash; you can still reach the underlying gdb console directly with <code>:lua require('dap').repl.open()</code>, which drops you into the exact same gdb prompt used throughout Sheet 05, commands and all, without leaving Neovim.</p>
+      </div>
+
+      <p class="dim">In practice: use nvim-dap-ui for the everyday case &mdash; "why is this value wrong," "did this branch actually run," stepping through your own <code>Dog</code>/<code>Cat</code> logic with breakpoints and a visible variables panel. Drop into the raw gdb REPL specifically when the question is about the mechanism itself &mdash; vptrs, register contents, raw memory &mdash; the same territory Sheet 05 covers.</p>
+    </section>
+
+  </main>
+</div>
+
+<footer>x86-64 assembly &amp; debugging &middot; grows as new topics come up</footer>
+
+<script>
+  var links = document.querySelectorAll('nav.sidebar a');
+  var sections = Array.prototype.map.call(links, function(l){ return document.querySelector(l.getAttribute('href')); });
+  function setActive(){
+    var y = window.scrollY + 120;
+    var current = sections[0];
+    sections.forEach(function(s){ if(s && s.offsetTop <= y) current = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    var idx = sections.indexOf(current);
+    if(idx >= 0) links[idx].classList.add('active');
+  }
+  document.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>
