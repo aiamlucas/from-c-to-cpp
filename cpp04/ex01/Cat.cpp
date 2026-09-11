@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 15:48:36 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/09 11:29:39 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/11 09:21:26 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 Cat::Cat(void) {
     _type = "Cat";
-    brain = new Brain();
+    brain = new Brain(); // own brain
     std::cout << "Cat default constructor called" << std::endl;
 }
 
@@ -27,8 +27,10 @@ Cat::Cat(const Cat &other) : Animal(other) {
 
 Cat &Cat::operator=(const Cat &other) {
     std::cout << "Cat copy assignment operator called" << std::endl;
+    if (this == &other)
+        return *this;
     Animal::operator=(other);
-    *brain = *other.brain;
+    *brain = *other.brain; // own brain (deep copy)
     return *this;
 }
 
