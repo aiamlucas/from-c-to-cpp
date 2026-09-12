@@ -24,6 +24,9 @@ fixed
 claptrap
 scavtrap
 fragtrap
+# cpp03
+animal
+aanimal
 
 # build artifacts
 *.dSYM/
