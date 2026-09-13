@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/10 18:05:20 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/13 20:56:11 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,16 +58,16 @@ int main(void) {
         const WrongAnimal *i = new WrongCat();
         std::cout << j->getType() << " " << std::endl; // "Dog"
         std::cout << i->getType() << " " << std::endl; //  "WrongCat"
-        i->makeSound(); // "WrongAnimal: brrr" -> no virtual, declared type wins
-                        // (was Cat sound before)
+        i->makeSound(); // (different) "WrongAnimal: brrr" -> no
+                        // virtual, declared type wins (miauu in the previous)
 
-        j->makeSound();    // "au au au" -> Animal -> virtual -> runtime lookup
-                           // (same as before)
-        meta->makeSound(); // "WrongAnimal: brrr" -> no virtual, direct call
-                           // (same as before)
-        delete meta;       // ~WrongAnimal()
-        delete j;          // ~Dog() then ~Animal()
-        delete i; // only ~WrongAnimal()  -> no virtual ~WrongCat never fires
+        j->makeSound(); // (same as before) "au au au" -> Animal* -> virtual ->
+                        // runtime lookup (same as before)
+        meta->makeSound(); // (same as before) "WrongAnimal: brrr" -> no
+                           // virtual, direct call
+        delete meta;       // (same as before) ~WrongAnimal()
+        delete j;          // (same as before) ~Dog() then ~Animal()
+        delete i; // only ~WrongAnimal() -> no virtual ~WrongCat never fires
     }
 
     // array of Animal* with mixed types

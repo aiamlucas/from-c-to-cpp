@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/03 19:40:31 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/07 18:44:51 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/13 20:57:51 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,12 @@ public:
     Animal(void);
     Animal(const Animal &other);
     Animal &operator=(const Animal &other);
-    virtual ~Animal();
+    virtual ~Animal(); // virtual -> destructor call resolved at runtime via
+                       // vtable
 
     std::string getType(void) const;
+    // virtual -> call resolved at runtime via vtable
+    // vtable lookup finds the true function
     virtual void makeSound(void) const;
 };
 
