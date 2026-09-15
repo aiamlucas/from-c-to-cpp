@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/12 19:31:37 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/15 14:21:26 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,18 @@ int main(void) {
         Cat juanCarlos;
         juanCarlos.getBrain()->setIdea(0, "I am hungry!");
         Cat cloneCat(juanCarlos); // copy constructor --> allocates a new Brain
+        juanCarlos.getBrain()->setIdea(0, "I wanna sleep!");
+        std::cout << "juanCarlos: " << juanCarlos.getBrain()->getIdea(0)
+                  << std::endl; // "I wanna sleep!"
+        std::cout << "cloneCat: " << cloneCat.getBrain()->getIdea(0)
+                  << std::endl; // "I am hungry!" // deep copy!
+    }
+    std::cout << "\n--- deep copy with assignment (=) ---" << std::endl;
+    {
+        Cat juanCarlos;
+        juanCarlos.getBrain()->setIdea(0, "I am hungry!");
+        Cat cloneCat;          // default constructed first (Brain allocated)
+        cloneCat = juanCarlos; // assignment operator (deep copy)
         juanCarlos.getBrain()->setIdea(0, "I wanna sleep!");
         std::cout << "juanCarlos: " << juanCarlos.getBrain()->getIdea(0)
                   << std::endl; // "I wanna sleep!"
