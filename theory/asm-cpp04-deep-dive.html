@@ -92,6 +92,8 @@
   .terminal .gdbprompt{color:var(--amber);}
   .terminal .out{color:var(--text-dim);}
   .terminal .hl{color:var(--pink); font-weight:600;}
+  .terminal .src{color:#5FC7EC;}
+  .terminal .asm{color:#F2A65A;}
 
   footer{border-top:1px solid var(--cyan-dim); padding:28px 0; font-family:var(--mono); font-size:12px; color:var(--text-faint); text-align:center;}
 
@@ -113,13 +115,7 @@
   <div class="wrap">
     <div class="eyebrow">Standalone reference &middot; grows as new topics come up</div>
     <h1>x86-64 Assembly &amp; Debugging Basics</h1>
-    <p class="sub">Add a new section here whenever a C++ rule feels abstract and it's worth compiling a tiny example to see what actually happens underneath. Seeded from the cpp04 virtual dispatch deep dive, then verified live against the real <code>ex00</code> binary with <code>gdb</code>.</p>
-    <div class="stamp">
-      <div><div class="k">autor</div><div class="v">aiamlucas</div></div>
-      <div><div class="k">Toolchain</div><div class="v">g++, gdb, nvim-dap</div></div>
-      <div><div class="k">Scope</div><div class="v">grows over time</div></div>
-      <div><div class="k">Verified against</div><div class="v">cpp04/ex00</div></div>
-    </div>
+    <p class="sub">Add a new section here whenever a C++ rule feels abstract and it's worth compiling a tiny example to see what actually happens underneath. Seeded from the cpp04 virtual dispatch deep dive, then verified live against the real <code>cpp04/ex00</code> binary with <code>gdb</code>.</p>
   </div>
 </header>
 
@@ -134,7 +130,6 @@
       <li><a href="#s04"><span class="num">04</span>Virtual dispatch, traced</a></li>
       <li><a href="#s05"><span class="num">05</span>Memory cost, measured</a></li>
       <li><a href="#s06"><span class="num">06</span>gdb, live on ex00</a></li>
-      <li><a href="#s07"><span class="num">07</span>nvim-dap</a></li>
     </ol>
   </nav>
 
@@ -530,161 +525,71 @@ mov  [d], rax                <span class="cm">; write that address into d's firs
     <section class="sheet" id="s06">
       <div class="sheetnum">Sheet 06</div>
       <h2>Verifying it live &mdash; gdb on ex00</h2>
-      <p class="tagline">Everything above, checked against the real, compiled Animal/Dog/Cat binary — not a toy example.</p>
+      <p class="tagline">Everything above, checked against the real, compiled Animal/Dog/Cat binary — not a toy example. Three commands, no breakpoints on specific lines needed.</p>
 
       <h3>Step 1 &mdash; compile with debug symbols</h3>
-      <p>Normal <code>-Wall -Wextra -Werror</code> builds strip out the information gdb needs to map instructions back to source lines and variable names. Add <code>-g</code> for a debug build:</p>
+      <p>Normal <code>-Wall -Wextra -Werror</code> builds strip out the information gdb needs to map instructions back to source lines. Add <code>-g</code> for a debug build:</p>
       <pre>c++ -g -Wall -Wextra -Werror -std=c++98 Animal.cpp Cat.cpp Dog.cpp WrongAnimal.cpp WrongCat.cpp main.cpp -o animal_dbg</pre>
-      <p class="dim">If your Makefile already has a <code>DEBUG=1</code> pattern adding <code>-g -O0</code> to <code>CFLAGS</code> (worth having, going forward), just run <code>make DEBUG=1</code> instead.</p>
 
-      <h3>Step 2 &mdash; turn on TUI split mode: source and assembly, both visible, always</h3>
+      <h3>Step 2 &mdash; start gdb, break on main, run</h3>
       <div class="terminal">
 <span class="prompt">$</span> gdb ./animal_dbg
 <span class="gdbprompt">(gdb)</span> set disassembly-flavor intel
-<span class="gdbprompt">(gdb)</span> layout split
-      </div>
-      <p><code>layout split</code> divides the screen into three stacked panes: your C++ source on top, live disassembly in the middle, and the normal command prompt at the bottom &mdash; all visible at once, all updating together as you step.</p>
-
-      <div class="diagram">
-        <svg viewBox="0 0 640 340" role="img" aria-label="Mockup of gdb's TUI split layout: a top pane showing C++ source code with an arrow marking the current line, a middle pane showing the corresponding disassembly with an arrow marking the current instruction, and a bottom command pane where gdb commands are typed, all visible simultaneously.">
-          <rect x="20" y="20" width="600" height="110" rx="6" fill="#0A1220" stroke="#5FC7EC" stroke-width="1"/>
-          <text x="34" y="42" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">12   Animal *meta = new Animal();</text>
-          <text x="34" y="60" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">13   Animal *j = new Dog();</text>
-          <text x="34" y="78" font-family="IBM Plex Mono" font-size="11" fill="#E88FB0">&gt;14   j-&gt;makeSound();</text>
-          <text x="34" y="96" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">15   i-&gt;makeSound();</text>
-          <text x="34" y="114" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">16   meta-&gt;makeSound();</text>
-          <text x="580" y="42" font-family="IBM Plex Mono" font-size="10" fill="#5C7690" text-anchor="end">SRC</text>
-
-          <rect x="20" y="140" width="600" height="130" rx="6" fill="#0A1220" stroke="#F2A65A" stroke-width="1"/>
-          <text x="34" y="160" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1234 &lt;+0&gt;:  mov  rax,[rbp-0x8]</text>
-          <text x="34" y="178" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1238 &lt;+4&gt;:  mov  rax,[rax]</text>
-          <text x="34" y="196" font-family="IBM Plex Mono" font-size="11" fill="#E88FB0">&gt;0x123c &lt;+7&gt;: mov  rdx,[rax]</text>
-          <text x="34" y="214" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1240 &lt;+11&gt;: mov  rax,[rbp-0x8]</text>
-          <text x="34" y="232" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1244 &lt;+15&gt;: mov  rdi,rax</text>
-          <text x="34" y="250" font-family="IBM Plex Mono" font-size="11" fill="#8CA6BC">0x1248 &lt;+19&gt;: call rdx</text>
-          <text x="580" y="160" font-family="IBM Plex Mono" font-size="10" fill="#5C7690" text-anchor="end">ASM</text>
-
-          <rect x="20" y="280" width="600" height="40" rx="6" fill="#0A1220" stroke="#7FD9A8" stroke-width="1"/>
-          <text x="34" y="304" font-family="IBM Plex Mono" font-size="11" fill="#7FD9A8">(gdb) stepi</text>
-          <text x="580" y="304" font-family="IBM Plex Mono" font-size="10" fill="#5C7690" text-anchor="end">CMD</text>
-        </svg>
-        <span class="fig">Fig. 07 &mdash; one C++ line (highlighted top) maps to six assembly instructions (highlighted middle); the arrows move together as you step</span>
-      </div>
-
-      <div class="note warn">
-        <span class="tag">The one navigation quirk</span>
-        <p>Typing normally goes to the bottom CMD pane. To scroll the ASM pane by hand (rather than stepping through it), press <code>Ctrl+X</code> then <code>O</code> to shift keyboard focus onto it first &mdash; otherwise arrow keys just scroll gdb's command history. <code>Ctrl+L</code> redraws the screen if it ever looks visually garbled after a terminal resize.</p>
-      </div>
-
-      <h3>Step 3 &mdash; break, run, and watch both panes move together</h3>
-      <div class="terminal">
 <span class="gdbprompt">(gdb)</span> break main
 <span class="gdbprompt">(gdb)</span> run
-<span class="out">... SRC pane jumps to main.cpp, arrow on the breakpoint line</span>
-<span class="gdbprompt">(gdb)</span> next
-<span class="out">... step until just past: Animal *j = new Dog();</span>
+      </div>
+      <p class="dim"><code>disassemble</code> needs a running program &mdash; it disassembles whatever function the program is currently stopped inside. Running it before <code>run</code> gives <code>No frame selected</code>.</p>
+
+      <h3>Step 3 &mdash; disassemble /s, then just scroll and compare</h3>
+      <p>One command shows the whole function with every C++ line immediately followed by the exact instructions it compiled into &mdash; the virtual calls, the WrongAnimal/WrongCat calls, all of it, in one static printout you can page through.</p>
+      <div class="terminal">
+<span class="gdbprompt">(gdb)</span> disassemble /s
+<span class="out">30      <span class="src">i-&gt;makeSound();    // virtual -&gt; runtime lookup</span>
+   <span class="asm">0x... &lt;+417&gt;: mov    rax,QWORD PTR [rbp-0x98]
+   0x... &lt;+424&gt;: mov    rax,QWORD PTR [rax]
+   0x... &lt;+427&gt;: add    rax,0x10
+   0x... &lt;+431&gt;: mov    rdx,QWORD PTR [rax]
+   0x... &lt;+434&gt;: mov    rax,QWORD PTR [rbp-0x98]
+   0x... &lt;+441&gt;: mov    rdi,rax
+   0x... &lt;+444&gt;: call   rdx</span>
+
+...page down with &lt;RET&gt; until the WrongAnimal section...
+
+61      <span class="src">i-&gt;makeSound(); // no virtual, declared type wins</span>
+   <span class="asm">0x... &lt;+1088&gt;: mov    rax,QWORD PTR [rbp-0x78]
+   0x... &lt;+1092&gt;: mov    rdi,rax
+   0x... &lt;+1095&gt;: call   0x555555558800 &lt;_ZNK11WrongAnimal9makeSoundEv&gt;</span></span>
+      </div>
+      <p class="dim">Press <code>&lt;RET&gt;</code> to page down a screen at a time, <code>c</code> to dump the rest without pausing, <code>q</code> to stop. Scroll your terminal's own scrollback up and down to hold both blocks side by side &mdash; no extra gdb command needed, it's all just printed text already sitting in the buffer.</p>
+
+      <p class="dim">Count the lines. The virtual call is 7 instructions with two dereferences and an indirect <code>call rdx</code>. The non-virtual call is 3 instructions with a direct, named <code>call</code>. Below is exactly what came out of that same <code>disassemble /s</code> run, side by side:</p>
+
+      <div class="cols">
+        <div class="cardmini">
+          <h4>Line 30 — i-&gt;makeSound(), Cat through Animal* (virtual)</h4>
+          <pre style="margin:0; font-size:12.5px;">mov  rax, [rbp-0x98]   <span class="cm">; rax = i</span>
+mov  rax, [rax]        <span class="cm">; rax = *i → the object's vptr</span>
+add  rax, 0x10          <span class="cm">; move to makeSound's slot</span>
+mov  rdx, [rax]        <span class="cm">; rdx = Cat::makeSound's real address</span>
+mov  rax, [rbp-0x98]   <span class="cm">; rax = i, again</span>
+mov  rdi, rax           <span class="cm">; rdi = this</span>
+call rdx                <span class="cm">; jump to whatever's in rdx</span></pre>
+        </div>
+        <div class="cardmini">
+          <h4>Line 61 — i-&gt;makeSound(), WrongCat through WrongAnimal* (non-virtual)</h4>
+          <pre style="margin:0; font-size:12.5px;">mov  rax, [rbp-0x78]   <span class="cm">; rax = i</span>
+mov  rdi, rax           <span class="cm">; rdi = this</span>
+call 0x555...&lt;_ZNK11WrongAnimal9makeSoundEv&gt;
+                         <span class="cm">; direct call, no dereference</span></pre>
+        </div>
       </div>
 
-      <h3>Step 4 &mdash; ask gdb what j actually is</h3>
-      <div class="terminal">
-<span class="gdbprompt">(gdb)</span> print j
-<span class="out">$1 = (const Animal *) 0x5555555592c0</span>
-<span class="gdbprompt">(gdb)</span> print *j
-<span class="out">$2 = (Dog) {&lt;Animal&gt; = {_type = "Dog"}}</span>
-<span class="hl">          ↑ gdb reports the REAL dynamic type — Dog — not the declared Animal*</span>
-      </div>
-      <p class="dim">gdb reads the object's own vptr to determine its true type for display purposes &mdash; the same mechanism from the assembly trace, used here by the debugger itself.</p>
+      <p class="dim">Same two-register setup (<code>rax</code> = object, <code>rdi</code> = <code>this</code>) in both, but the virtual case detours through two extra <code>mov ...,[...]</code> reads before it knows what to call, while the non-virtual case has the answer baked into the instruction itself &mdash; <code>call rdx</code> versus <code>call &lt;name&gt;</code> is the entire difference.</p>
 
-      <h3>Step 5 &mdash; read the vptr directly, as raw bytes</h3>
-      <div class="terminal">
-<span class="gdbprompt">(gdb)</span> print *(void**)j
-<span class="out">$3 = (void *) 0x555555557d38</span>
-<span class="gdbprompt">(gdb)</span> info symbol *(void**)j
-<span class="out">vtable for Dog + 16 in section .data.rel.ro</span>
-<span class="hl">          ↑ confirms: the object's first 8 bytes really do point at Dog's vtable, past the +16 offset</span>
-      </div>
-
-      <h3>Step 6 &mdash; break inside Dog::makeSound, prove it's reached through the base pointer</h3>
-      <div class="terminal">
-<span class="gdbprompt">(gdb)</span> break Dog::makeSound
-<span class="gdbprompt">(gdb)</span> continue
-<span class="out">... SRC pane jumps into Dog.cpp — stopped inside Dog::makeSound,
-    even though the call site only had an Animal*</span>
-<span class="gdbprompt">(gdb)</span> bt
-<span class="out">#0  Dog::makeSound (this=0x5555555592c0) const at Dog.cpp:41
-#1  0x... in main () at main.cpp:19</span>
-      </div>
-
-      <h3>Step 7 &mdash; now the payoff: stepi, watching both panes and the registers together</h3>
-      <div class="terminal">
-<span class="gdbprompt">(gdb)</span> stepi
-<span class="out">... ASM pane's arrow advances one line; SRC pane stays on the calling line</span>
-<span class="gdbprompt">(gdb)</span> print $rax
-<span class="out">$4 = (void *) 0x555555557d38     the vtable address</span>
-<span class="gdbprompt">(gdb)</span> stepi
-<span class="gdbprompt">(gdb)</span> print $rdx
-<span class="out">$5 = (void *) 0x555555555289     Dog::makeSound's real code address</span>
-<span class="gdbprompt">(gdb)</span> stepi
-<span class="gdbprompt">(gdb)</span> print $rdi
-<span class="out">$6 = (void *) 0x5555555592c0     the Dog object's address — this</span>
-      </div>
-      <p class="dim">This is the live version of Sheet 03's six-row instruction table &mdash; the exact same values, watched appear one <code>stepi</code> at a time, with the ASM pane's highlighted line and the register value changing in lockstep. <code>print $rax</code> reads a register directly; the <code>$</code> prefix is gdb's syntax for "this is a register, not a variable."</p>
       <div class="note">
-        <span class="tag">Quick reference &mdash; the commands used above</span>
-        <p><code>layout split</code> show source + assembly together &middot; <code>Ctrl+X O</code> switch pane focus &middot; <code>break &lt;func&gt;</code> set a breakpoint &middot; <code>run</code> / <code>continue</code> start or resume &middot; <code>next</code> step one C++ line, skip over calls &middot; <code>step</code> step one C++ line, into calls &middot; <code>stepi</code> step one machine instruction &middot; <code>print &lt;expr&gt;</code> evaluate and show &middot; <code>print $rax</code> read a register directly &middot; <code>bt</code> backtrace, the call stack &middot; <code>info symbol &lt;addr&gt;</code> resolve an address back to a name.</p>
+        <span class="tag">Quick reference</span>
+        <p><code>set disassembly-flavor intel</code> readable operand order &middot; <code>break main</code> stop at the top of main &middot; <code>run</code> start the program &middot; <code>disassemble /s</code> whole function, source interleaved with asm &middot; <code>&lt;RET&gt;</code> / <code>c</code> / <code>q</code> page, dump rest, or stop paging.</p>
       </div>
-    </section>
-
-    <!-- ============ S07 ============ -->
-    <section class="sheet" id="s07">
-      <div class="sheetnum">Sheet 07</div>
-      <h2>nvim-dap &mdash; the same workflow, with a UI</h2>
-      <p class="tagline">Everything in Sheet 05 works exactly the same underneath — nvim-dap just wraps gdb's output in breakpoint gutters, a variables panel, and a call-stack view, instead of typing print statements by hand.</p>
-
-      <h3>Minimal setup, if not already configured</h3>
-      <pre><span class="cm">-- requires: nvim-dap, nvim-dap-ui (optional but recommended), gdb installed</span>
-<span class="kw">local</span> dap = require(<span class="st">"dap"</span>)
-
-dap.adapters.gdb = {
-  type = <span class="st">"executable"</span>,
-  command = <span class="st">"gdb"</span>,
-  args = { <span class="st">"-i"</span>, <span class="st">"dap"</span> }
-}
-
-dap.configurations.cpp = {
-  {
-    name = <span class="st">"Launch (gdb, cpp04 ex00)"</span>,
-    type = <span class="st">"gdb"</span>,
-    request = <span class="st">"launch"</span>,
-    program = <span class="kw">function</span>()
-      <span class="kw">return</span> vim.fn.input(<span class="st">"Path to executable: "</span>, vim.fn.getcwd() .. <span class="st">"/"</span>, <span class="st">"file"</span>)
-    <span class="kw">end</span>,
-    cwd = <span class="st">"${workspaceFolder}"</span>,
-    stopAtBeginningOfMainSubprogram = <span class="kw">false</span>,
-  },
-}</pre>
-
-      <h3>Mapping the gdb commands from Sheet 05 to nvim-dap actions</h3>
-      <div class="cmp-wrap">
-        <table class="cmp">
-          <thead><tr><th>gdb command</th><th>nvim-dap equivalent</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">break Dog::makeSound</th><td>place cursor on the line, <code>:lua require('dap').toggle_breakpoint()</code> &mdash; shows a marker in the gutter</td></tr>
-            <tr><th scope="row">run</th><td><code>:lua require('dap').continue()</code> &mdash; also resumes after a breakpoint hits</td></tr>
-            <tr><th scope="row">next / step / stepi</th><td><code>dap.step_over()</code> / <code>dap.step_into()</code> / <code>dap.step_back()</code> or dap-ui's step buttons</td></tr>
-            <tr><th scope="row">print j / print *j</th><td>hover the variable (with nvim-dap-ui's hover widget), or the always-visible Variables panel</td></tr>
-            <tr><th scope="row">bt</th><td>nvim-dap-ui's Call Stack panel, updated live</td></tr>
-            <tr><th scope="row">info registers</th><td>not built into nvim-dap-ui by default &mdash; still worth dropping into the gdb console directly for register-level inspection (see below)</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note warn">
-        <span class="tag">Where nvim-dap alone isn't quite enough</span>
-        <p>nvim-dap-ui is built around C++-level concepts &mdash; variables, the call stack, breakpoints on source lines. It doesn't expose raw register contents or <code>x/2gx</code>-style memory examination out of the box. For anything at the level of Sheet 05's Steps 4&ndash;7 &mdash; reading the vptr as raw bytes, watching <code>rax</code>/<code>rdx</code>/<code>rdi</code> fill in &mdash; you can still reach the underlying gdb console directly with <code>:lua require('dap').repl.open()</code>, which drops you into the exact same gdb prompt used throughout Sheet 05, commands and all, without leaving Neovim.</p>
-      </div>
-
-      <p class="dim">In practice: use nvim-dap-ui for the everyday case &mdash; "why is this value wrong," "did this branch actually run," stepping through your own <code>Dog</code>/<code>Cat</code> logic with breakpoints and a visible variables panel. Drop into the raw gdb REPL specifically when the question is about the mechanism itself &mdash; vptrs, register contents, raw memory &mdash; the same territory Sheet 05 covers.</p>
     </section>
 
   </main>
