@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 18:46:20 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/09 18:46:41 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/15 14:11:52 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,8 @@ public:
     virtual ~AAnimal();
 
     std::string getType(void) const;
-    // virtual void makeSound(void) const; --> virtual -> it's instatiable
-    // (Animal a -> still compiles)
+    // pure virtual function
+    // compiler refuses to construct an object of this time (AAnimal a;)
     virtual void makeSound(void)
         const = 0; // pure virtual, abstract class (AAnimal a -> dons't compile)
 };
