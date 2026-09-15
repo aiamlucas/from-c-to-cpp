@@ -6,7 +6,7 @@
 /*   By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 18:07:11 by lbueno-m          #+#    #+#             */
-/*   Updated: 2026/09/13 20:56:11 by lbueno-m         ###   ########.fr       */
+/*   Updated: 2026/09/15 11:22:58 by lbueno-m         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,18 +21,18 @@ int main(void) {
 
     std::cout << " \n--- subject main ---" << std::endl;
     {
-        // declared as Animal*, but each points at different (derived) types
         const Animal *meta = new Animal();
         const Animal *j = new Dog();
         const Animal *i = new Cat();
         std::cout << j->getType() << " " << std::endl; // "Dog"
         std::cout << i->getType() << " " << std::endl; // "Cat"
-        i->makeSound();    // "miauuu" -> virtual -> runtime lookup
-        j->makeSound();    // "au au" -> virtual -> runtime lookup
-        meta->makeSound(); // "brrrr br" -> virtual -> runtime lookup
+        i->makeSound();    // "miauuu" -> virtual -> runtime vtable lookup
+        j->makeSound();    // "au au" -> virtual -> runtime vtable lookup
+        meta->makeSound(); // "brrrr br" -> virtual -> runtime vtable lookup
         delete meta;       // ~Animal()
-        delete j;          // ~Dog() then ~Animal()
-        delete i;          // ~Cat() then ~Animal()
+        // virtual destructor
+        delete j; // ~Dog() then ~Animal()
+        delete i; // ~Cat() then ~Animal()
     }
 
     // WrongAnimal -> no virtual:
@@ -89,7 +89,5 @@ int main(void) {
     for (int i = 0; i < 3; i++)
         delete animals[i]; // virtual destructor -> runtime lookup
 
-    std::cout << "\n--- destructor (from what is remain in the stack) ---"
-              << std::endl;
     return 0;
 }
