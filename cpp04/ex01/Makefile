@@ -6,7 +6,7 @@
 #    By: lbueno-m <lbueno-m@student.42berlin.de>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/09/08 08:36:07 by lbueno-m          #+#    #+#              #
-#    Updated: 2026/09/08 19:54:14 by lbueno-m         ###   ########.fr        #
+#    Updated: 2026/09/15 13:26:28 by lbueno-m         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,7 +20,9 @@ endif
 
 SRC     =  main.cpp
 SRC     += Animal.cpp
+SRC     += WrongAnimal.cpp
 SRC     += Cat.cpp
+SRC     += WrongCat.cpp
 SRC     += Dog.cpp
 SRC     += Brain.cpp
 
