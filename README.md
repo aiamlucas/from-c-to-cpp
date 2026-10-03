@@ -2,17 +2,13 @@
 
 ## Context
 
-At this point in the 42 curriculum, after completing the C modules (Libft, ft_printf, 
-get_next_line, push_swap, frac-tol, philosophers and minishell), 
-we start learning C++ through the CPP modules.
-
 This is the shift from procedural programming to **Object-Oriented Programming (OOP)**.
 
 ---
 
 ## Standard & Requirements
 
-All code is written to the **C++98 standard** (`-std=c++98`), as required by 42.
+All code is written to the **C++98 standard** (`-std=c++98`).
 
 **Why C++98?**
 42 focuses on building a solid foundation. The core concepts like classes, memory management, inheritance, polymorphism are the same across all C++ standards.
